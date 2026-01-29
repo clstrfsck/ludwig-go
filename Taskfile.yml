@@ -1,0 +1,70 @@
+version: '3'
+
+vars:
+  output_dir: bin
+  ludpkg: ./cmd/ludwig
+  hlppkg: ./cmd/ludwighlpbld
+
+tasks:
+  setup:
+    desc: Create output directory
+    cmds:
+      - mkdir -p {{.output_dir}}
+
+  build:
+    desc: Build debug binary
+    deps: [setup]
+    cmds:
+      - go build -o {{.output_dir}}/ludwig-debug -gcflags "all=-N -l" {{.ludpkg}}
+
+  build-release:
+    desc: Build release binary
+    deps: [setup]
+    cmds:
+      - go build -o {{.output_dir}}/ludwig -ldflags "-s -w" {{.ludpkg}}
+
+  build-help:
+    desc: Build help documentation
+    deps: [build-hlpbld]
+    cmds:
+      - go run {{.hlppkg}} ludwighlp.txt ludwighlp.idx
+      - go run {{.hlppkg}} ludwignewhlp.txt ludwignewhlp.idx
+
+  build-hlpbld:
+    desc: Build help documentation builder
+    deps: [setup]
+    cmds:
+      - go build -o {{.output_dir}}/ludwighlpbld -ldflags "-s -w" {{.hlppkg}}
+
+  run:
+    desc: Run the ludwig application (debug)
+    deps: [build-debug]
+    cmds:
+      - ./{{.output_dir}}/ludwig-debug
+
+  run-release:
+    desc: Run the ludwig application (release)
+    deps: [build-release]
+    cmds:
+      - ./{{.output_dir}}/ludwig
+
+  coverage:
+    desc: Run tests with coverage
+    cmds:
+      - go test -coverprofile=coverage.out ./internal/ludwig
+      - go tool cover -html=coverage.out
+
+  bench:
+    desc: Run benchmarks
+    cmds:
+      - go test -bench=. -benchmem ./internal/ludwig
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./internal/ludwig -v
+
+  clean:
+    desc: Remove built binaries
+    cmds:
+      - rm -rf {{.output_dir}}
