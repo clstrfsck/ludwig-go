@@ -14,7 +14,10 @@
 
 package ludwig
 
-import "unicode"
+import (
+	"math/big"
+	"unicode"
+)
 
 func isLetter(ch rune) bool {
 	return unicode.IsLetter(ch)
@@ -51,14 +54,14 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		' ',
 	)
 
-	commandSet := make(map[Commands]bool)
+	commandSet := big.NewInt(0)
 	var otherLine *LineHdrObject
 
 	switch command {
 	case CmdCaseUp, CmdCaseLow, CmdCaseEdit:
-		commandSet[CmdCaseUp] = true
-		commandSet[CmdCaseLow] = true
-		commandSet[CmdCaseEdit] = true
+		commandSet.SetBit(commandSet, int(CmdCaseUp), 1)
+		commandSet.SetBit(commandSet, int(CmdCaseLow), 1)
+		commandSet.SetBit(commandSet, int(CmdCaseEdit), 1)
 		otherLine = CurrentFrame.Dot.Line
 	case CmdDittoUp, CmdDittoDown:
 		if insert && (rept == LeadParamMinus || rept == LeadParamNInt ||
@@ -66,8 +69,8 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			ScreenMessage(MsgNotAllowedInInsertMode)
 			return false
 		}
-		commandSet[CmdDittoUp] = true
-		commandSet[CmdDittoDown] = true
+		commandSet.SetBit(commandSet, int(CmdDittoUp), 1)
+		commandSet.SetBit(commandSet, int(CmdDittoDown), 1)
 	}
 
 	var firstCol int
@@ -211,7 +214,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			command = CmdNoop
 		}
 
-		if !commandSet[command] {
+		if commandSet.Bit(int(command)) == 0 {
 			break
 		}
 	}
