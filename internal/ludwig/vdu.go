@@ -18,7 +18,7 @@ package ludwig
 import (
 	"os"
 
-	gc "github.com/clstrfsck/goncurses"
+	nc "ludwig-go/internal/ncurses"
 )
 
 // Constants
@@ -56,7 +56,7 @@ var (
 	inInsertMode bool
 	gCtrlC       *bool
 	gWinChange   *bool
-	stdscr       *gc.Window
+	stdscr       *nc.Window
 )
 
 func init() {
@@ -80,7 +80,7 @@ func massageKey(keyCode int) int {
 	if keyCode >= MinNormalCode && keyCode <= MaxNormalCode {
 		return keyCode
 	} else if keyCode >= MinCursesKey && keyCode <= MaxCursesKey {
-		if keyCode == gc.KEY_BACKSPACE {
+		if keyCode == nc.KEY_BACKSPACE {
 			return DEL
 		}
 		return keyCode
@@ -110,7 +110,7 @@ func VduFlush() {
 
 // VduBeep produces a beep or flash
 func VduBeep() {
-	gc.Flash()
+	nc.Flash()
 }
 
 // VduClearEOL clears from cursor to end of line
@@ -142,7 +142,7 @@ func VduDisplayStr(str string, opts int) {
 
 // VduDisplayCh displays a single character
 func VduDisplayCh(ch byte) {
-	stdscr.AddChar(gc.Char(ch))
+	stdscr.AddChar(nc.Char(ch))
 }
 
 // VduClearScr clears the entire screen
@@ -177,7 +177,7 @@ func VduInsertLines(n int) {
 // VduInsertChars inserts n characters at current position
 func VduInsertChars(n int) {
 	for range n {
-		stdscr.InsChar(gc.Char(' '))
+		stdscr.InsChar(nc.Char(' '))
 	}
 	VduFlush()
 }
@@ -207,7 +207,7 @@ func VduDisplayCrLf() {
 
 // VduTakeBackKey pushes a key back to the input queue
 func VduTakeBackKey(key int) {
-	gc.UnGetChar(gc.Char(unmassageKey(key)))
+	nc.UnGetChar(nc.Char(unmassageKey(key)))
 }
 
 // VduNewIntroducer sets up terminators for input
@@ -224,7 +224,7 @@ func VduNewIntroducer(key int) {
 // VduGetKey gets a single key from the user
 func VduGetKey() int {
 	VduFlush()
-	var rawKey gc.Key
+	var rawKey nc.Key
 	for {
 		rawKey = stdscr.GetChar()
 		if rawKey != 0 {
@@ -232,7 +232,7 @@ func VduGetKey() int {
 		}
 	}
 
-	if rawKey == gc.KEY_RESIZE && gWinChange != nil {
+	if rawKey == nc.KEY_RESIZE && gWinChange != nil {
 		*gWinChange = true
 	}
 	return massageKey(int(rawKey))
@@ -262,9 +262,9 @@ func VduGetInput(prompt string, get *StrObject, getLen int, outlen *int) {
 		if *outlen > 0 && (key == BS || key == DEL) {
 			getLen++
 			*outlen--
-			stdscr.AddChar(gc.Char(BS))
-			stdscr.AddChar(gc.Char(SPC))
-			stdscr.AddChar(gc.Char(BS))
+			stdscr.AddChar(nc.Char(BS))
+			stdscr.AddChar(nc.Char(SPC))
+			stdscr.AddChar(nc.Char(BS))
 		} else {
 			if key < 0 || key > OrdMaxChar || controlChars[key] {
 				VduBeep()
@@ -272,7 +272,7 @@ func VduGetInput(prompt string, get *StrObject, getLen int, outlen *int) {
 				getLen--
 				*outlen++
 				get.Set(*outlen, byte(key))
-				stdscr.AddChar(gc.Char(key))
+				stdscr.AddChar(nc.Char(key))
 			}
 		}
 		key = VduGetKey()
@@ -310,7 +310,7 @@ func VduGetText(strLen int, str *StrObject, outlen *int) {
 			if inInsertMode {
 				VduInsertChars(1)
 			}
-			stdscr.AddChar(gc.Char(key))
+			stdscr.AddChar(nc.Char(key))
 			stdscr.Refresh()
 			*outlen++
 			str.Set(*outlen, byte(key))
@@ -548,21 +548,21 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 
 	if SysIsTTY() {
 		var err error
-		stdscr, err = gc.Init()
+		stdscr, err = nc.Init()
 		if err == nil {
 			vduSetup = true
-			gc.Raw(true)
-			gc.Echo(false)
-			gc.NewLines(false)
-			// FIXME add to goncurses stdscr.IntrFlush(false)
+			nc.Raw(true)
+			nc.Echo(false)
+			nc.NewLines(false)
+			stdscr.IntrFlush(false)
 			stdscr.Keypad(true)
-			// FIXME add to goncurses stdscr.Idlok(true)
-			// FIXME add to goncurses stdscr.Idcok(true)
+			stdscr.Idlok(true)
+			stdscr.Idcok(true)
 			stdscr.ScrollOk(false)
 
 			// Initialize ncurses key range constants after Init
 			MinCursesKey = 257
-			MaxCursesKey = gc.KEY_MAX
+			MaxCursesKey = nc.KEY_MAX
 			NumNcursesKeys = (MaxCursesKey - MinCursesKey) + 1
 			NcursesSubtract = MinCursesKey - 1
 			MassagedMax = MaxCursesKey
@@ -587,13 +587,13 @@ func VduFree() {
 		maxY, _ := stdscr.MaxYX()
 		VduMoveCurs(1, maxY)
 		VduFlush()
-		gc.End()
+		nc.End()
 	}
 }
 
 // VduGetNewDimensions gets the new screen dimensions after resize
 func VduGetNewDimensions(newX *int, newY *int) {
-	gc.End()
+	nc.End()
 	stdscr.Refresh()
 	maxY, maxX := stdscr.MaxYX()
 	*newX = maxX
@@ -602,11 +602,11 @@ func VduGetNewDimensions(newX *int, newY *int) {
 
 // VduAttrBold turns on bold attribute
 func VduAttrBold() {
-	stdscr.AttrOn(gc.A_BOLD)
+	stdscr.AttrOn(nc.A_BOLD)
 }
 
 // VduAttrNormal turns off all attributes
 func VduAttrNormal() {
-	stdscr.AttrOff(gc.A_BOLD)
-	stdscr.AttrOff(gc.A_REVERSE)
+	stdscr.AttrOff(nc.A_BOLD)
+	stdscr.AttrOff(nc.A_REVERSE)
 }
