@@ -14,15 +14,10 @@
 
 package ludwig
 
-const lettersS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+import "unicode"
 
-var letters map[byte]bool
-
-func init() {
-	letters = make(map[byte]bool)
-	for i := range lettersS {
-		letters[lettersS[i]] = true
-	}
+func isLetter(ch rune) bool {
+	return unicode.IsLetter(ch)
 }
 
 func keyIsLower(key int) bool {
@@ -148,7 +143,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 					ch = ' '
 				}
 				for j := 1; j <= count; j++ {
-					if letters[ch] {
+					if isLetter(rune(ch)) {
 						ch = ChToLower(newStr.Get(j))
 					} else {
 						ch = ChToUpper(newStr.Get(j))
