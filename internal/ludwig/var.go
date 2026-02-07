@@ -155,9 +155,8 @@ func init() {
 	}
 
 	// AlphaSet: union of LowerSet and UpperSet
-	for i := 0; i <= MaxSetRange; i++ {
-		AlphaSet.SetBit(&AlphaSet, i, LowerSet.Bit(i)|UpperSet.Bit(i))
-	}
+	AlphaSet.Or(&AlphaSet, &LowerSet)
+	AlphaSet.Or(&AlphaSet, &UpperSet)
 
 	// NumericSet: '0'..'9'
 	for i := byte('0'); i <= byte('9'); i++ {

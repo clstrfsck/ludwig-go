@@ -25,15 +25,13 @@ const (
 )
 
 var (
-	npunctSet big.Int = orSet(AlphaSet, NumericSet, SpaceSet)
+	npunctSet big.Int
 )
 
-func orSet(sets ...big.Int) big.Int {
-	result := big.NewInt(0)
-	for _, s := range sets {
-		result.Or(result, &s)
-	}
-	return *result
+func init() {
+	npunctSet.Or(&npunctSet, &AlphaSet)
+	npunctSet.Or(&npunctSet, &NumericSet)
+	npunctSet.Or(&npunctSet, &SpaceSet)
 }
 
 // FrameEdit creates or edits a frame with the specified name.
@@ -516,8 +514,8 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 			CurrentFrame.TabStops[1] = ts
 		}
 		for i := 2; i <= CurrentFrame.Dot.Line.Used; i++ {
-			chi := CurrentFrame.Dot.Line.Str.Get(i - 1)
-			chim1 := CurrentFrame.Dot.Line.Str.Get(i - 2)
+			chi := CurrentFrame.Dot.Line.Str.Get(i)
+			chim1 := CurrentFrame.Dot.Line.Str.Get(i - 1)
 			if setInitial {
 				InitialTabStops[i] = (chi != ' ') && (chim1 == ' ')
 			}
