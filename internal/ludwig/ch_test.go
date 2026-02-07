@@ -7,13 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Helper function to set a string at a specific 1-based position
-func setStringAt(s *StrObject, pos int, str string) {
-	for i, ch := range []byte(str) {
-		s.Set(pos+i, ch)
-	}
-}
-
 // TestSgn tests the sign function
 func TestSgn(t *testing.T) {
 	tests := []struct {
@@ -41,8 +34,7 @@ func TestSgn(t *testing.T) {
 // TestChFillCopy tests the ChFillCopy function
 func TestChFillCopy(t *testing.T) {
 	t.Run("CopyFullSource", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HELLO")
+		src := NewStrObjectFrom("HELLO")
 		dst := &StrObject{}
 
 		ChFillCopy(src, 1, 5, dst, 1, 5, ' ')
@@ -51,8 +43,7 @@ func TestChFillCopy(t *testing.T) {
 	})
 
 	t.Run("CopyWithFill", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HI")
+		src := NewStrObjectFrom("HI")
 		dst := &StrObject{}
 
 		ChFillCopy(src, 1, 2, dst, 1, 5, '*')
@@ -70,10 +61,8 @@ func TestChFillCopy(t *testing.T) {
 	})
 
 	t.Run("ZeroDestLen", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HELLO")
-		dst := &StrObject{}
-		setStringAt(dst, 1, "XXXXX")
+		src := NewStrObjectFrom("HELLO")
+		dst := NewStrObjectFrom("XXXXX")
 
 		ChFillCopy(src, 1, 5, dst, 1, 0, ' ')
 
@@ -82,8 +71,7 @@ func TestChFillCopy(t *testing.T) {
 	})
 
 	t.Run("SourceLongerThanDest", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HELLO")
+		src := NewStrObjectFrom("HELLO")
 		dst := &StrObject{}
 
 		ChFillCopy(src, 1, 5, dst, 1, 3, ' ')
@@ -92,8 +80,7 @@ func TestChFillCopy(t *testing.T) {
 	})
 
 	t.Run("CopyWithOffset", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HELLO")
+		src := NewStrObjectFrom("HELLO")
 		dst := &StrObject{}
 
 		ChFillCopy(src, 2, 3, dst, 3, 4, '.')
@@ -105,10 +92,8 @@ func TestChFillCopy(t *testing.T) {
 // TestChCompareStr tests string comparison
 func TestChCompareStr(t *testing.T) {
 	t.Run("ExactMatch", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "HELLO")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "HELLO")
+		s1 := NewStrObjectFrom("HELLO")
+		s2 := NewStrObjectFrom("HELLO")
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 5, s2, 1, 5, true, &nchIdent)
@@ -118,10 +103,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("FirstLessThanSecond", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "HELLO")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "WORLD")
+		s1 := NewStrObjectFrom("HELLO")
+		s2 := NewStrObjectFrom("WORLD")
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 5, s2, 1, 5, false, &nchIdent)
@@ -131,10 +114,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("FirstGreaterThanSecond", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "WORLD")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "HELLO")
+		s1 := NewStrObjectFrom("WORLD")
+		s2 := NewStrObjectFrom("HELLO")
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 5, s2, 1, 5, false, &nchIdent)
@@ -144,10 +125,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("PartialMatch", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "HELLO")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "HELP")
+		s1 := NewStrObjectFrom("HELLO")
+		s2 := NewStrObjectFrom("HELP")
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 5, s2, 1, 4, false, &nchIdent)
@@ -157,10 +136,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("DifferentLengths", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "HELLO")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "HEL")
+		s1 := NewStrObjectFrom("HELLO")
+		s2 := NewStrObjectFrom("HEL")
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 5, s2, 1, 3, false, &nchIdent)
@@ -170,10 +147,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("CaseInsensitiveMatch", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "HELLO")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "hello")
+		s1 := NewStrObjectFrom("HELLO")
+		s2 := NewStrObjectFrom("hello")
 		var nchIdent int
 
 		// exactcase=true means case-insensitive (confusing name but per code/comment)
@@ -184,10 +159,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("CaseInsensitiveDifferent", func(t *testing.T) {
-		s1 := &StrObject{}
-		setStringAt(s1, 1, "HELLO")
-		s2 := &StrObject{}
-		setStringAt(s2, 1, "world")
+		s1 := NewStrObjectFrom("HELLO")
+		s2 := NewStrObjectFrom("world")
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 5, s2, 1, 5, true, &nchIdent)
@@ -210,8 +183,7 @@ func TestChCompareStr(t *testing.T) {
 // TestChReverseStr tests string reversal
 func TestChReverseStr(t *testing.T) {
 	t.Run("ReverseOddLength", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HELLO")
+		src := NewStrObjectFrom("HELLO")
 		dst := &StrObject{}
 
 		ChReverseStr(src, dst, 5)
@@ -220,8 +192,7 @@ func TestChReverseStr(t *testing.T) {
 	})
 
 	t.Run("ReverseEvenLength", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "TEST")
+		src := NewStrObjectFrom("TEST")
 		dst := &StrObject{}
 
 		ChReverseStr(src, dst, 4)
@@ -230,8 +201,7 @@ func TestChReverseStr(t *testing.T) {
 	})
 
 	t.Run("ReverseSingleChar", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "A")
+		src := NewStrObjectFrom("A")
 		dst := &StrObject{}
 
 		ChReverseStr(src, dst, 1)
@@ -240,8 +210,7 @@ func TestChReverseStr(t *testing.T) {
 	})
 
 	t.Run("ReverseInPlace", func(t *testing.T) {
-		str := &StrObject{}
-		setStringAt(str, 1, "ABCDE")
+		str := NewStrObjectFrom("ABCDE")
 
 		ChReverseStr(str, str, 5)
 
@@ -249,10 +218,8 @@ func TestChReverseStr(t *testing.T) {
 	})
 
 	t.Run("ReverseZeroLength", func(t *testing.T) {
-		src := &StrObject{}
-		setStringAt(src, 1, "HELLO")
-		dst := &StrObject{}
-		setStringAt(dst, 1, "XXXXX")
+		src := NewStrObjectFrom("HELLO")
+		dst := NewStrObjectFrom("XXXXX")
 
 		ChReverseStr(src, dst, 0)
 
@@ -290,8 +257,7 @@ func TestChToUpper(t *testing.T) {
 // TestChApplyN tests applying a function to n characters
 func TestChApplyN(t *testing.T) {
 	t.Run("ApplyToUpper", func(t *testing.T) {
-		str := &StrObject{}
-		setStringAt(str, 1, "hello world")
+		str := NewStrObjectFrom("hello world")
 
 		ChApplyN(str, ChToUpper, 5)
 
@@ -299,8 +265,7 @@ func TestChApplyN(t *testing.T) {
 	})
 
 	t.Run("ApplyToAll", func(t *testing.T) {
-		str := &StrObject{}
-		setStringAt(str, 1, "hello")
+		str := NewStrObjectFrom("hello")
 
 		ChApplyN(str, ChToUpper, 5)
 
@@ -308,8 +273,7 @@ func TestChApplyN(t *testing.T) {
 	})
 
 	t.Run("ApplyZeroChars", func(t *testing.T) {
-		str := &StrObject{}
-		setStringAt(str, 1, "hello")
+		str := NewStrObjectFrom("hello")
 
 		ChApplyN(str, ChToUpper, 0)
 
@@ -317,8 +281,7 @@ func TestChApplyN(t *testing.T) {
 	})
 
 	t.Run("ApplyCustomFunction", func(t *testing.T) {
-		str := &StrObject{}
-		setStringAt(str, 1, "12345")
+		str := NewStrObjectFrom("12345")
 
 		// Custom function: add 1 to each character
 		addOne := func(ch byte) byte { return ch + 1 }
@@ -331,10 +294,8 @@ func TestChApplyN(t *testing.T) {
 // TestChSearchStr tests string searching
 func TestChSearchStr(t *testing.T) {
 	t.Run("SearchForward", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "WORLD")
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO WORLD TEST")
+		target := NewStrObjectFrom("WORLD")
+		text := NewStrObjectFrom("HELLO WORLD TEST")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 5, text, 1, 16, true, false, &foundLoc)
@@ -344,10 +305,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchReverse", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "DLROW") // "WORLD" reversed
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO WORLD TEST")
+		target := NewStrObjectFrom("DLROW") // "WORLD" reversed
+		text := NewStrObjectFrom("HELLO WORLD TEST")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 5, text, 1, 16, true, true, &foundLoc)
@@ -357,10 +316,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchNotFound", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "XYZ")
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO WORLD")
+		target := NewStrObjectFrom("XYZ")
+		text := NewStrObjectFrom("HELLO WORLD")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 3, text, 1, 11, true, false, &foundLoc)
@@ -369,10 +326,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchCaseInsensitive", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "WORLD")
-		text := &StrObject{}
-		setStringAt(text, 1, "hello world test")
+		target := NewStrObjectFrom("WORLD")
+		text := NewStrObjectFrom("hello world test")
 		var foundLoc int
 
 		// exactcase=false for case-insensitive search (text is uppercased)
@@ -383,10 +338,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchAtBeginning", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "HELLO")
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO WORLD")
+		target := NewStrObjectFrom("HELLO")
+		text := NewStrObjectFrom("HELLO WORLD")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 5, text, 1, 11, true, false, &foundLoc)
@@ -396,10 +349,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchAtEnd", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "TEST")
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO TEST")
+		target := NewStrObjectFrom("TEST")
+		text := NewStrObjectFrom("HELLO TEST")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 4, text, 1, 10, false, false, &foundLoc)
@@ -409,10 +360,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchSingleChar", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "W")
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO WORLD")
+		target := NewStrObjectFrom("W")
+		text := NewStrObjectFrom("HELLO WORLD")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 1, text, 1, 11, false, false, &foundLoc)
@@ -422,10 +371,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchTargetLongerThanText", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "HELLO WORLD")
-		text := &StrObject{}
-		setStringAt(text, 1, "HI")
+		target := NewStrObjectFrom("HELLO WORLD")
+		text := NewStrObjectFrom("HI")
 		var foundLoc int
 
 		found := ChSearchStr(target, 1, 11, text, 1, 2, false, false, &foundLoc)
@@ -434,10 +381,8 @@ func TestChSearchStr(t *testing.T) {
 	})
 
 	t.Run("SearchMultipleOccurrences", func(t *testing.T) {
-		target := &StrObject{}
-		setStringAt(target, 1, "L")
-		text := &StrObject{}
-		setStringAt(text, 1, "HELLO")
+		target := NewStrObjectFrom("L")
+		text := NewStrObjectFrom("HELLO")
 		var foundLoc int
 
 		// Should find first occurrence
@@ -446,12 +391,22 @@ func TestChSearchStr(t *testing.T) {
 		assert.True(t, found, "Expected to find 'L'")
 		assert.Equal(t, 2, foundLoc, "Expected foundLoc=2 (first L)")
 	})
+
+	t.Run("SearchWithOffset", func(t *testing.T) {
+		target := NewStrObjectFrom("LO")
+		text := NewStrObjectFrom("HELLO")
+		var foundLoc int
+
+		found := ChSearchStr(target, 1, 2, text, 3, 3, false, false, &foundLoc)
+
+		assert.True(t, found, "Expected to find 'LO'")
+		assert.Equal(t, 1, foundLoc, "Expected foundLoc=1")
+	})
 }
 
 // BenchmarkChFillCopy benchmarks the fill copy operation
 func BenchmarkChFillCopy(b *testing.B) {
-	src := &StrObject{}
-	setStringAt(src, 1, "HELLO")
+	src := NewStrObjectFrom("HELLO")
 	dst := &StrObject{}
 
 	b.ResetTimer()
@@ -462,10 +417,8 @@ func BenchmarkChFillCopy(b *testing.B) {
 
 // BenchmarkChCompareStr benchmarks string comparison
 func BenchmarkChCompareStr(b *testing.B) {
-	s1 := &StrObject{}
-	setStringAt(s1, 1, "HELLO WORLD")
-	s2 := &StrObject{}
-	setStringAt(s2, 1, "HELLO WORLD")
+	s1 := NewStrObjectFrom("HELLO WORLD")
+	s2 := NewStrObjectFrom("HELLO WORLD")
 	var nchIdent int
 
 	b.ResetTimer()
@@ -476,10 +429,8 @@ func BenchmarkChCompareStr(b *testing.B) {
 
 // BenchmarkChSearchStr benchmarks string searching
 func BenchmarkChSearchStr(b *testing.B) {
-	target := &StrObject{}
-	setStringAt(target, 1, "WORLD")
-	text := &StrObject{}
-	setStringAt(text, 1, "HELLO WORLD TEST")
+	target := NewStrObjectFrom("WORLD")
+	text := NewStrObjectFrom("HELLO WORLD TEST")
 	var foundLoc int
 
 	b.ResetTimer()

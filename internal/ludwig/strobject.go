@@ -50,6 +50,12 @@ func NewFilled(elem byte) *StrObject {
 	return s
 }
 
+func NewStrObjectFrom(str string) *StrObject {
+	s := &StrObject{}
+	s.Assign(str)
+	return s
+}
+
 // NewWithPattern creates a new StrObject with a repeating pattern
 func NewWithPattern(values []byte) *StrObject {
 	if len(values) == 0 {
