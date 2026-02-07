@@ -558,9 +558,9 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		}
 		// Calculate used length
 		firstLine.Used = 0
-		for i := 0; i < firstLine.Len; i++ {
+		for i := 1; i <= firstLine.Len; i++ {
 			if firstLine.Str.Get(i) != ' ' {
-				firstLine.Used = i + 1
+				firstLine.Used = i
 			}
 		}
 		if !LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line) {
