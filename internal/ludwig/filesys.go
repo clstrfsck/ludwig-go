@@ -34,11 +34,6 @@ func removeBackupFiles(backupFile string, versions []int64, start, end int) {
 	}
 }
 
-// startsWith checks if haystack starts with needle
-func startsWith(haystack, needle string) bool {
-	return len(haystack) >= len(needle) && haystack[:len(needle)] == needle
-}
-
 // toArgv converts a command line string to an argv-style slice
 func toArgv(cmdline string) []string {
 	return strings.Fields(cmdline)
@@ -244,9 +239,9 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 		}
 		// Time to set the memory, if it's required and we aren't writing in
 		// one of the global tmp directories
-		if !startsWith(fyle.Filename, "/tmp/") &&
-			!startsWith(fyle.Filename, "/usr/tmp/") &&
-			!startsWith(fyle.Filename, "/var/tmp/") {
+		if !strings.HasPrefix(fyle.Filename, "/tmp/") &&
+			!strings.HasPrefix(fyle.Filename, "/usr/tmp/") &&
+			!strings.HasPrefix(fyle.Filename, "/var/tmp/") {
 			SysWriteFilename(fyle.Memory, fyle.Filename)
 		}
 		return true
