@@ -32,7 +32,6 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 	} else {
 		mbx.Filename = ""
 	}
-	mbx.Zed = 'Z'
 
 	if !FilesysCreateOpen(&mbx, nil, false) {
 		return false

@@ -137,7 +137,6 @@ func FileCreateOpen(fn *string, parse ParseType, inputfp **FileObject, outputfp 
 		(*inputfp).Eof = false
 		(*inputfp).Idx = MaxStrLen
 		(*inputfp).Len = 0
-		(*inputfp).Zed = 'Z'
 	}
 
 	switch parse {
@@ -152,7 +151,6 @@ func FileCreateOpen(fn *string, parse ParseType, inputfp **FileObject, outputfp 
 		(*outputfp).LastLine = nil
 		(*outputfp).LineCount = 0
 		(*outputfp).OutputFlag = true
-		(*outputfp).Zed = 'Z'
 	}
 
 	result := FilesysParse(*fn, parse, &FileData, *inputfp, *outputfp)

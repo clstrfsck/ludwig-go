@@ -350,9 +350,6 @@ type FileObject struct {
 	// Fields for controlling version backup
 	Purge    bool
 	Versions int
-
-	// Consistency check field
-	Zed byte // MUST BE 'Z'
 }
 
 // MarkObject represents a mark in the editor

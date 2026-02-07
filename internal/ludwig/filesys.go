@@ -46,12 +46,6 @@ func toArgv(cmdline string) []string {
 
 // FilesysCreateOpen opens a file for input or creates a file for output
 func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) bool {
-	// Check the file has a 'Z' in the right place (debug check)
-	if fyle.Zed != 'Z' {
-		ScreenMessage("FILE and FILESYS definition of file_object disagree.")
-		return false
-	}
-
 	fyle.LCounter = 0
 	if !fyle.OutputFlag { // open file for reading
 		if fyle.Filename == "" {
