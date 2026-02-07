@@ -96,6 +96,7 @@ func ChCompareStr(
 }
 
 // ChReverseStr reverses len bytes from src and stores them in dst.
+// If src and dst are the same, it reverses in place.
 func ChReverseStr(src *StrObject, dst *StrObject, len int) {
 	half := (len + 1) / 2
 	if half > 0 {
