@@ -128,7 +128,7 @@ func ChApplyN(str *StrObject, fn func(byte) byte, n int) {
 // ChSearchStr searches for a target string within a text string.
 // Returns true if found, with foundLoc set to the location.
 // If backwards is true, searches from the end of the text.
-// If exactcase is true, the search is case-insensitive.
+// If exactcase is true, the search is case-sensitive.
 func ChSearchStr(
 	target *StrObject,
 	st1 int,
