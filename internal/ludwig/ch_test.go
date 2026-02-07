@@ -403,38 +403,3 @@ func TestChSearchStr(t *testing.T) {
 		assert.Equal(t, 1, foundLoc, "Expected foundLoc=1")
 	})
 }
-
-// BenchmarkChFillCopy benchmarks the fill copy operation
-func BenchmarkChFillCopy(b *testing.B) {
-	src := NewStrObjectFrom("HELLO")
-	dst := &StrObject{}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ChFillCopy(src, 1, 5, dst, 1, 10, ' ')
-	}
-}
-
-// BenchmarkChCompareStr benchmarks string comparison
-func BenchmarkChCompareStr(b *testing.B) {
-	s1 := NewStrObjectFrom("HELLO WORLD")
-	s2 := NewStrObjectFrom("HELLO WORLD")
-	var nchIdent int
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ChCompareStr(s1, 1, 11, s2, 1, 11, false, &nchIdent)
-	}
-}
-
-// BenchmarkChSearchStr benchmarks string searching
-func BenchmarkChSearchStr(b *testing.B) {
-	target := NewStrObjectFrom("WORLD")
-	text := NewStrObjectFrom("HELLO WORLD TEST")
-	var foundLoc int
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ChSearchStr(target, 1, 5, text, 1, 16, false, false, &foundLoc)
-	}
-}

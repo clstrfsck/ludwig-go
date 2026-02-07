@@ -54,11 +54,6 @@ tasks:
       - go test -coverprofile=coverage.out ./internal/ludwig
       - go tool cover -html=coverage.out
 
-  bench:
-    desc: Run benchmarks
-    cmds:
-      - go test -bench=. -benchmem ./internal/ludwig
-
   test:
     desc: Run tests
     cmds:
