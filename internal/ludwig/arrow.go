@@ -38,191 +38,39 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 		if arrowCommands[command] {
 			switch command {
 			case CmdReturn:
-				{
-					cmdValid = true
-					newEql = *CurrentFrame.Dot
-					dotLine := CurrentFrame.Dot.Line
-					dotCol := CurrentFrame.Dot.Col
-					for counter := 1; counter <= count; counter++ {
-						if TtControlC {
-							goto l9
-						}
-						if dotLine.FLink == nil {
-							if !TextRealizeNull(dotLine) {
-								goto l9
-							}
-							eopLineNr++
-							dotLine = dotLine.BLink
-							if counter == 1 {
-								newEql.Line = dotLine
-							}
-						}
-						dotCol = TextReturnCol(dotLine, dotCol, false)
-						dotLine = dotLine.FLink
-					}
-					if !MarkCreate(dotLine, dotCol, &CurrentFrame.Dot) {
-						goto l9
-					}
-				}
+				cmdValid = doCmdReturn(count, &newEql, &eopLineNr)
 
 			case CmdHome:
-				{
-					cmdValid = true
-					newEql = *CurrentFrame.Dot
-					if CurrentFrame == ScrFrame {
-						if !MarkCreate(
-							ScrTopLine, CurrentFrame.ScrOffset+1, &CurrentFrame.Dot,
-						) {
-							goto l9
-						}
-					}
-				}
+				cmdValid = doCmdHome(&newEql)
 
-			case CmdTab, CmdBacktab:
-				{
-					newCol := CurrentFrame.Dot.Col
-					var step int
-					if command == CmdTab {
-						if newCol == MaxStrLenP {
-							goto l1
-						}
-						step = 1
-					} else {
-						step = -1
-					}
-					for counter := 1; counter <= count; counter++ {
-						for {
-							newCol += step
-							if CurrentFrame.TabStops[newCol] ||
-								(newCol == CurrentFrame.MarginLeft) ||
-								(newCol == CurrentFrame.MarginRight) {
-								break
-							}
-						}
-						if (newCol == 0) || (newCol == MaxStrLenP) {
-							goto l1
-						}
-					}
-					cmdValid = true
-					newEql = *CurrentFrame.Dot
-					CurrentFrame.Dot.Col = newCol
-				l1:
-				}
+			case CmdTab:
+				cmdValid = doCmdTabBacktab(1, count, &newEql)
+
+			case CmdBacktab:
+				cmdValid = doCmdTabBacktab(-1, count, &newEql)
 
 			case CmdLeft:
-				{
-					switch rept {
-					case LeadParamNone, LeadParamPlus, LeadParamPInt:
-						if CurrentFrame.Dot.Col-count >= 1 {
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							CurrentFrame.Dot.Col -= count
-						}
-					case LeadParamPIndef:
-						if CurrentFrame.Dot.Col >= CurrentFrame.MarginLeft {
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							CurrentFrame.Dot.Col = CurrentFrame.MarginLeft
-						}
-					}
-				}
+				cmdValid = doCmdLeft(rept, count, &newEql)
 
 			case CmdRight:
-				{
-					switch rept {
-					case LeadParamNone, LeadParamPlus, LeadParamPInt:
-						if CurrentFrame.Dot.Col+count <= MaxStrLenP {
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							CurrentFrame.Dot.Col += count
-						}
-					case LeadParamPIndef:
-						if CurrentFrame.Dot.Col <= CurrentFrame.MarginRight {
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							CurrentFrame.Dot.Col = CurrentFrame.MarginRight
-						}
-					}
-				}
+				cmdValid = doCmdRight(rept, count, &newEql)
 
 			case CmdDown:
-				{
-					dotLine := CurrentFrame.Dot.Line
-					var lineNr int
-					if !LineToNumber(dotLine, &lineNr) {
-						goto l9
-					}
-					switch rept {
-					case LeadParamNone, LeadParamPlus, LeadParamPInt:
-						if lineNr+count <= eopLineNr {
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							if count < MaxGroupLines/2 {
-								for counter := 1; counter <= count; counter++ {
-									dotLine = dotLine.FLink
-								}
-							} else {
-								if !LineFromNumber(CurrentFrame, lineNr+count, &dotLine) {
-									goto l9
-								}
-							}
-						}
-					case LeadParamPIndef:
-						{
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							dotLine = CurrentFrame.LastGroup.LastLine
-						}
-					}
-					if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
-						goto l9
-					}
-				}
+				cmdValid = doCmdDown(rept, count, &newEql, eopLineNr)
 
 			case CmdUp:
-				{
-					dotLine := CurrentFrame.Dot.Line
-					var lineNr int
-					if !LineToNumber(dotLine, &lineNr) {
-						goto l9
-					}
-					switch rept {
-					case LeadParamNone, LeadParamPlus, LeadParamPInt:
-						if lineNr-count > 0 {
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							if count < MaxGroupLines/2 {
-								for counter := 1; counter <= count; counter++ {
-									dotLine = dotLine.BLink
-								}
-							} else {
-								if !LineFromNumber(CurrentFrame, lineNr-count, &dotLine) {
-									goto l9
-								}
-							}
-						}
-					case LeadParamPIndef:
-						{
-							cmdValid = true
-							newEql = *CurrentFrame.Dot
-							dotLine = CurrentFrame.FirstGroup.FirstLine
-						}
-					}
-					if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
-						goto l9
-					}
-				}
+				cmdValid = doCmdUp(rept, count, &newEql)
 			}
 		} else {
 			VduTakeBackKey(key)
-			goto l9
+			break
 		}
 
 		if cmdValid {
 			cmdStatus = true
 		}
 		if fromSpan {
-			goto l9
+			break
 		}
 		ScreenFixup()
 		if !cmdValid || ((command == CmdDown) && (rept != LeadParamPIndef) &&
@@ -231,7 +79,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 		}
 		key = VduGetKey()
 		if TtControlC {
-			goto l9
+			break
 		}
 		rept = LeadParamNone
 		count = 1
@@ -241,7 +89,6 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 		}
 	}
 
-l9:
 	if TtControlC {
 		MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
 	} else {
@@ -255,4 +102,158 @@ l9:
 		}
 	}
 	return cmdStatus || !fromSpan
+}
+
+func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) bool {
+	dotLine := CurrentFrame.Dot.Line
+	var lineNr int
+	if !LineToNumber(dotLine, &lineNr) {
+		return false
+	}
+	switch rept {
+	case LeadParamNone, LeadParamPlus, LeadParamPInt:
+		if lineNr+count <= eopLineNr {
+			*newEql = *CurrentFrame.Dot
+			if count < MaxGroupLines/2 {
+				for counter := 1; counter <= count; counter++ {
+					dotLine = dotLine.FLink
+				}
+			} else {
+				if !LineFromNumber(CurrentFrame, lineNr+count, &dotLine) {
+					return false
+				}
+			}
+		}
+	case LeadParamPIndef:
+		*newEql = *CurrentFrame.Dot
+		dotLine = CurrentFrame.LastGroup.LastLine
+	}
+	if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
+		return false
+	}
+	return true
+}
+
+func doCmdHome(newEql *MarkObject) bool {
+	*newEql = *CurrentFrame.Dot
+	if CurrentFrame == ScrFrame {
+		if !MarkCreate(ScrTopLine, CurrentFrame.ScrOffset+1, &CurrentFrame.Dot) {
+			return false
+		}
+	}
+	return true
+}
+
+func doCmdLeft(rept LeadParam, count int, newEql *MarkObject) bool {
+	switch rept {
+	case LeadParamNone, LeadParamPlus, LeadParamPInt:
+		if CurrentFrame.Dot.Col-count >= 1 {
+			*newEql = *CurrentFrame.Dot
+			CurrentFrame.Dot.Col -= count
+			return true
+		}
+	case LeadParamPIndef:
+		if CurrentFrame.Dot.Col >= CurrentFrame.MarginLeft {
+			*newEql = *CurrentFrame.Dot
+			CurrentFrame.Dot.Col = CurrentFrame.MarginLeft
+			return true
+		}
+	}
+	return false
+}
+
+func doCmdRight(rept LeadParam, count int, newEql *MarkObject) bool {
+	switch rept {
+	case LeadParamNone, LeadParamPlus, LeadParamPInt:
+		if CurrentFrame.Dot.Col+count <= MaxStrLenP {
+			*newEql = *CurrentFrame.Dot
+			CurrentFrame.Dot.Col += count
+			return true
+		}
+	case LeadParamPIndef:
+		if CurrentFrame.Dot.Col <= CurrentFrame.MarginRight {
+			*newEql = *CurrentFrame.Dot
+			CurrentFrame.Dot.Col = CurrentFrame.MarginRight
+			return true
+		}
+	}
+	return false
+}
+
+func doCmdTabBacktab(step, count int, newEql *MarkObject) bool {
+	newCol := CurrentFrame.Dot.Col
+	for counter := 1; counter <= count; counter++ {
+		for {
+			newCol += step
+			if newCol <= 0 || newCol >= MaxStrLenP ||
+				CurrentFrame.TabStops[newCol] ||
+				(newCol == CurrentFrame.MarginLeft) ||
+				(newCol == CurrentFrame.MarginRight) {
+				break
+			}
+		}
+		if (newCol <= 0) || (newCol >= MaxStrLenP) {
+			return false
+		}
+	}
+	*newEql = *CurrentFrame.Dot
+	CurrentFrame.Dot.Col = newCol
+	return true
+}
+
+func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
+	dotLine := CurrentFrame.Dot.Line
+	var lineNr int
+	if !LineToNumber(dotLine, &lineNr) {
+		return false
+	}
+	switch rept {
+	case LeadParamNone, LeadParamPlus, LeadParamPInt:
+		if lineNr-count > 0 {
+			*newEql = *CurrentFrame.Dot
+			if count < MaxGroupLines/2 {
+				for counter := 1; counter <= count; counter++ {
+					dotLine = dotLine.BLink
+				}
+			} else {
+				if !LineFromNumber(CurrentFrame, lineNr-count, &dotLine) {
+					return false
+				}
+			}
+		}
+	case LeadParamPIndef:
+		*newEql = *CurrentFrame.Dot
+		dotLine = CurrentFrame.FirstGroup.FirstLine
+	}
+	if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
+		return false
+	}
+	return true
+}
+
+func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
+	*newEql = *CurrentFrame.Dot
+	dotLine := CurrentFrame.Dot.Line
+	dotCol := CurrentFrame.Dot.Col
+	for counter := 1; counter <= count; counter++ {
+		if TtControlC {
+			return false
+		}
+		if dotLine.FLink == nil {
+			if !TextRealizeNull(dotLine) {
+				return false
+			}
+			*eopLineNr++
+			dotLine = dotLine.BLink
+			if counter == 1 {
+				newEql.Line = dotLine
+			}
+		}
+		dotCol = TextReturnCol(dotLine, dotCol, false)
+		dotLine = dotLine.FLink
+	}
+	if !MarkCreate(dotLine, dotCol, &CurrentFrame.Dot) {
+		return false
+	}
+	return true
 }
