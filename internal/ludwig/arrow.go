@@ -14,15 +14,19 @@
 
 package ludwig
 
-var arrowCommands = map[Commands]bool{
-	CmdReturn:  true,
-	CmdHome:    true,
-	CmdTab:     true,
-	CmdBacktab: true,
-	CmdLeft:    true,
-	CmdRight:   true,
-	CmdDown:    true,
-	CmdUp:      true,
+func isArrowCommand(command Commands) bool {
+	switch command {
+	case CmdReturn,
+		CmdHome,
+		CmdTab,
+		CmdBacktab,
+		CmdLeft,
+		CmdRight,
+		CmdDown,
+		CmdUp:
+		return true
+	}
+	return false
 }
 
 // ArrowCommand handles arrow key, TAB, and BACKTAB commands
@@ -35,35 +39,30 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 	var key int
 	for {
 		cmdValid := false
-		if arrowCommands[command] {
-			switch command {
-			case CmdReturn:
-				cmdValid = doCmdReturn(count, &newEql, &eopLineNr)
+		switch command {
+		case CmdReturn:
+			cmdValid = doCmdReturn(count, &newEql, &eopLineNr)
 
-			case CmdHome:
-				cmdValid = doCmdHome(&newEql)
+		case CmdHome:
+			cmdValid = doCmdHome(&newEql)
 
-			case CmdTab:
-				cmdValid = doCmdTabBacktab(1, count, &newEql)
+		case CmdTab:
+			cmdValid = doCmdTabBacktab(1, count, &newEql)
 
-			case CmdBacktab:
-				cmdValid = doCmdTabBacktab(-1, count, &newEql)
+		case CmdBacktab:
+			cmdValid = doCmdTabBacktab(-1, count, &newEql)
 
-			case CmdLeft:
-				cmdValid = doCmdLeft(rept, count, &newEql)
+		case CmdLeft:
+			cmdValid = doCmdLeft(rept, count, &newEql)
 
-			case CmdRight:
-				cmdValid = doCmdRight(rept, count, &newEql)
+		case CmdRight:
+			cmdValid = doCmdRight(rept, count, &newEql)
 
-			case CmdDown:
-				cmdValid = doCmdDown(rept, count, &newEql, eopLineNr)
+		case CmdDown:
+			cmdValid = doCmdDown(rept, count, &newEql, eopLineNr)
 
-			case CmdUp:
-				cmdValid = doCmdUp(rept, count, &newEql)
-			}
-		} else {
-			VduTakeBackKey(key)
-			break
+		case CmdUp:
+			cmdValid = doCmdUp(rept, count, &newEql)
 		}
 
 		if cmdValid {
@@ -86,6 +85,10 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 		command = Lookup[key].Command
 		if (command == CmdReturn) && (EditMode == ModeInsert) {
 			command = CmdSplitLine
+		}
+		if !isArrowCommand(command) {
+			VduTakeBackKey(key)
+			break
 		}
 	}
 
