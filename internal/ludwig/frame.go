@@ -15,6 +15,7 @@
 package ludwig
 
 import (
+	"math/big"
 	"strings"
 )
 
@@ -23,21 +24,16 @@ const (
 	newValues = "  New Values: "
 )
 
-// npunct returns a set containing ALPHA, NUMERIC and SPACE characters
-func npunct() map[byte]bool {
-	result := make(map[byte]bool)
-	// Add alphanumeric and space characters
-	for ch := byte('A'); ch <= 'Z'; ch++ {
-		result[ch] = true
+var (
+	npunctSet big.Int = orSet(AlphaSet, NumericSet, SpaceSet)
+)
+
+func orSet(sets ...big.Int) big.Int {
+	result := big.NewInt(0)
+	for _, s := range sets {
+		result.Or(result, &s)
 	}
-	for ch := byte('a'); ch <= 'z'; ch++ {
-		result[ch] = true
-	}
-	for ch := byte('0'); ch <= '9'; ch++ {
-		result[ch] = true
-	}
-	result[' '] = true
-	return result
+	return *result
 }
 
 // FrameEdit creates or edits a frame with the specified name.
@@ -461,8 +457,7 @@ func setcmdintr(request *TParObject, pos *int) bool {
 
 		var keyCode int
 		if len(keyNameStr) == 1 {
-			npunctSet := npunct()
-			if !npunctSet[keyNameStr[0]] {
+			if npunctSet.Bit(int(keyNameStr[0])) == 0 {
 				CommandIntroducer = int(keyNameStr[0])
 				VduNewIntroducer(CommandIntroducer)
 				return true
