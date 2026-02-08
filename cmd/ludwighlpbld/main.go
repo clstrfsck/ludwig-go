@@ -160,6 +160,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error processing files: %v\n", err)
 		os.Exit(1)
 	}
-
-	fmt.Println("Conversion complete.")
 }

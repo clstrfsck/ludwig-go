@@ -7,7 +7,7 @@ vars:
 
 tasks:
   setup:
-    desc: Create output directory
+    silent: true
     cmds:
       - mkdir -p {{.output_dir}}
 
@@ -27,8 +27,8 @@ tasks:
     desc: Build help documentation
     deps: [build-hlpbld]
     cmds:
-      - go run {{.hlppkg}} ludwighlp.txt ludwighlp.idx
-      - go run {{.hlppkg}} ludwignewhlp.txt ludwignewhlp.idx
+      - go run {{.hlppkg}} ludwighlp.txt {{.output_dir}}/ludwighlp.idx
+      - go run {{.hlppkg}} ludwignewhlp.txt {{.output_dir}}/ludwignewhlp.idx
 
   build-hlpbld:
     desc: Build help documentation builder
@@ -36,17 +36,10 @@ tasks:
     cmds:
       - go build -o {{.output_dir}}/ludwighlpbld -ldflags "-s -w" {{.hlppkg}}
 
-  run:
-    desc: Run the ludwig application (debug)
-    deps: [build-debug]
+  test:
+    desc: Run tests
     cmds:
-      - ./{{.output_dir}}/ludwig-debug
-
-  run-release:
-    desc: Run the ludwig application (release)
-    deps: [build-release]
-    cmds:
-      - ./{{.output_dir}}/ludwig
+      - go test ./internal/ludwig
 
   coverage:
     desc: Run tests with coverage
@@ -54,10 +47,20 @@ tasks:
       - go test -coverprofile=coverage.out ./internal/ludwig
       - go tool cover -html=coverage.out
 
-  test:
-    desc: Run tests
+  system-test:
+    desc: Run system tests if present
+    if: '[ -x ./system-test/run-system-test.sh ]'
     cmds:
-      - go test ./internal/ludwig -v
+      - ./system-test/run-system-test.sh
+
+  check:
+    desc: Run all checks
+    cmds:
+      - task: build
+      - task: build-release
+      - task: build-help
+      - task: test
+      - task: system-test
 
   clean:
     desc: Remove built binaries
