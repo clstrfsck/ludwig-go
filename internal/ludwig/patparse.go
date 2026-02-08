@@ -117,29 +117,44 @@ var (
 )
 
 func init() {
-	for i := 0; i <= MaxSetRange; i++ {
-		r := rune(i)
-		if ChIsSpace(r) {
-			spaceSet.SetBit(&spaceSet, i, 1)
-		}
-		if ChIsPrintable(r) {
-			printableSet.SetBit(&printableSet, i, 1)
-		}
-		if ChIsLetter(r) {
-			alphaSet.SetBit(&alphaSet, i, 1)
-		}
-		if ChIsLower(r) {
-			lowerSet.SetBit(&lowerSet, i, 1)
-		}
-		if ChIsUpper(r) {
-			upperSet.SetBit(&upperSet, i, 1)
-		}
-		if ChIsNumeric(r) {
-			numericSet.SetBit(&numericSet, i, 1)
-		}
-		if ChIsPunctuation(r) {
-			punctuationSet.SetBit(&punctuationSet, i, 1)
-		}
+
+	// Initialize character sets for pattern matching.
+	// We are retaining the Ludwig original meanings of these ASCII sets for
+	// compatibility.  At some point it would be good to redefine these to be
+	// consistent with Unicode character classes, but that would be a breaking
+	// change.
+
+	// SpaceSet: ' '
+	spaceSet.SetBit(&spaceSet, ' ', 1)
+
+	// LowerSet: 'a'..'z'
+	for i := byte('a'); i <= byte('z'); i++ {
+		lowerSet.SetBit(&lowerSet, int(i), 1)
+	}
+
+	// UpperSet: 'A'..'Z'
+	for i := byte('A'); i <= byte('Z'); i++ {
+		upperSet.SetBit(&upperSet, int(i), 1)
+	}
+
+	// AlphaSet: union of LowerSet and UpperSet
+	alphaSet.Or(&alphaSet, &lowerSet)
+	alphaSet.Or(&alphaSet, &upperSet)
+
+	// NumericSet: '0'..'9'
+	for i := byte('0'); i <= byte('9'); i++ {
+		numericSet.SetBit(&numericSet, int(i), 1)
+	}
+
+	// PrintableSet: 32..126 (space to tilde)
+	for i := 32; i <= 126; i++ {
+		printableSet.SetBit(&printableSet, i, 1)
+	}
+
+	// PunctuationSet: '!','"','''','(',')',',','.',':',';','?','`'
+	punctChars := []byte{33, 34, 39, 40, 41, 44, 46, 58, 59, 63, 96}
+	for _, ch := range punctChars {
+		punctuationSet.SetBit(&punctuationSet, int(ch), 1)
 	}
 }
 

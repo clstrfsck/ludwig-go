@@ -18,13 +18,6 @@ import (
 	"math"
 )
 
-func keyInSet(key int, s *Bitset) bool {
-	if key < 0 || key > OrdMaxChar {
-		return false
-	}
-	return s.Test(key)
-}
-
 // CharcmdInsert handles character insertion commands
 func CharcmdInsert(cmd Commands, rept LeadParam, count int, fromSpan bool) bool {
 	cmdStatus := false

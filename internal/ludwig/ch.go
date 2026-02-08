@@ -154,7 +154,8 @@ func ChIsPunctuation(ch rune) bool {
 	if ch < 0 || ch > MaxSetRange {
 		return false
 	}
-	return unicode.IsPunct(ch)
+	// Broad definition of punctuation.
+	return ChIsPrintable(ch) && !ChIsLetter(ch) && !ChIsNumeric(ch) && !ChIsSpace(ch)
 }
 
 func ChIsWordElement(set int, ch rune) bool {
