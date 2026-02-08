@@ -106,7 +106,42 @@ var (
 		}
 		return s
 	}()
+
+	spaceSet       big.Int
+	printableSet   big.Int
+	alphaSet       big.Int
+	lowerSet       big.Int
+	upperSet       big.Int
+	numericSet     big.Int
+	punctuationSet big.Int
 )
+
+func init() {
+	for i := 0; i <= MaxSetRange; i++ {
+		r := rune(i)
+		if ChIsSpace(r) {
+			spaceSet.SetBit(&spaceSet, i, 1)
+		}
+		if ChIsPrintable(r) {
+			printableSet.SetBit(&printableSet, i, 1)
+		}
+		if ChIsLetter(r) {
+			alphaSet.SetBit(&alphaSet, i, 1)
+		}
+		if ChIsLower(r) {
+			lowerSet.SetBit(&lowerSet, i, 1)
+		}
+		if ChIsUpper(r) {
+			upperSet.SetBit(&upperSet, i, 1)
+		}
+		if ChIsNumeric(r) {
+			numericSet.SetBit(&numericSet, i, 1)
+		}
+		if ChIsPunctuation(r) {
+			punctuationSet.SetBit(&punctuationSet, i, 1)
+		}
+	}
+}
 
 // Helper function to check if a value is in a set
 func setContains(set [MaxSetRange + 1]bool, val byte) bool {
@@ -718,19 +753,19 @@ func PatternParser(
 							upperCh := ChToUpper(*patCh)
 							switch upperCh {
 							case 'S':
-								nfaTable[currentState].AcceptSet.Set(&SpaceSet)
+								nfaTable[currentState].AcceptSet.Set(&spaceSet)
 							case 'C':
-								nfaTable[currentState].AcceptSet.Set(&PrintableSet)
+								nfaTable[currentState].AcceptSet.Set(&printableSet)
 							case 'A':
-								nfaTable[currentState].AcceptSet.Set(&AlphaSet)
+								nfaTable[currentState].AcceptSet.Set(&alphaSet)
 							case 'L':
-								nfaTable[currentState].AcceptSet.Set(&LowerSet)
+								nfaTable[currentState].AcceptSet.Set(&lowerSet)
 							case 'U':
-								nfaTable[currentState].AcceptSet.Set(&UpperSet)
+								nfaTable[currentState].AcceptSet.Set(&upperSet)
 							case 'N':
-								nfaTable[currentState].AcceptSet.Set(&NumericSet)
+								nfaTable[currentState].AcceptSet.Set(&numericSet)
 							case 'P':
-								nfaTable[currentState].AcceptSet.Set(&PunctuationSet)
+								nfaTable[currentState].AcceptSet.Set(&punctuationSet)
 							}
 							if negate {
 								fullSet := rangeSet(PatternAlphaStart, MaxSetRange)

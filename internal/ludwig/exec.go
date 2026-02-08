@@ -693,7 +693,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			if TtControlC {
 				goto l99
 			}
-			if PrintableSet.Bit(key) != 0 {
+			if ChIsPrintable(rune(key)) {
 				i++
 				newStr.Set(i, byte(key))
 			} else if key == 13 {

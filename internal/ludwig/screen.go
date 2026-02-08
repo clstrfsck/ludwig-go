@@ -1430,7 +1430,7 @@ func ScreenHelpPrompt(prompt string) string {
 					VduDisplayCh(' ')
 					VduDisplayCh(8)
 				}
-			} else if PrintableSet.Bit(key) != 0 {
+			} else if ChIsPrintable(rune(key)) {
 				VduDisplayCh(byte(key))
 				reply += string(byte(key))
 				terminated = (key == ' ') || len(reply) == KeyLen

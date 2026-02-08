@@ -85,11 +85,6 @@ func SetupInitialValues() {
 	FileData.Purge = false
 	FileData.Versions = 1
 	FileData.Initial = ""
-
-	// Initialize word elements
-	WordElements[0].Set(&SpaceSet)
-	WordElements[1].Set(&PrintableSet)
-	WordElements[1].AndNot(&WordElements[1], &SpaceSet)
 }
 
 // initCmd is a helper function to initialize command attributes

@@ -15,7 +15,6 @@
 package ludwig
 
 import (
-	"math/big"
 	"strings"
 )
 
@@ -24,14 +23,8 @@ const (
 	newValues = "  New Values: "
 )
 
-var (
-	npunctSet big.Int
-)
-
-func init() {
-	npunctSet.Or(&npunctSet, &AlphaSet)
-	npunctSet.Or(&npunctSet, &NumericSet)
-	npunctSet.Or(&npunctSet, &SpaceSet)
+func isNPunct(ch byte) bool {
+	return !ChIsPunctuation(rune(ch))
 }
 
 // FrameEdit creates or edits a frame with the specified name.
@@ -455,7 +448,7 @@ func setcmdintr(request *TParObject, pos *int) bool {
 
 		var keyCode int
 		if len(keyNameStr) == 1 {
-			if npunctSet.Bit(int(keyNameStr[0])) == 0 {
+			if ChIsPunctuation(rune(keyNameStr[0])) {
 				CommandIntroducer = int(keyNameStr[0])
 				VduNewIntroducer(CommandIntroducer)
 				return true

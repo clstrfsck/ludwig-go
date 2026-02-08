@@ -16,14 +16,13 @@ package ludwig
 
 import (
 	"math"
-	"math/big"
 )
 
-func keyInSet(key int, s *big.Int) bool {
+func keyInSet(key int, s *Bitset) bool {
 	if key < 0 || key > OrdMaxChar {
 		return false
 	}
-	return s.Bit(key) != 0
+	return s.Test(key)
 }
 
 // CharcmdInsert handles character insertion commands
@@ -76,7 +75,7 @@ func CharcmdInsert(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 		}
 		rept = LeadParamNone
 		count = 1
-		if keyInSet(key, &PrintableSet) {
+		if ChIsPrintable(rune(key)) {
 			cmd = CmdNoop
 		} else {
 			cmd = Lookup[key].Command
@@ -207,7 +206,7 @@ func CharcmdDelete(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 		}
 		rept = LeadParamNone
 		count = 1
-		if keyInSet(key, &PrintableSet) {
+		if ChIsPrintable(rune(key)) {
 			cmd = CmdNoop
 		} else {
 			cmd = Lookup[key].Command
@@ -301,7 +300,7 @@ func CharcmdRubout(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 			}
 			rept = LeadParamNone
 			count = 1
-			if keyInSet(key, &PrintableSet) {
+			if ChIsPrintable(rune(key)) {
 				cmd = CmdNoop
 			} else {
 				cmd = Lookup[key].Command

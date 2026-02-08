@@ -33,10 +33,10 @@ func currentWord(dot *MarkObject) bool {
 	if dot.Col == 0 {
 		return false
 	}
-	for (dot.Col > 1) && WordElements[0].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	for (dot.Col > 1) && ChIsWordElement(0, rune(dot.Line.Str.Get(dot.Col))) {
 		dot.Col--
 	}
-	if WordElements[0].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	if ChIsWordElement(0, rune(dot.Line.Str.Get(dot.Col))) {
 		// we must have been somewhere on the line before the first word
 		if dot.Line.BLink == nil { // oops top of the frame reached
 			return false
@@ -50,14 +50,14 @@ func currentWord(dot *MarkObject) bool {
 	}
 	// ASSERT: we now have dot sitting on part of a word
 	element := 0
-	for WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) == 0 {
+	for !ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		element++
 	}
 	// Now find the start of this word
-	for (dot.Col > 1) && WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	for (dot.Col > 1) && ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		dot.Col--
 	}
-	if WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) == 0 {
+	if !ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		dot.Col++
 	}
 	return true
@@ -74,13 +74,13 @@ func nextWord(dot *MarkObject) bool {
 		dot.Col = dot.Line.Used
 	}
 	element := 0
-	for WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) == 0 {
+	for !ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		element++
 	}
-	for (dot.Col < dot.Line.Used) && WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	for (dot.Col < dot.Line.Used) && ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		dot.Col++
 	}
-	if WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	if ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		if dot.Line.FLink == nil { // no more lines
 			return false
 		}
@@ -91,7 +91,7 @@ func nextWord(dot *MarkObject) bool {
 			return false
 		}
 	}
-	for WordElements[0].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	for ChIsWordElement(0, rune(dot.Line.Str.Get(dot.Col))) {
 		dot.Col++
 	}
 	return true
@@ -100,13 +100,13 @@ func nextWord(dot *MarkObject) bool {
 // previousWord positions the mark at the start of the previous word
 func previousWord(dot *MarkObject) bool {
 	element := 0
-	for WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) == 0 {
+	for !ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		element++
 	}
-	for (dot.Col > 1) && WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	for (dot.Col > 1) && ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		dot.Col--
 	}
-	if WordElements[element].Bit(int(dot.Line.Str.Get(dot.Col))) != 0 {
+	if ChIsWordElement(element, rune(dot.Line.Str.Get(dot.Col))) {
 		if dot.Line.BLink == nil { // no more lines
 			return false
 		}
@@ -312,10 +312,10 @@ func currentParagraph(dot *MarkObject) bool {
 	var pos int
 	if dot.Col < dot.Line.Used {
 		pos = dot.Col
-		for (pos > 1) && WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+		for (pos > 1) && ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 			pos--
 		}
-		if WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+		if ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 			if newLine.BLink == nil {
 				return false
 			}
@@ -335,7 +335,7 @@ func currentParagraph(dot *MarkObject) bool {
 		newLine = newLine.FLink // Oops too far!
 	}
 	pos = 1
-	for WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+	for ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 		pos++
 	}
 	return MarkCreate(newLine, pos, &dot)
@@ -347,13 +347,13 @@ func nextParagraph(dot *MarkObject) bool {
 	var pos int
 	if dot.Col < dot.Line.Used {
 		pos = dot.Col
-		for (pos > 1) && WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+		for (pos > 1) && ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 			pos--
 		}
-		if WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+		if ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 			if newLine.BLink == nil {
 				dot.Col = 1
-				for WordElements[0].Bit(int(newLine.Str.Get(dot.Col))) != 0 {
+				for ChIsWordElement(0, rune(newLine.Str.Get(dot.Col))) {
 					dot.Col++
 				}
 				return true
@@ -374,7 +374,7 @@ func nextParagraph(dot *MarkObject) bool {
 		return false
 	}
 	pos = 1
-	for WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+	for ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 		pos++
 	}
 	return MarkCreate(newLine, pos, &dot)
@@ -460,7 +460,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 			newLine = newLine.FLink
 		}
 		pos := 1
-		for WordElements[0].Bit(int(newLine.Str.Get(pos))) != 0 {
+		for ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 			pos++
 		}
 		if !MarkCreate(newLine, pos, &CurrentFrame.Dot) {

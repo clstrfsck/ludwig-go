@@ -108,6 +108,73 @@ func ChReverseStr(src *StrObject, dst *StrObject, len int) {
 	}
 }
 
+func ChIsPrintable(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsPrint(ch)
+}
+
+func ChIsSpace(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsSpace(ch)
+}
+
+func ChIsLetter(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsLetter(ch)
+}
+
+func ChIsLower(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsLower(ch)
+}
+
+func ChIsUpper(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsUpper(ch)
+}
+
+func ChIsNumeric(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsNumber(ch)
+}
+
+func ChIsPunctuation(ch rune) bool {
+	if ch < 0 || ch > MaxSetRange {
+		return false
+	}
+	return unicode.IsPunct(ch)
+}
+
+func ChIsWordElement(set int, ch rune) bool {
+	switch set {
+	case 0:
+		return ChIsSpace(ch)
+	case 1:
+		return ChIsPrintable(ch) && !ChIsSpace(ch)
+	default:
+		return false
+	}
+}
+
+func ChKeyToUpper(key int) int {
+	if key >= 0 && key <= MaxSetRange {
+		return int(ChToUpper(byte(key)))
+	}
+	return key
+}
+
 // ChToUpper converts a character to uppercase.
 func ChToUpper(ch byte) byte {
 	return byte(unicode.ToUpper(rune(ch)))

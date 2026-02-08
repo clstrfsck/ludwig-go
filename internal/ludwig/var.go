@@ -116,61 +116,15 @@ var BlankString StrObject = *NewFilled(' ')
 var InitialVerify VerifyArray
 var DefaultTabStops TabArray
 
-// Sets of characters
-var PrintableSet big.Int
-var SpaceSet big.Int
-var AlphaSet big.Int
-var LowerSet big.Int
-var UpperSet big.Int
-var NumericSet big.Int
-var PunctuationSet big.Int
-
 // Output file actions
 var FileData FileDataType
 
 // Info about the terminal
 var TerminalInfo TerminalInfoType
 
-// Word definition sets
-var WordElements [MaxWordSets](big.Int)
-
 func init() {
 	// Initialize DefaultTabStops with the pattern: false, true, false, false...
 	for i := range DefaultTabStops {
 		DefaultTabStops[i] = (i % 8) == 1
-	}
-
-	// Initialize character sets for pattern matching
-	// SpaceSet: ' '
-	SpaceSet.SetBit(&SpaceSet, ' ', 1)
-
-	// LowerSet: 'a'..'z'
-	for i := byte('a'); i <= byte('z'); i++ {
-		LowerSet.SetBit(&LowerSet, int(i), 1)
-	}
-
-	// UpperSet: 'A'..'Z'
-	for i := byte('A'); i <= byte('Z'); i++ {
-		UpperSet.SetBit(&UpperSet, int(i), 1)
-	}
-
-	// AlphaSet: union of LowerSet and UpperSet
-	AlphaSet.Or(&AlphaSet, &LowerSet)
-	AlphaSet.Or(&AlphaSet, &UpperSet)
-
-	// NumericSet: '0'..'9'
-	for i := byte('0'); i <= byte('9'); i++ {
-		NumericSet.SetBit(&NumericSet, int(i), 1)
-	}
-
-	// PrintableSet: 32..126 (space to tilde)
-	for i := 32; i <= 126; i++ {
-		PrintableSet.SetBit(&PrintableSet, i, 1)
-	}
-
-	// PunctuationSet: '!','"','''','(',')',',','.',':',';','?','`'
-	punctChars := []byte{33, 34, 39, 40, 41, 44, 46, 58, 59, 63, 96}
-	for _, ch := range punctChars {
-		PunctuationSet.SetBit(&PunctuationSet, int(ch), 1)
 	}
 }

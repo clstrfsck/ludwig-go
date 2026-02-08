@@ -353,7 +353,7 @@ func findEnquiry(name string, result *StrObject, reslen *int) bool {
 				result.Assign(SystemName)
 				*reslen = len(SystemName)
 			case "COMMAND_INTRODUCER":
-				if PrintableSet.Bit(CommandIntroducer) == 0 {
+				if !ChIsPrintable(rune(CommandIntroducer)) {
 					*reslen = 0
 					ScreenMessage(MsgNonprintableIntroducer)
 				} else {

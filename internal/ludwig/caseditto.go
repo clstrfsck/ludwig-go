@@ -16,22 +16,7 @@ package ludwig
 
 import (
 	"math/big"
-	"unicode"
 )
-
-func isLetter(ch rune) bool {
-	return unicode.IsLetter(ch)
-}
-
-func keyIsLower(key int) bool {
-	if key < 0 {
-		return false
-	}
-	if key > MaxSetRange {
-		return false
-	}
-	return LowerSet.Bit(key) != 0
-}
 
 // CaseDittoCommand handles case change and ditto commands
 func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool) bool {
@@ -146,7 +131,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 					ch = ' '
 				}
 				for j := 1; j <= count; j++ {
-					if isLetter(rune(ch)) {
+					if ChIsLetter(rune(ch)) {
 						ch = ChToLower(newStr.Get(j))
 					} else {
 						ch = ChToUpper(newStr.Get(j))
@@ -186,12 +171,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			goto l9
 		}
 
-		var keyUp int
-		if keyIsLower(key) {
-			keyUp = key - 32 // Uppercase it!
-		} else {
-			keyUp = key
-		}
+		keyUp := ChKeyToUpper(key)
 
 		switch rept {
 		case LeadParamNone, LeadParamPlus, LeadParamPInt, LeadParamPIndef:

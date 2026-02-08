@@ -116,7 +116,7 @@ func UserKeyInitialize() {
 
 // UserCommandIntroducer enters command introducer into text in correct keyboard mode
 func UserCommandIntroducer() bool {
-	if PrintableSet.Bit(CommandIntroducer) == 0 {
+	if !ChIsPrintable(rune(CommandIntroducer)) {
 		ScreenMessage(MsgNonprintableIntroducer)
 		return false
 	}

@@ -61,7 +61,7 @@ func ExecuteImmed() {
 						if TtControlC {
 							goto l9
 						}
-						if PrintableSet.Bit(key) != 0 && key != CommandIntroducer {
+						if ChIsPrintable(rune(key)) && key != CommandIntroducer {
 							cmdSuccess = false
 							goto l9
 						}
@@ -86,7 +86,7 @@ func ExecuteImmed() {
 							goto l9
 						}
 						VduTakeBackKey(key)
-						if PrintableSet.Bit(key) != 0 && key != CommandIntroducer {
+						if ChIsPrintable(rune(key)) && key != CommandIntroducer {
 							// If printing char, realize NULL, re-fix cursor.
 							if !TextRealizeNull(CurrentFrame.Dot.Line) {
 								cmdSuccess = false
@@ -157,7 +157,7 @@ func ExecuteImmed() {
 							if TtControlC {
 								goto l9
 							}
-							if PrintableSet.Bit(key) != 0 && key != CommandIntroducer {
+							if ChIsPrintable(rune(key)) && key != CommandIntroducer {
 								col1 := CurrentFrame.MarginRight
 								if key != ' ' {
 									for CurrentFrame.Dot.Line.Str.Get(col1) != ' ' &&

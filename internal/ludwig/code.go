@@ -14,11 +14,6 @@
 
 package ludwig
 
-import (
-	"math/big"
-	"unicode"
-)
-
 var interpCmds = map[Commands]bool{
 	CmdPcJump:      true,
 	CmdExitTo:      true,
@@ -30,22 +25,6 @@ var interpCmds = map[Commands]bool{
 	CmdExtended:    true,
 	CmdVerify:      true,
 	CmdNoop:        true,
-}
-
-var punctSet big.Int
-var punctInitialized bool
-
-func initPunct() {
-	if punctInitialized {
-		return
-	}
-	// PUNCT = PRINTABLE_SET - ALPHA_SET - NUMERIC_SET - SPACE_SET
-	for i := 0; i <= MaxSetRange; i++ {
-		if PrintableSet.Bit(i) != 0 && AlphaSet.Bit(i) == 0 && NumericSet.Bit(i) == 0 && SpaceSet.Bit(i) == 0 {
-			punctSet.SetBit(&punctSet, i, 1)
-		}
-	}
-	punctInitialized = true
 }
 
 type parseState struct {
@@ -357,7 +336,6 @@ func scanLeadingParam(ps *parseState, repSym *LeadParam, repCount *int) bool {
 }
 
 func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tparam **TParObject) bool {
-	initPunct()
 	tc := CmdAttrib[command].TpCount
 	*tparam = nil
 
@@ -375,7 +353,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 			return false
 		}
 		parDelim := ps.key
-		if ps.key < 0 || ps.key > MaxSetRange || punctSet.Bit(int(parDelim)) == 0 {
+		if ps.key < 0 || ps.key > MaxSetRange || !ChIsPunctuation(rune(parDelim)) {
 			errorMsg(ps, "Illegal parameter delimiter")
 			return false
 		}
@@ -444,8 +422,8 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 		return false
 	}
 
-	if ps.key >= 0 && ps.key <= MaxSetRange && LowerSet.Bit(ps.key) != 0 {
-		ps.key = int(unicode.ToUpper(rune(ps.key)))
+	if ps.key >= 0 && ps.key <= MaxSetRange {
+		ps.key = int(ChToUpper(byte(ps.key)))
 	}
 
 	command := Lookup[ps.key].Command
@@ -459,7 +437,7 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 		}
 		i := LookupExpPtr[command]
 		j := LookupExpPtr[command+1]
-		for (i < j) && (int(unicode.ToUpper(rune(ps.key))) != int(LookupExp[i].Extn)) {
+		for (i < j) && (int(ChToUpper(byte(ps.key))) != int(LookupExp[i].Extn)) {
 			i++
 		}
 		if i < j {
