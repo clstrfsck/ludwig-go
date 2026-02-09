@@ -160,7 +160,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	var eqSet bool            // These 3 are used for
 	var oldFrame *FrameObject // the setting up of
 	var oldDot MarkObject     // the commands = behaviour
-	var newStr StrObject
+	var newStr *StrObject
 
 	cmdSuccess = false
 	request.Nxt = nil
@@ -653,7 +653,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 		} else if TparGet1(tparam, command, &request) {
 			if request.Con == nil {
-				cmdSuccess = TextInsert(true, count, request.Str, request.Len, CurrentFrame.Dot)
+				cmdSuccess = TextInsert(true, count, &request.Str, request.Len, CurrentFrame.Dot)
 				if cmdSuccess && (count*request.Len != 0) {
 					CurrentFrame.TextModified = true
 					cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
@@ -686,7 +686,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		if count > i {
 			goto l99
 		}
-		newStr = BlankString
+		newStr = BlankString.Clone()
 		i = 0
 		for i < count {
 			key = VduGetKey()
@@ -828,7 +828,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				ScreenMessage(MsgSyntaxError)
 			}
 		} else if TparGet1(tparam, command, &request) {
-			cmdSuccess = TextOvertype(true, count, request.Str, request.Len, CurrentFrame.Dot)
+			cmdSuccess = TextOvertype(true, count, &request.Str, request.Len, CurrentFrame.Dot)
 			if cmdSuccess && (count*request.Len != 0) {
 				CurrentFrame.TextModified = true
 				if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,

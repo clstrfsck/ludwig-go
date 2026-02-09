@@ -105,15 +105,11 @@ l9:
 func CharcmdDelete(cmd Commands, rept LeadParam, count int, fromSpan bool) bool {
 	cmdStatus := false
 	oldDotCol := CurrentFrame.Dot.Col
-	var oldStr StrObject
-	ChFillCopy(
+	oldStr := NewStrObjectCopy(
 		CurrentFrame.Dot.Line.Str,
 		1,
 		CurrentFrame.Dot.Line.Used,
-		&oldStr,
-		1,
-		MaxStrLen,
-		' ',
+		CurrentFrame.Dot.Line.Used,
 	)
 	deleted := 0
 	var key int
@@ -260,8 +256,7 @@ func CharcmdRubout(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 		cmdStatus = false
 		oldDotCol := CurrentFrame.Dot.Col
 		dotUsed := CurrentFrame.Dot.Line.Used
-		var oldStr StrObject
-		ChFillCopy(CurrentFrame.Dot.Line.Str, 1, dotUsed, &oldStr, 1, MaxStrLen, ' ')
+		oldStr := NewStrObjectCopy(CurrentFrame.Dot.Line.Str, 1, dotUsed, dotUsed)
 		var key int
 		var eqlCol int
 

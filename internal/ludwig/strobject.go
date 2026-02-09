@@ -1,4 +1,4 @@
-// Handles a fixed-size string object with 1-based indexing.
+// Handles a variable-size string object with 1-based indexing.
 // Calls to methods will panic if indices are out of range.
 
 package ludwig
@@ -10,40 +10,61 @@ import (
 )
 
 const (
-	// MaxStrLen from const.go is used
 	// MinIndex is the minimum index (1-based indexing)
 	MinIndex = 1
-	// MaxIndex is the maximum index
-	MaxIndex = MaxStrLen
 )
 
-// StrObject represents a fixed-size string object with 1-based indexing
+// StrObject represents a variable-size string object with 1-based indexing
 type StrObject struct {
-	array [MaxStrLen]byte
+	array []byte
+}
+
+// Size returns the allocated size (max valid 1-based index)
+func (s *StrObject) Size() int {
+	return len(s.array)
 }
 
 // checkIndex validates that an index with optional offset is within valid range
-func checkIndex(index, offset int) {
+func (s *StrObject) checkIndex(index, offset int) {
 	if offset > math.MaxInt-index {
 		panic("index + offset overflow")
 	}
 
 	combinedIndex := index + offset
 
-	if combinedIndex < MinIndex || combinedIndex > MaxIndex {
+	if combinedIndex < MinIndex || combinedIndex > len(s.array) {
 		panic("index out of range")
 	}
 }
 
 // adjustIndex converts 1-based index to 0-based array index
-func adjustIndex(index, offset int) int {
-	checkIndex(index, offset)
+func (s *StrObject) adjustIndex(index, offset int) int {
+	s.checkIndex(index, offset)
 	return index + offset - MinIndex
 }
 
-// NewFilled creates a new StrObject filled with the given element
-func NewFilled(elem byte) *StrObject {
-	s := &StrObject{}
+// clampLen clamps a length so that (index + length - 1) doesn't exceed the array size.
+// The start index must be valid (>= MinIndex and <= Size()+1).
+// Returns the clamped length (may be 0 if start is at Size()+1).
+func (s *StrObject) clampLen(index, length int) int {
+	maxLen := len(s.array) - index + MinIndex
+	if length > maxLen {
+		return maxLen
+	}
+	return length
+}
+
+// clampEnd clamps an end index to the array size
+func (s *StrObject) clampEnd(end int) int {
+	if end > len(s.array) {
+		return len(s.array)
+	}
+	return end
+}
+
+// NewFilled creates a new StrObject of the given size filled with the given element
+func NewFilled(elem byte, size int) *StrObject {
+	s := &StrObject{array: make([]byte, size)}
 	for i := range s.array {
 		s.array[i] = elem
 	}
@@ -51,43 +72,40 @@ func NewFilled(elem byte) *StrObject {
 }
 
 func NewStrObjectFrom(str string) *StrObject {
-	s := &StrObject{}
+	s := &StrObject{array: make([]byte, MaxStrLen)}
 	s.Assign(str)
 	return s
 }
 
-// NewWithPattern creates a new StrObject with a repeating pattern
-func NewWithPattern(values []byte) *StrObject {
-	if len(values) == 0 {
-		return NewFilled(' ')
-	}
-	s := &StrObject{}
-	for i := range s.array {
-		s.array[i] = values[i%len(values)]
-	}
+func NewStrObjectCopy(src *StrObject, srcIndex int, srcLen int, dstLen int) *StrObject {
+	s := &StrObject{array: make([]byte, dstLen)}
+	s.Copy(src, srcIndex, srcLen, 1)
+	s.Fill(' ', srcLen+1, dstLen)
 	return s
 }
 
 // Clone creates a copy of the StrObject
 func (s *StrObject) Clone() *StrObject {
-	return &StrObject{array: s.array}
+	newArray := make([]byte, len(s.array))
+	copy(newArray, s.array)
+	return &StrObject{array: newArray}
 }
 
 // Get returns the character at the given 1-based index
 func (s *StrObject) Get(index int) byte {
-	idx := adjustIndex(index, 0)
+	idx := s.adjustIndex(index, 0)
 	return s.array[idx]
 }
 
 // Set sets the character at the given 1-based index
 func (s *StrObject) Set(index int, value byte) {
-	idx := adjustIndex(index, 0)
+	idx := s.adjustIndex(index, 0)
 	s.array[idx] = value
 }
 
 // Assign sets the content from a string, padding with spaces if needed
 func (s *StrObject) Assign(str string) {
-	s.FillCopyBytes([]byte(str), 1, MaxStrLen, ' ')
+	s.FillCopyBytes([]byte(str), 1, len(s.array), ' ')
 }
 
 // Equals compares n characters starting at srcOffset with another StrObject starting at dstOffset
@@ -95,10 +113,10 @@ func (s *StrObject) Equals(other *StrObject, n, srcOffset, dstOffset int) bool {
 	if n == 0 {
 		return true
 	}
-	checkIndex(srcOffset, n-1)
-	checkIndex(dstOffset, n-1)
-	srcIdx := adjustIndex(srcOffset, 0)
-	dstIdx := adjustIndex(dstOffset, 0)
+	s.checkIndex(srcOffset, n-1)
+	other.checkIndex(dstOffset, n-1)
+	srcIdx := s.adjustIndex(srcOffset, 0)
+	dstIdx := other.adjustIndex(dstOffset, 0)
 	return bytes.Equal(s.array[srcIdx:srcIdx+n], other.array[dstIdx:dstIdx+n])
 }
 
@@ -107,8 +125,11 @@ func (s *StrObject) ApplyN(f func(byte) byte, n, start int) {
 	if n <= 0 {
 		return
 	}
-	checkIndex(start, n-1)
-	idx := adjustIndex(start, 0)
+	n = s.clampLen(start, n)
+	if n <= 0 {
+		return
+	}
+	idx := s.adjustIndex(start, 0)
 	for i := idx; i < idx+n; i++ {
 		s.array[i] = f(s.array[i])
 	}
@@ -119,10 +140,13 @@ func (s *StrObject) Copy(src *StrObject, srcOffset, count, dstOffset int) {
 	if count <= 0 {
 		return
 	}
-	checkIndex(dstOffset, count-1)
-	checkIndex(srcOffset, count-1)
-	srcIdx := adjustIndex(srcOffset, 0)
-	dstIdx := adjustIndex(dstOffset, 0)
+	count = s.clampLen(dstOffset, count)
+	count = src.clampLen(srcOffset, count)
+	if count <= 0 {
+		return
+	}
+	srcIdx := src.adjustIndex(srcOffset, 0)
+	dstIdx := s.adjustIndex(dstOffset, 0)
 	copy(s.array[dstIdx:dstIdx+count], src.array[srcIdx:srcIdx+count])
 }
 
@@ -131,8 +155,11 @@ func (s *StrObject) CopyN(src []byte, count, dstOffset int) {
 	if count <= 0 {
 		return
 	}
-	checkIndex(dstOffset, count-1)
-	dstIdx := adjustIndex(dstOffset, 0)
+	count = s.clampLen(dstOffset, count)
+	if count <= 0 {
+		return
+	}
+	dstIdx := s.adjustIndex(dstOffset, 0)
 	copy(s.array[dstIdx:dstIdx+count], src[:count])
 }
 
@@ -141,15 +168,22 @@ func (s *StrObject) Erase(n, from int) {
 	if n <= 0 {
 		return
 	}
-	checkIndex(from, n-1)
-	dstIdx := adjustIndex(from, 0)
+	n = s.clampLen(from, n)
+	if n <= 0 {
+		return
+	}
+	dstIdx := s.adjustIndex(from, 0)
 	copy(s.array[dstIdx:], s.array[dstIdx+n:])
 }
 
 // Fill fills the range [start, end] with value
 func (s *StrObject) Fill(value byte, start, end int) {
-	startIdx := adjustIndex(start, 0)
-	endIdx := adjustIndex(end, 0) + 1 // end is inclusive
+	end = s.clampEnd(end)
+	if start > end {
+		return
+	}
+	startIdx := s.adjustIndex(start, 0)
+	endIdx := end // already 0-based upper bound (clamped to len)
 	for i := startIdx; i < endIdx; i++ {
 		s.array[i] = value
 	}
@@ -160,8 +194,11 @@ func (s *StrObject) FillN(value byte, n, start int) {
 	if n <= 0 {
 		return
 	}
-	checkIndex(start, n-1)
-	startIdx := adjustIndex(start, 0)
+	n = s.clampLen(start, n)
+	if n <= 0 {
+		return
+	}
+	startIdx := s.adjustIndex(start, 0)
 	for i := startIdx; i < startIdx+n; i++ {
 		s.array[i] = value
 	}
@@ -173,13 +210,19 @@ func (s *StrObject) FillCopy(src *StrObject, srcIndex, srcLen, dstIndex, dstLen 
 	if dstLen <= 0 {
 		return
 	}
-	checkIndex(dstIndex, dstLen-1)
-	dstIdx := adjustIndex(dstIndex, 0)
+	dstLen = s.clampLen(dstIndex, dstLen)
+	if dstLen <= 0 {
+		return
+	}
+	dstIdx := s.adjustIndex(dstIndex, 0)
 	length := min(srcLen, dstLen)
 
 	if length > 0 {
-		srcIdx := adjustIndex(srcIndex, 0)
-		copy(s.array[dstIdx:dstIdx+length], src.array[srcIdx:srcIdx+length])
+		length = src.clampLen(srcIndex, length)
+		if length > 0 {
+			srcIdx := src.adjustIndex(srcIndex, 0)
+			copy(s.array[dstIdx:dstIdx+length], src.array[srcIdx:srcIdx+length])
+		}
 	}
 	for i := dstIdx + length; i < dstIdx+dstLen; i++ {
 		s.array[i] = value
@@ -192,8 +235,11 @@ func (s *StrObject) FillCopyBytes(src []byte, dstIndex, dstLen int, value byte) 
 	if dstLen <= 0 {
 		return
 	}
-	checkIndex(dstIndex, dstLen-1)
-	dstIdx := adjustIndex(dstIndex, 0)
+	dstLen = s.clampLen(dstIndex, dstLen)
+	if dstLen <= 0 {
+		return
+	}
+	dstIdx := s.adjustIndex(dstIndex, 0)
 	length := min(len(src), dstLen)
 
 	if length > 0 {
@@ -209,15 +255,19 @@ func (s *StrObject) Insert(n, at int) {
 	if n <= 0 {
 		return
 	}
-	checkIndex(at, n-1)
-	atIdx := adjustIndex(at, 0)
-	copy(s.array[atIdx+n:], s.array[atIdx:MaxStrLen-n])
+	n = s.clampLen(at, n)
+	if n <= 0 {
+		return
+	}
+	atIdx := s.adjustIndex(at, 0)
+	copy(s.array[atIdx+n:], s.array[atIdx:len(s.array)-n])
 }
 
 // Length returns the position of the last character that is not equal to value,
 // searching backwards from the 'from' position
 func (s *StrObject) Length(value byte, from int) int {
-	lastIdx := adjustIndex(from, 0)
+	from = s.clampEnd(from)
+	lastIdx := from - MinIndex
 	for i := lastIdx; i >= 0; i-- {
 		if s.array[i] != value {
 			return i + 1
@@ -231,8 +281,8 @@ func (s *StrObject) Slice(index, length int) string {
 	if length == 0 {
 		return ""
 	}
-	checkIndex(index, length-1)
-	idx := adjustIndex(index, 0)
+	s.checkIndex(index, length-1)
+	idx := s.adjustIndex(index, 0)
 	return string(s.array[idx : idx+length])
 }
 
@@ -243,7 +293,7 @@ func (s *StrObject) String() string {
 
 // TrimmedString returns the string up to the last non-space character
 func (s *StrObject) TrimmedString() string {
-	length := s.Length(' ', MaxIndex)
+	length := s.Length(' ', len(s.array))
 	if length == 0 {
 		return ""
 	}
@@ -257,7 +307,7 @@ func (s *StrObject) Compare(other *StrObject) int {
 
 // Equal returns true if this StrObject is equal to another
 func (s *StrObject) Equal(other *StrObject) bool {
-	return s.array == other.array
+	return bytes.Equal(s.array, other.array)
 }
 
 // Bytes returns a copy of the underlying byte array
@@ -269,7 +319,7 @@ func (s *StrObject) Bytes() []byte {
 func (s *StrObject) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 's', 'v':
-		length := s.Length(' ', MaxIndex)
+		length := s.Length(' ', len(s.array))
 		f.Write(s.array[:length])
 	case 'q':
 		fmt.Fprintf(f, "%q", s.array[:])

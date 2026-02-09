@@ -440,8 +440,7 @@ func LineChangeLength(line *LineHdrObject, newLength int) bool {
 		}
 
 		// Create a new str_object and copy the text from the old one
-		newStr = &StrObject{}
-		ChFillCopy(line.Str, 1, line.Len, newStr, 1, newLength, ' ')
+		newStr = NewStrObjectCopy(line.Str, 1, line.Len, newLength)
 	} else {
 		newStr = nil
 	}

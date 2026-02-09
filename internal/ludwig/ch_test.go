@@ -35,7 +35,7 @@ func TestSgn(t *testing.T) {
 func TestChFillCopy(t *testing.T) {
 	t.Run("CopyFullSource", func(t *testing.T) {
 		src := NewStrObjectFrom("HELLO")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChFillCopy(src, 1, 5, dst, 1, 5, ' ')
 
@@ -44,7 +44,7 @@ func TestChFillCopy(t *testing.T) {
 
 	t.Run("CopyWithFill", func(t *testing.T) {
 		src := NewStrObjectFrom("HI")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChFillCopy(src, 1, 2, dst, 1, 5, '*')
 
@@ -52,8 +52,8 @@ func TestChFillCopy(t *testing.T) {
 	})
 
 	t.Run("FillOnly", func(t *testing.T) {
-		src := &StrObject{}
-		dst := &StrObject{}
+		src := NewFilled(0, MaxStrLen)
+		dst := NewFilled(0, MaxStrLen)
 
 		ChFillCopy(src, 1, 0, dst, 1, 5, '-')
 
@@ -72,7 +72,7 @@ func TestChFillCopy(t *testing.T) {
 
 	t.Run("SourceLongerThanDest", func(t *testing.T) {
 		src := NewStrObjectFrom("HELLO")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChFillCopy(src, 1, 5, dst, 1, 3, ' ')
 
@@ -81,7 +81,7 @@ func TestChFillCopy(t *testing.T) {
 
 	t.Run("CopyWithOffset", func(t *testing.T) {
 		src := NewStrObjectFrom("HELLO")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChFillCopy(src, 2, 3, dst, 3, 4, '.')
 
@@ -169,8 +169,8 @@ func TestChCompareStr(t *testing.T) {
 	})
 
 	t.Run("EmptyStrings", func(t *testing.T) {
-		s1 := &StrObject{}
-		s2 := &StrObject{}
+		s1 := NewFilled(0, MaxStrLen)
+		s2 := NewFilled(0, MaxStrLen)
 		var nchIdent int
 
 		result := ChCompareStr(s1, 1, 0, s2, 1, 0, false, &nchIdent)
@@ -184,7 +184,7 @@ func TestChCompareStr(t *testing.T) {
 func TestChReverseStr(t *testing.T) {
 	t.Run("ReverseOddLength", func(t *testing.T) {
 		src := NewStrObjectFrom("HELLO")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChReverseStr(src, dst, 5)
 
@@ -193,7 +193,7 @@ func TestChReverseStr(t *testing.T) {
 
 	t.Run("ReverseEvenLength", func(t *testing.T) {
 		src := NewStrObjectFrom("TEST")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChReverseStr(src, dst, 4)
 
@@ -202,7 +202,7 @@ func TestChReverseStr(t *testing.T) {
 
 	t.Run("ReverseSingleChar", func(t *testing.T) {
 		src := NewStrObjectFrom("A")
-		dst := &StrObject{}
+		dst := NewFilled(0, MaxStrLen)
 
 		ChReverseStr(src, dst, 1)
 

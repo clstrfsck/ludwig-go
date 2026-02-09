@@ -782,7 +782,7 @@ func startUp(argc int, argv []string) bool {
 		if LudwigMode == LudwigScreen {
 			VduFlush()
 		}
-		tparam := &TParObject{}
+		tparam := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
 		// with tparam^ do
 		tparam.Len = len(FileData.Initial)
 		tparam.Dlm = TpdExact

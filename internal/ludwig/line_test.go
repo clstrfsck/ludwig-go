@@ -527,7 +527,7 @@ func TestLinesDestroy(t *testing.T) {
 		// Add Str objects to some lines
 		line := firstLine
 		for i := 0; i < 3 && line != nil; i++ {
-			line.Str = &StrObject{}
+			line.Str = NewFilled(' ', MaxStrLen)
 			line.Len = 10
 			line = line.FLink
 		}
@@ -603,7 +603,7 @@ func TestLineEOPDestroy(t *testing.T) {
 		LineEOPCreate(frame, &group)
 
 		// Add a Str object to the EOP line
-		group.FirstLine.Str = &StrObject{}
+		group.FirstLine.Str = NewFilled(' ', MaxStrLen)
 		group.FirstLine.Len = 10
 
 		result := LineEOPDestroy(&group)

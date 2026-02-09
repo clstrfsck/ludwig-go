@@ -871,9 +871,9 @@ func ScreenPause() {
 		} else {
 			VduDisplayCrLf()
 		}
-		var buffer StrObject
+		buffer := NewFilled(' ', MaxStrLen)
 		var outlen int
-		VduGetInput(PAUSE_MSG, &buffer, MaxStrLen, &outlen)
+		VduGetInput(PAUSE_MSG, buffer, MaxStrLen, &outlen)
 		if ScrTopLine != nil {
 			if ScrTopLine.ScrRowNr == 1 {
 				ScreenDrawLine(ScrTopLine)
@@ -1192,12 +1192,12 @@ func ScreenVerify(prompt string) VerifyResponse {
 			ScreenClearMsgs(false)
 
 		case LudwigBatch, LudwigHardcopy:
-			var response StrObject
+			response := NewFilled(' ', MaxStrLen)
 			var respLen int
 			if usePrompt {
-				ScreenGetLineP(prompt, &response, &respLen, 1, 1)
+				ScreenGetLineP(prompt, response, &respLen, 1, 1)
 			} else {
-				ScreenGetLineP(YNAQM_MSG, &response, &respLen, 1, 1)
+				ScreenGetLineP(YNAQM_MSG, response, &respLen, 1, 1)
 			}
 			if respLen == 0 {
 				key = 'N'

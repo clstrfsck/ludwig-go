@@ -132,9 +132,10 @@ func FrameEdit(frameName string) bool {
 			if LineChangeLength(gptr.LastLine, NameLen+len(endOfFile)) {
 				// Copy end-of-file message and frame name
 				if gptr.LastLine.Str != nil {
-					gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, MaxStrLen, ' ')
+					lineLen := gptr.LastLine.Len
+					gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, lineLen, ' ')
 					eofLen := len(endOfFile) + 1
-					gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, MaxStrLen-eofLen, ' ')
+					gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
 					gptr.LastLine.Used = 0 // Special feature of the NULL line!
 					CurrentFrame = fptr
 					return true

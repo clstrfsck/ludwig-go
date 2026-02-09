@@ -63,12 +63,14 @@ func TparCleanObject(tpO *TParObject) {
 // tparDuplicateCon duplicates the con chain of a tpar
 func tparDuplicateCon(tpar *TParObject, tpO *TParObject) {
 	*tpO = *tpar
+	tpO.Str = *tpar.Str.Clone()
 	tpO.Nxt = nil
 	var tp2 *TParObject
 	for tpar.Con != nil {
 		tpar = tpar.Con
 		tp := &TParObject{}
 		*tp = *tpar
+		tp.Str = *tpar.Str.Clone()
 		if tp2 == nil {
 			tpO.Con = tp
 		} else {
@@ -202,7 +204,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			var tmpTp *TParObject
 			startMark.Line = startMark.Line.FLink
 			for startMark.Line != endMark.Line {
-				tmpTp2 := &TParObject{}
+				tmpTp2 := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
 				if tmpTp == nil {
 					tpar.Con = tmpTp2
 				} else {
@@ -217,7 +219,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 				startMark.Line = startMark.Line.FLink
 			}
 			// Create new tpar for last line
-			tmpTp2 := &TParObject{}
+			tmpTp2 := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
 			if tmpTp == nil {
 				tpar.Con = tmpTp2
 			} else {
@@ -228,7 +230,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			tmpTp.Nxt = nil
 			tmpTp.Con = nil
 			tmpTp.Len = endMark.Col - 1
-			ChFillCopy(endMark.Line.Str, 0, endMark.Line.Used, &tmpTp.Str, 1, tpar.Len, ' ')
+			ChFillCopy(endMark.Line.Str, 1, endMark.Line.Used, &tmpTp.Str, 1, tpar.Len, ' ')
 		}
 	} else {
 		ScreenMessage(MsgNoSuchSpan)

@@ -28,15 +28,11 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 	// Remember current line
 	oldDotCol := CurrentFrame.Dot.Col
 
-	var oldStr StrObject
-	ChFillCopy(
+	oldStr := NewStrObjectCopy(
 		CurrentFrame.Dot.Line.Str,
 		1,
 		CurrentFrame.Dot.Line.Used,
-		&oldStr,
-		1,
-		MaxStrLen,
-		' ',
+		CurrentFrame.Dot.Line.Used,
 	)
 
 	commandSet := big.NewInt(0)
@@ -109,11 +105,9 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		// Carry out the command
 		if cmdValid {
 			i := otherLine.Used + 1 - firstCol
-			var newStr StrObject
-			if i <= 0 {
-				newStr.FillN(' ', count, 1)
-			} else {
-				ChFillCopy(otherLine.Str, firstCol, i, &newStr, 1, count, ' ')
+			newStr := NewFilled(' ', count)
+			if i > 0 {
+				ChFillCopy(otherLine.Str, firstCol, i, newStr, 1, count, ' ')
 			}
 
 			switch command {

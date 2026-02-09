@@ -79,20 +79,18 @@ func UserKeyInitialize() {
 	}
 	if UserKeyNameToCode("HELP", &keyCode) {
 		Lookup[keyCode].Command = CmdHelp
-		tpar := &TParObject{}
+		tpar := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
 		tpar.Dlm = TpdPrompt
 		tpar.Len = 0
-		tpar.Str.Fill(' ', 1, MaxStrLen)
 		tpar.Con = nil
 		tpar.Nxt = nil
 		Lookup[keyCode].Tpar = tpar
 	}
 	if UserKeyNameToCode("FIND", &keyCode) {
 		Lookup[keyCode].Command = CmdGet
-		tpar := &TParObject{}
+		tpar := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
 		tpar.Dlm = TpdPrompt
 		tpar.Len = 0
-		tpar.Str.Fill(' ', 1, MaxStrLen)
 		tpar.Con = nil
 		tpar.Nxt = nil
 		Lookup[keyCode].Tpar = tpar
@@ -121,7 +119,7 @@ func UserCommandIntroducer() bool {
 		return false
 	}
 
-	var temp StrObject
+	temp := NewFilled(' ', MaxStrLen)
 	temp.Set(1, byte(CommandIntroducer))
 	cmdSuccess := true
 

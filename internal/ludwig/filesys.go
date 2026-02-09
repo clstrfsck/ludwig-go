@@ -347,7 +347,7 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 
 	var inputEof bool
 	var inputPosition int64
-	var line StrObject
+	line := NewFilled(' ', MaxStrLen)
 	var lineLen int
 
 	if iFyle != nil {
@@ -357,10 +357,10 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 
 		// copy unread portion of input file to output file
 		for {
-			if !FilesysRead(iFyle, &line, &lineLen) {
+			if !FilesysRead(iFyle, line, &lineLen) {
 				break
 			}
-			FilesysWrite(oFyle, &line, lineLen)
+			FilesysWrite(oFyle, line, lineLen)
 			if iFyle.Eof {
 				break
 			}
@@ -396,10 +396,10 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 
 	// copy lines from the input file to the output file
 	for i := 0; i < copyLines; i++ {
-		if !FilesysRead(iFyle, &line, &lineLen) {
+		if !FilesysRead(iFyle, line, &lineLen) {
 			return false
 		}
-		if !FilesysWrite(oFyle, &line, lineLen) {
+		if !FilesysWrite(oFyle, line, lineLen) {
 			return false
 		}
 	}

@@ -39,7 +39,7 @@ func setupTestFrame(lineCount int) (*FrameObject, []*LineHdrObject) {
 			Len:      MaxStrLen,
 			Used:     0,
 			ScrRowNr: 0, // Set to 0 to disable screen updates
-			Str:      NewFilled(' '),
+			Str:      NewFilled(' ', MaxStrLen),
 			Marks:    make([]*MarkObject, 0),
 		}
 	}
@@ -51,7 +51,7 @@ func setupTestFrame(lineCount int) (*FrameObject, []*LineHdrObject) {
 		Len:      0,
 		Used:     0,
 		ScrRowNr: 0,
-		Str:      NewFilled(' '),
+		Str:      NewFilled(' ', MaxStrLen),
 		Marks:    make([]*MarkObject, 0),
 	}
 
