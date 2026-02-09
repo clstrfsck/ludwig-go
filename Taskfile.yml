@@ -51,7 +51,7 @@ tasks:
     desc: Run system tests if present
     if: '[ -x ./system-test/run-system-test.sh ]'
     cmds:
-      - ./system-test/run-system-test.sh
+      - ./system-test/run-system-test.sh --showlocals
 
   check:
     desc: Run all checks
