@@ -782,13 +782,13 @@ func startUp(argc int, argv []string) bool {
 		if LudwigMode == LudwigScreen {
 			VduFlush()
 		}
-		tparam := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
-		// with tparam^ do
-		tparam.Len = len(FileData.Initial)
-		tparam.Dlm = TpdExact
-		tparam.Str.Assign(FileData.Initial)
-		tparam.Nxt = nil
-		tparam.Con = nil
+		tparam := &TParObject{
+			Len: len(FileData.Initial),
+			Dlm: TpdExact,
+			Nxt: nil,
+			Con: nil,
+			Str: NewStrObjectFrom(FileData.Initial),
+		}
 		if !Execute(CmdFileExecute, LeadParamNone, 1, tparam, true) {
 			if ExitAbort {
 				// something is wrong, but let the user continue anyway!

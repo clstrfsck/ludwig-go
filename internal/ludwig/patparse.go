@@ -319,7 +319,7 @@ func PatternParser(
 		var leadingParam ParameterType
 		var aux, auxCount, temporary int
 		var delimiter, auxCh1, auxCh2, auxPatCh byte
-		derefSpan := TParObject{Str: *NewFilled(' ', MaxStrLen)}
+		derefSpan := TParObject{Str: NewBlankStrObject(MaxStrLen)}
 		var tparSort Commands
 		var currentState, auxState, beginState int
 		var endOfInput, negate, noDereference bool
@@ -456,7 +456,7 @@ func PatternParser(
 			switch *patCh {
 			case TpdSpan, TpdPrompt:
 				delimiter = *patCh
-				derefTpar := TParObject{Str: *NewFilled(' ', MaxStrLen)}
+				derefTpar := TParObject{Str: NewBlankStrObject(MaxStrLen)}
 				aux = 0
 				if !patternGetch(parseCount, patCh, inString) {
 					ScreenMessage(MsgPatNoMatchingDelim)
@@ -527,7 +527,7 @@ func PatternParser(
 					if *patCh == TpdSpan || *patCh == TpdPrompt {
 						noDereference = false
 						delimiter = *patCh
-						derefTpar := TParObject{Str: *NewFilled(' ', MaxStrLen)}
+						derefTpar := TParObject{Str: NewBlankStrObject(MaxStrLen)}
 						aux = 0
 						for {
 							if !patternGetch(parseCount, patCh, inString) {
@@ -677,8 +677,10 @@ func PatternParser(
 						patternDefinition.Strng.Set(temporary, 0)
 
 						if delimiter == TpdSpan || delimiter == TpdPrompt {
-							derefTpar := TParObject{Str: *NewFilled(' ', MaxStrLen)}
-							derefTpar.Dlm = delimiter
+							derefTpar := TParObject{
+								Str: NewBlankStrObject(MaxStrLen),
+								Dlm: delimiter,
+							}
 							if !patternGetch(parseCount, patCh, inString) {
 								ScreenMessage(MsgPatPrematurePatternEnd)
 								panic(localException{})

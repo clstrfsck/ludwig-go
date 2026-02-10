@@ -347,7 +347,7 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 
 	var inputEof bool
 	var inputPosition int64
-	line := NewFilled(' ', MaxStrLen)
+	line := NewBlankStrObject(MaxStrLen)
 	var lineLen int
 
 	if iFyle != nil {
@@ -598,7 +598,8 @@ func FilesysParse(
 			input.Filename = file[0]
 		} else if memory != "" {
 			if SysReadFilename(memory, &input.Filename) {
-				checkInput = true
+				// This is a bit annoying when the file is removed.
+				// checkInput = true
 			} else {
 				if parseType == ParseCommand {
 					input.Filename = ""

@@ -107,7 +107,7 @@ func TextInsert(
 			dstLine = dstLine.BLink
 		}
 
-		if finalLen > dstLine.Len {
+		if finalLen > dstLine.Len() {
 			if !LineChangeLength(dstLine, finalLen) {
 				return false
 			}
@@ -129,7 +129,7 @@ func TextInsert(
 
 		// Re-compute length of line, to remove trailing spaces
 		if tailLen == 0 {
-			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len)
+			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len())
 		} else {
 			dstLine.Used += insertLen
 		}
@@ -189,7 +189,7 @@ func TextOvertype(
 			dstLine = dstLine.BLink
 		}
 
-		if finalLen > dstLine.Len {
+		if finalLen > dstLine.Len() {
 			if !LineChangeLength(dstLine, finalLen) {
 				return false
 			}
@@ -202,7 +202,7 @@ func TextOvertype(
 
 		// Re-compute length of line, to remove trailing spaces
 		if newCol > dstLine.Used {
-			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len)
+			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len())
 		}
 
 		// Update screen if necessary
@@ -238,7 +238,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 
 	// Check for the simple case
 	if tp.Con == nil {
-		if !TextInsert(true, 1, &tp.Str, tp.Len, beforeMark) {
+		if !TextInsert(true, 1, tp.Str, tp.Len, beforeMark) {
 			ScreenMessage(MsgNoRoomOnLine)
 			return false
 		}
@@ -270,7 +270,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 		if !TextSplitLine(beforeMark, 1, equalsMark) {
 			goto cleanup
 		}
-		if !TextInsert(true, 1, &tp.Str, tp.Len, *equalsMark) {
+		if !TextInsert(true, 1, tp.Str, tp.Len, *equalsMark) {
 			goto cleanup
 		}
 		(*equalsMark).Col -= tp.Len
@@ -280,7 +280,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			if !LineChangeLength(tmpLine, tmpTp.Len) {
 				goto cleanup
 			}
-			tmpLine.Str.Copy(&tmpTp.Str, 1, tmpTp.Len, 1)
+			tmpLine.Str.Copy(tmpTp.Str, 1, tmpTp.Len, 1)
 			if tmpTp.Len == 0 {
 				tmpLine.Used = 0
 			} else {
@@ -295,7 +295,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			}
 		}
 		discard = false
-		if !TextInsert(true, 1, &tmpTp.Str, tmpTp.Len, beforeMark) {
+		if !TextInsert(true, 1, tmpTp.Str, tmpTp.Len, beforeMark) {
 			return false
 		}
 	}
@@ -391,8 +391,8 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	var extrOne *LineHdrObject
 	var extrTwo *LineHdrObject
 	var textLen int
-	strng := NewFilled(' ', MaxStrLen)
-	strngTail := NewFilled(' ', MaxStrLen)
+	strng := NewBlankStrObject(MaxStrLen)
+	strngTail := NewBlankStrObject(MaxStrLen)
 	var delta int
 	var lineOne *LineHdrObject
 	var colOne int
@@ -499,7 +499,7 @@ func textIntraMove(
 	colTwo := markTwo.Col
 
 	fullLen := colTwo - colOne
-	textStr := NewFilled(' ', MaxStrLen)
+	textStr := NewBlankStrObject(MaxStrLen)
 	if fullLen != 0 {
 		if fullLen*count > MaxStrLen {
 			return false
@@ -587,7 +587,7 @@ func textInterMove(
 	var lastLineLength int
 	var tempLen int
 	var textLen int
-	textStr := NewFilled(' ', MaxStrLen)
+	textStr := NewBlankStrObject(MaxStrLen)
 	var dstCol int
 	var dstUsed int
 	var dstLine *LineHdrObject
@@ -766,7 +766,7 @@ func textInterMove(
 				if !LineChangeLength(firstLine, textLen) {
 					goto cleanup
 				}
-				ChFillCopy(textStr, 1, textLen, firstLine.Str, 1, firstLine.Len, ' ')
+				ChFillCopy(textStr, 1, textLen, firstLine.Str, 1, firstLine.Len(), ' ')
 				firstLine.Used = textLen
 			}
 			if !LinesInject(firstLine, lastLine, dstLine) {
@@ -791,7 +791,7 @@ func textInterMove(
 		if !LineChangeLength(dstLine, dstCol+textLen-1) {
 			goto cleanup
 		}
-		ChFillCopy(textStr, 1, textLen, dstLine.Str, dstCol, dstLine.Len+1-dstCol, ' ')
+		ChFillCopy(textStr, 1, textLen, dstLine.Str, dstCol, dstLine.Len()+1-dstCol, ' ')
 		dstLine.Used = dstCol + textLen - 1
 		if dstLine.ScrRowNr != 0 {
 			ScreenDrawLine(dstLine)

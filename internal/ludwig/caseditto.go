@@ -105,7 +105,12 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		// Carry out the command
 		if cmdValid {
 			i := otherLine.Used + 1 - firstCol
-			newStr := NewFilled(' ', count)
+			var newStr *StrObject
+			if i > 0 {
+				newStr = NewStrObjectCopy(otherLine.Str, firstCol, i, count)
+			} else {
+				newStr = NewBlankStrObject(count)
+			}
 			if i > 0 {
 				ChFillCopy(otherLine.Str, firstCol, i, newStr, 1, count, ' ')
 			}

@@ -25,7 +25,6 @@ func LineEOPCreate(inframe *FrameObject, group **GroupObject) bool {
 	newLine.OffsetNr = 0
 	newLine.Marks = nil
 	newLine.Str = nil
-	newLine.Len = 0
 	newLine.Used = 0
 	newLine.ScrRowNr = 0
 
@@ -72,7 +71,6 @@ func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObj
 		thisLine.OffsetNr = 0
 		thisLine.Marks = nil
 		thisLine.Str = nil
-		thisLine.Len = 0
 		thisLine.Used = 0
 		thisLine.ScrRowNr = 0
 
@@ -121,7 +119,7 @@ func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *
 
 	thisLine := firstLine
 	for thisLine != nil {
-		space += thisLine.Len
+		space += thisLine.Len()
 		nrNewLines++
 		thisLine = thisLine.FLink
 	}
@@ -345,7 +343,7 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) bool {
 	var space int
 	thisLine := firstLine
 	for lineNr := 1; lineNr <= nrLinesToRemove; lineNr++ {
-		space += thisLine.Len
+		space += thisLine.Len()
 		thisLine = thisLine.FLink
 	}
 	thisFrame.SpaceLeft += space
@@ -440,19 +438,18 @@ func LineChangeLength(line *LineHdrObject, newLength int) bool {
 		}
 
 		// Create a new str_object and copy the text from the old one
-		newStr = NewStrObjectCopy(line.Str, 1, line.Len, newLength)
+		newStr = NewStrObjectCopy(line.Str, 1, line.Len(), newLength)
 	} else {
 		newStr = nil
 	}
 
 	// Update the amount of free space available in the frame
 	if line.Group != nil {
-		line.Group.Frame.SpaceLeft += line.Len - newLength
+		line.Group.Frame.SpaceLeft += line.Len() - newLength
 	}
 
 	// Change line to refer to the new str_object
 	line.Str = newStr
-	line.Len = newLength
 
 	return true
 }

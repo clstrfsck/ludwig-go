@@ -112,7 +112,7 @@ var InitialTabStops TabArray
 var InitialOptions FrameOptions
 
 // Useful constants
-var BlankString *StrObject = NewFilled(' ', MaxStrLen)
+var BlankString *StrObject = NewBlankStrObject(MaxStrLen)
 var InitialVerify VerifyArray
 var DefaultTabStops TabArray
 

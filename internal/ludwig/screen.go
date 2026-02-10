@@ -94,7 +94,7 @@ func ScreenDrawLine(line *LineHdrObject) {
 	if line.FLink != nil {
 		strlen = line.Used - offset
 	} else {
-		strlen = line.Len
+		strlen = line.Len()
 		offset = 0
 	}
 
@@ -455,7 +455,9 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 		if curRow < TerminalInfo.Height {
 			curRow += 1
 			VduMoveCurs(1, curRow)
+			VduAttrBold()
 			VduDisplayStr("<BOTTOM>", 3)
+			VduAttrNormal()
 			if curRow == ScrMsgRow {
 				ScrMsgRow += 1
 			}
@@ -464,7 +466,9 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 
 	if ScrTopLine.ScrRowNr > 1 {
 		VduMoveCurs(1, ScrTopLine.ScrRowNr-1)
+		VduAttrBold()
 		VduDisplayStr("<TOP>", 3)
+		VduAttrNormal()
 	}
 }
 
@@ -643,7 +647,7 @@ func ScreenLoad(line *LineHdrObject) {
 			}
 			buflen := line.Used
 			if line.FLink == nil {
-				buflen = line.Len
+				buflen = line.Len()
 			}
 			if buflen > 0 && line.Str != nil {
 				writeln(line.Str.Slice(1, buflen))
@@ -871,9 +875,9 @@ func ScreenPause() {
 		} else {
 			VduDisplayCrLf()
 		}
-		buffer := NewFilled(' ', MaxStrLen)
+		var buffer *StrObject
 		var outlen int
-		VduGetInput(PAUSE_MSG, buffer, MaxStrLen, &outlen)
+		VduGetInput(PAUSE_MSG, &buffer, MaxStrLen, &outlen)
 		if ScrTopLine != nil {
 			if ScrTopLine.ScrRowNr == 1 {
 				ScreenDrawLine(ScrTopLine)
@@ -1008,7 +1012,7 @@ func ScreenFixup() {
 // ScreenGetLineP gets a line from the user
 func ScreenGetLineP(
 	prompt string,
-	outbuf *StrObject,
+	outbuf **StrObject,
 	outlen *int,
 	maxTp int,
 	thisTp int,
@@ -1192,12 +1196,12 @@ func ScreenVerify(prompt string) VerifyResponse {
 			ScreenClearMsgs(false)
 
 		case LudwigBatch, LudwigHardcopy:
-			response := NewFilled(' ', MaxStrLen)
+			var response *StrObject
 			var respLen int
 			if usePrompt {
-				ScreenGetLineP(prompt, response, &respLen, 1, 1)
+				ScreenGetLineP(prompt, &response, &respLen, 1, 1)
 			} else {
-				ScreenGetLineP(YNAQM_MSG, response, &respLen, 1, 1)
+				ScreenGetLineP(YNAQM_MSG, &response, &respLen, 1, 1)
 			}
 			if respLen == 0 {
 				key = 'N'

@@ -42,7 +42,6 @@ func createTestGroup(frame *FrameObject, firstLineNr int, nrLines int) *GroupObj
 		line := &LineHdrObject{
 			Group:    group,
 			OffsetNr: i,
-			Len:      0,
 			Used:     0,
 		}
 
@@ -295,7 +294,7 @@ func TestLineChangeLength(t *testing.T) {
 		assert.True(t, result, "LineChangeLength returned false")
 		assert.NotNil(t, line.Str, "Str should not be nil")
 		// Should be quantized to 20
-		assert.Equal(t, 20, line.Len, "Expected length 20 (quantized)")
+		assert.Equal(t, 20, line.Len(), "Expected length 20 (quantized)")
 		assert.Equal(t, originalSpace-20, frame.SpaceLeft, "SpaceLeft not updated correctly")
 	})
 
@@ -313,7 +312,7 @@ func TestLineChangeLength(t *testing.T) {
 
 		assert.True(t, result, "LineChangeLength returned false")
 		// Should be quantized to 30
-		assert.Equal(t, 30, line.Len, "Expected length 30 (quantized)")
+		assert.Equal(t, 30, line.Len(), "Expected length 30 (quantized)")
 		// Space change: -30 + 20 = -10 from space1
 		expectedSpace := space1 - 30 + 20
 		assert.Equal(t, expectedSpace, frame.SpaceLeft, "SpaceLeft not updated correctly")
@@ -326,7 +325,7 @@ func TestLineChangeLength(t *testing.T) {
 
 		// Set initial length
 		LineChangeLength(line, 100)
-		oldLen := line.Len // Will be 110 (quantized from 100)
+		oldLen := line.Len() // Will be 110 (quantized from 100)
 		space1 := frame.SpaceLeft
 
 		// Shrink to 20
@@ -334,7 +333,7 @@ func TestLineChangeLength(t *testing.T) {
 
 		assert.True(t, result, "LineChangeLength returned false")
 		// Should be quantized to 30 (20/10 + 1) * 10 = 30
-		assert.Equal(t, 30, line.Len, "Expected length 30 (quantized)")
+		assert.Equal(t, 30, line.Len(), "Expected length 30 (quantized)")
 		// Space freed: oldLen - 30
 		expectedSpace := space1 + oldLen - 30
 		assert.Equal(t, expectedSpace, frame.SpaceLeft, "SpaceLeft not updated correctly")
@@ -354,7 +353,7 @@ func TestLineChangeLength(t *testing.T) {
 
 		assert.True(t, result, "LineChangeLength returned false")
 		assert.Nil(t, line.Str, "Str should be nil when length is 0")
-		assert.Equal(t, 0, line.Len, "Expected length 0")
+		assert.Equal(t, 0, line.Len(), "Expected length 0")
 		// All space should be freed
 		assert.Equal(t, space1+60, frame.SpaceLeft, "SpaceLeft not updated correctly")
 	})
@@ -390,21 +389,21 @@ func TestLineChangeLength(t *testing.T) {
 		for _, tc := range testCases {
 			result := LineChangeLength(line, tc.requested)
 			assert.True(t, result, "LineChangeLength(%d) returned false", tc.requested)
-			assert.Equal(t, tc.expected, line.Len, "LineChangeLength(%d): expected %d", tc.requested, tc.expected)
+			assert.Equal(t, tc.expected, line.Len(), "LineChangeLength(%d): expected %d", tc.requested, tc.expected)
 		}
 	})
 
 	t.Run("LineWithoutGroup", func(t *testing.T) {
 		// Line not attached to a group (no frame)
 		line := &LineHdrObject{
-			Len: 0,
+			Str: EmptyStrObject(),
 		}
 
 		result := LineChangeLength(line, 20)
 
 		assert.True(t, result, "LineChangeLength returned false")
 		// Should be quantized to 30
-		assert.Equal(t, 30, line.Len, "Expected length 30 (quantized)")
+		assert.Equal(t, 30, line.Len(), "Expected length 30 (quantized)")
 		// Should not panic even without a group
 	})
 }
@@ -489,7 +488,7 @@ func TestLinesCreate(t *testing.T) {
 			assert.Equal(t, 0, line.OffsetNr, "Line OffsetNr should be 0")
 			assert.Nil(t, line.Marks, "Line Marks should be nil")
 			assert.Nil(t, line.Str, "Line Str should be nil")
-			assert.Equal(t, 0, line.Len, "Line Len should be 0")
+			assert.Equal(t, 0, line.Len(), "Line Len should be 0")
 			assert.Equal(t, 0, line.Used, "Line Used should be 0")
 			assert.Equal(t, 0, line.ScrRowNr, "Line ScrRowNr should be 0")
 			line = line.FLink
@@ -527,8 +526,7 @@ func TestLinesDestroy(t *testing.T) {
 		// Add Str objects to some lines
 		line := firstLine
 		for i := 0; i < 3 && line != nil; i++ {
-			line.Str = NewFilled(' ', MaxStrLen)
-			line.Len = 10
+			line.Str = NewBlankStrObject(MaxStrLen)
 			line = line.FLink
 		}
 
@@ -580,7 +578,7 @@ func TestLineEOPCreate(t *testing.T) {
 		assert.Equal(t, 0, line.OffsetNr, "EOP line OffsetNr should be 0")
 		assert.Nil(t, line.Marks, "EOP line Marks should be nil")
 		assert.Nil(t, line.Str, "EOP line Str should be nil")
-		assert.Equal(t, 0, line.Len, "EOP line Len should be 0")
+		assert.Equal(t, 0, line.Len(), "EOP line Len should be 0")
 		assert.Equal(t, 0, line.Used, "EOP line Used should be 0")
 	})
 }
@@ -603,8 +601,7 @@ func TestLineEOPDestroy(t *testing.T) {
 		LineEOPCreate(frame, &group)
 
 		// Add a Str object to the EOP line
-		group.FirstLine.Str = NewFilled(' ', MaxStrLen)
-		group.FirstLine.Len = 10
+		group.FirstLine.Str = NewBlankStrObject(MaxStrLen)
 
 		result := LineEOPDestroy(&group)
 

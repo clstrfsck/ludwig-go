@@ -116,6 +116,11 @@ func Flash() {
 	C.flash()
 }
 
+// CursSet sets the cursor visibility
+func CursSet(visibility int) {
+	C.curs_set(C.int(visibility))
+}
+
 // UnGetChar pushes a character back to the input queue
 func UnGetChar(ch Char) {
 	C.ungetch(C.int(ch))

@@ -45,7 +45,7 @@ func eqsgetrepSamePatternDef(pattern1 *PatternDefType, pattern2 *PatternDefType)
 }
 
 func eqsgetrepPatternBuild(tpar TParObject, patternPtr **DFATableObject) bool {
-	patternDefinition := PatternDefType{Strng: *NewFilled(0, MaxStrLen)}
+	patternDefinition := PatternDefType{Strng: *NewBlankStrObject(MaxStrLen)}
 	var nfaTable NFATableType
 	var firstPatternStart int
 	var patternFinalState int
@@ -140,7 +140,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 
 		var nchIdent int
 		result := ChCompareStr(
-			&tpar.Str,
+			tpar.Str,
 			1,
 			tpar.Len,
 			CurrentFrame.Dot.Line.Str,
@@ -185,13 +185,13 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 	} else {
 		tailSpace = false
 	}
-	newstr := NewFilled(' ', MaxStrLen)
+	newstr := NewBlankStrObject(MaxStrLen)
 	var backwards bool
 	var startCol int
 	var length int
 	if count < 0 {
 		count = -count
-		ChReverseStr(&tpar.Str, newstr, newlen)
+		ChReverseStr(tpar.Str, newstr, newlen)
 		backwards = true
 		startCol = 1
 		length = CurrentFrame.Dot.Col - 1
@@ -199,7 +199,7 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 			length = line.Used
 		}
 	} else {
-		newstr = &tpar.Str
+		newstr = tpar.Str
 		backwards = false
 		startCol = CurrentFrame.Dot.Col
 		if startCol > line.Used {
@@ -532,7 +532,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				}
 				CurrentFrame.Dot.Col = startCol
 			}
-			if !TextOvertype(true, 1, &tpar2.Str, tpar2.Len, CurrentFrame.Dot) {
+			if !TextOvertype(true, 1, tpar2.Str, tpar2.Len, CurrentFrame.Dot) {
 				goto l99
 			}
 			if getcount > 0 {

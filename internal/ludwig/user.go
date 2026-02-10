@@ -79,20 +79,24 @@ func UserKeyInitialize() {
 	}
 	if UserKeyNameToCode("HELP", &keyCode) {
 		Lookup[keyCode].Command = CmdHelp
-		tpar := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
-		tpar.Dlm = TpdPrompt
-		tpar.Len = 0
-		tpar.Con = nil
-		tpar.Nxt = nil
+		tpar := &TParObject{
+			Str: EmptyStrObject(),
+			Dlm: TpdPrompt,
+			Len: 0,
+			Con: nil,
+			Nxt: nil,
+		}
 		Lookup[keyCode].Tpar = tpar
 	}
 	if UserKeyNameToCode("FIND", &keyCode) {
 		Lookup[keyCode].Command = CmdGet
-		tpar := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
-		tpar.Dlm = TpdPrompt
-		tpar.Len = 0
-		tpar.Con = nil
-		tpar.Nxt = nil
+		tpar := &TParObject{
+			Str: EmptyStrObject(),
+			Dlm: TpdPrompt,
+			Len: 0,
+			Con: nil,
+			Nxt: nil,
+		}
 		Lookup[keyCode].Tpar = tpar
 	}
 	if UserKeyNameToCode("PREV-SCREEN", &keyCode) {
@@ -119,7 +123,7 @@ func UserCommandIntroducer() bool {
 		return false
 	}
 
-	temp := NewFilled(' ', MaxStrLen)
+	temp := NewBlankStrObject(MaxStrLen)
 	temp.Set(1, byte(CommandIntroducer))
 	cmdSuccess := true
 

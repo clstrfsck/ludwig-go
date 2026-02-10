@@ -15,6 +15,8 @@
 package ludwig
 
 import (
+	"bufio"
+	"io"
 	"os"
 	"os/exec"
 	"os/user"
@@ -221,23 +223,18 @@ func SysWriteFilename(memory string, filename string) bool {
 
 // SysReadFilename reads a filename from a memory file
 func SysReadFilename(memory string, filename *string) bool {
-	data, err := os.ReadFile(memory)
+	f, err := os.Open(memory)
 	if err != nil {
 		return false
 	}
+	defer f.Close()
 
-	if len(data) > 0 {
-		nlIdx := 0
-		for nlIdx < len(data) {
-			if data[nlIdx] == '\n' || data[nlIdx] == '\r' {
-				break
-			}
-			nlIdx++
-		}
-		*filename = string(data[:nlIdx])
-		return *filename != ""
+	line, err := bufio.NewReader(f).ReadString('\n')
+	if err != nil && err != io.EOF {
+		return false
 	}
-	return false
+	*filename = strings.TrimRight(line, "\r\n")
+	return *filename != ""
 }
 
 // SysReapChildren reaps zombie child processes

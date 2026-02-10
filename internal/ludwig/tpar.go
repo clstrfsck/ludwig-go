@@ -63,14 +63,14 @@ func TparCleanObject(tpO *TParObject) {
 // tparDuplicateCon duplicates the con chain of a tpar
 func tparDuplicateCon(tpar *TParObject, tpO *TParObject) {
 	*tpO = *tpar
-	tpO.Str = *tpar.Str.Clone()
+	tpO.Str = tpar.Str.Clone()
 	tpO.Nxt = nil
 	var tp2 *TParObject
 	for tpar.Con != nil {
 		tpar = tpar.Con
 		tp := &TParObject{}
 		*tp = *tpar
-		tp.Str = *tpar.Str.Clone()
+		tp.Str = tpar.Str.Clone()
 		if tp2 == nil {
 			tpO.Con = tp
 		} else {
@@ -188,7 +188,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			} else {
 				srclen = tpar.Len
 			}
-			ChFillCopy(startMark.Line.Str, startMark.Col, srclen, &tpar.Str, 1, tpar.Len, ' ')
+			ChFillCopy(startMark.Line.Str, startMark.Col, srclen, tpar.Str, 1, tpar.Len, ' ')
 		} else if !CmdAttrib[cmd].TparInfo[thisTp].MlAllowed {
 			ScreenMessage(MsgSpanMustBeOneLine)
 			return false
@@ -204,7 +204,9 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			var tmpTp *TParObject
 			startMark.Line = startMark.Line.FLink
 			for startMark.Line != endMark.Line {
-				tmpTp2 := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
+				tmpTp2 := &TParObject{
+					Str: NewBlankStrObject(MaxStrLen),
+				}
 				if tmpTp == nil {
 					tpar.Con = tmpTp2
 				} else {
@@ -219,7 +221,9 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 				startMark.Line = startMark.Line.FLink
 			}
 			// Create new tpar for last line
-			tmpTp2 := &TParObject{Str: *NewFilled(' ', MaxStrLen)}
+			tmpTp2 := &TParObject{
+				Str: NewBlankStrObject(MaxStrLen),
+			}
 			if tmpTp == nil {
 				tpar.Con = tmpTp2
 			} else {
@@ -230,7 +234,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			tmpTp.Nxt = nil
 			tmpTp.Con = nil
 			tmpTp.Len = endMark.Col - 1
-			ChFillCopy(endMark.Line.Str, 1, endMark.Line.Used, &tmpTp.Str, 1, tpar.Len, ' ')
+			ChFillCopy(endMark.Line.Str, 1, endMark.Line.Used, tmpTp.Str, 1, tpar.Len, ' ')
 		}
 	} else {
 		ScreenMessage(MsgNoSuchSpan)
@@ -245,7 +249,7 @@ func leftPadded(width int, value int) string {
 }
 
 // findEnquiry handles environment and system enquiries
-func findEnquiry(name string, result *StrObject, reslen *int) bool {
+func findEnquiry(name string, result **StrObject, reslen *int) bool {
 	enquiryResult := false
 	variableType := varTypeUnknown
 	var item strings.Builder
@@ -288,19 +292,19 @@ func findEnquiry(name string, result *StrObject, reslen *int) bool {
 			switch itemStr {
 			case "NAME":
 				*reslen = len(TerminalInfo.Name)
-				result.Assign(TerminalInfo.Name)
+				*result = NewStrObjectFrom(TerminalInfo.Name)
 			case "HEIGHT":
 				s := leftPadded(EnquiryNumLen, TerminalInfo.Height)
 				*reslen = len(s)
-				result.Assign(s)
+				*result = NewStrObjectFrom(s)
 			case "WIDTH":
 				s := leftPadded(EnquiryNumLen, TerminalInfo.Width)
 				*reslen = len(s)
-				result.Assign(s)
+				*result = NewStrObjectFrom(s)
 			case "SPEED":
 				s := leftPadded(EnquiryNumLen, 0)
 				*reslen = len(s)
-				result.Assign(s)
+				*result = NewStrObjectFrom(s)
 			default:
 				enquiryResult = false
 			}
@@ -310,28 +314,27 @@ func findEnquiry(name string, result *StrObject, reslen *int) bool {
 			switch itemStr {
 			case "NAME":
 				*reslen = len(CurrentFrame.Span.Name)
-				result.Assign(CurrentFrame.Span.Name)
+				*result = NewStrObjectFrom(CurrentFrame.Span.Name)
 			case "INPUTFILE":
 				if CurrentFrame.InputFile == 0 {
 					*reslen = 0
 				} else {
 					*reslen = len(Files[CurrentFrame.InputFile].Filename)
-					result.Assign(Files[CurrentFrame.InputFile].Filename)
+					*result = NewStrObjectFrom(Files[CurrentFrame.InputFile].Filename)
 				}
 			case "OUTPUTFILE":
 				if CurrentFrame.OutputFile == 0 {
 					*reslen = 0
 				} else {
 					*reslen = len(Files[CurrentFrame.OutputFile].Filename)
-					result.Assign(Files[CurrentFrame.OutputFile].Filename)
+					*result = NewStrObjectFrom(Files[CurrentFrame.OutputFile].Filename)
 				}
 			case "MODIFIED":
 				*reslen = 1
-				result.Fill(' ', 1, MaxStrLen)
 				if CurrentFrame.TextModified {
-					result.Set(1, 'Y')
+					*result = NewStrObjectFrom("Y")
 				} else {
-					result.Set(1, 'N')
+					*result = NewStrObjectFrom("N")
 				}
 			default:
 				enquiryResult = false
@@ -342,7 +345,7 @@ func findEnquiry(name string, result *StrObject, reslen *int) bool {
 			if found {
 				enquiryResult = true
 				*reslen = min(MaxStrLen, len(env))
-				result.Assign(env)
+				*result = NewStrObjectFrom(env)
 			}
 
 		case varTypeLudwig:
@@ -350,9 +353,9 @@ func findEnquiry(name string, result *StrObject, reslen *int) bool {
 			switch itemStr {
 			case "VERSION":
 				*reslen = len(LudwigVersion)
-				result.Assign(LudwigVersion)
+				*result = NewStrObjectFrom(LudwigVersion)
 			case "OPSYS":
-				result.Assign(SystemName)
+				*result = NewStrObjectFrom(SystemName)
 				*reslen = len(SystemName)
 			case "COMMAND_INTRODUCER":
 				if !ChIsPrintable(rune(CommandIntroducer)) {
@@ -360,22 +363,22 @@ func findEnquiry(name string, result *StrObject, reslen *int) bool {
 					ScreenMessage(MsgNonprintableIntroducer)
 				} else {
 					*reslen = 1
-					result.Set(1, byte(CommandIntroducer))
+					*result = NewStrObjectFrom(string(rune(CommandIntroducer)))
 				}
 			case "INSERT_MODE":
 				*reslen = 1
 				if (EditMode == ModeInsert) || ((EditMode == ModeCommand) && (PreviousMode == ModeInsert)) {
-					result.Set(1, 'Y')
+					*result = NewStrObjectFrom("Y")
 				} else {
-					result.Set(1, 'N')
+					*result = NewStrObjectFrom("N")
 				}
 			case "OVERTYPE_MODE":
 				*reslen = 1
 				if (EditMode == ModeOvertype) ||
 					((EditMode == ModeCommand) && (PreviousMode == ModeOvertype)) {
-					result.Set(1, 'Y')
+					*result = NewStrObjectFrom("Y")
 				} else {
-					result.Set(1, 'N')
+					*result = NewStrObjectFrom("N")
 				}
 			default:
 				enquiryResult = false
@@ -473,13 +476,13 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 						}
 						switch verifyReply {
 						case VerifyReplyYes:
-							tran.Str.Set(1, 'Y')
+							tran.Str = NewStrObjectFrom("Y")
 						case VerifyReplyNo:
-							tran.Str.Set(1, 'N')
+							tran.Str = NewStrObjectFrom("N")
 						case VerifyReplyAlways:
-							tran.Str.Set(1, 'A')
+							tran.Str = NewStrObjectFrom("A")
 						case VerifyReplyQuit:
-							tran.Str.Set(1, 'Q')
+							tran.Str = NewStrObjectFrom("Q")
 						}
 						tran.Len = 1
 					} else if tran.Len == 0 {
@@ -510,13 +513,14 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 // trim trims leading spaces and uppercases a tpar
 func trim(request *TParObject) {
 	if request.Len > 0 {
+		originalLen := request.Len
 		// Find first non-blank character
-		i := 0
+		i := 1
 		for {
-			i++
-			if !(request.Str.Get(i) == ' ' && i != request.Len) {
+			if i > request.Len || request.Str.Get(i) != ' ' {
 				break
 			}
+			i += 1
 		}
 		request.Len -= i - 1
 		if request.Len > 0 {
@@ -524,8 +528,8 @@ func trim(request *TParObject) {
 			request.Str.Erase(i-1, 1)
 			request.Str.ApplyN(ChToUpper, request.Len, 1)
 		}
-		if request.Len >= 0 && request.Len < MaxStrLen {
-			request.Str.Fill(' ', request.Len+1, MaxStrLen)
+		if request.Len < originalLen {
+			request.Str.Fill(' ', request.Len+1, originalLen)
 		}
 	}
 }

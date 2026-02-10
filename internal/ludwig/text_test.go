@@ -32,10 +32,9 @@ func setupTestLineInFrame() (*FrameObject, *LineHdrObject) {
 	line1 := &LineHdrObject{
 		Group:    group,
 		OffsetNr: 0,
-		Len:      MaxStrLen,
 		Used:     0,
 		ScrRowNr: 0,
-		Str:      NewFilled(' ', MaxStrLen),
+		Str:      NewBlankStrObject(MaxStrLen),
 	}
 
 	// Add NULL line at the end
@@ -107,10 +106,9 @@ func setupLinkedLines(count int) (*FrameObject, []*LineHdrObject) {
 		lines[i] = &LineHdrObject{
 			Group:    group,
 			OffsetNr: i,
-			Len:      MaxStrLen,
 			Used:     0,
 			ScrRowNr: 0,
-			Str:      NewFilled(' ', MaxStrLen),
+			Str:      NewBlankStrObject(MaxStrLen),
 		}
 
 		if i > 0 {
@@ -169,9 +167,8 @@ func TestTextReturnCol(t *testing.T) {
 		nextLine := &LineHdrObject{
 			Group:    line.Group,
 			OffsetNr: 1,
-			Len:      MaxStrLen,
 			Used:     10,
-			Str:      NewFilled(' ', MaxStrLen),
+			Str:      NewBlankStrObject(MaxStrLen),
 			BLink:    line,
 		}
 		line.FLink = nextLine
@@ -240,7 +237,7 @@ func TestTextInsert(t *testing.T) {
 		}
 
 		// Create a simple string to insert
-		insertStr := NewFilled(' ', MaxStrLen)
+		insertStr := NewBlankStrObject(MaxStrLen)
 		insertStr.Set(1, 'H')
 		insertStr.Set(2, 'i')
 
@@ -259,7 +256,7 @@ func TestTextInsert(t *testing.T) {
 			Col:  4, // Insert before 'l'
 		}
 
-		insertStr := NewFilled(' ', MaxStrLen)
+		insertStr := NewBlankStrObject(MaxStrLen)
 		insertStr.Set(1, 'X')
 		insertStr.Set(2, 'Y')
 
@@ -282,7 +279,7 @@ func TestTextInsert(t *testing.T) {
 			Col:  1,
 		}
 
-		insertStr := NewFilled(' ', MaxStrLen)
+		insertStr := NewBlankStrObject(MaxStrLen)
 		insertStr.Set(1, 'A')
 
 		result := TextInsert(false, 3, insertStr, 1, mark)
@@ -301,7 +298,7 @@ func TestTextInsert(t *testing.T) {
 			Col:  1,
 		}
 
-		insertStr := NewFilled('X', MaxStrLen)
+		insertStr := NewBlankStrObject(MaxStrLen)
 
 		// Try to insert too much data
 		result := TextInsert(false, 1, insertStr, MaxStrLen+10, mark)
@@ -325,7 +322,7 @@ func TestTextInsert(t *testing.T) {
 			Col:  1,
 		}
 
-		insertStr := NewFilled(' ', MaxStrLen)
+		insertStr := NewBlankStrObject(MaxStrLen)
 		insertStr.Set(1, 'X')
 
 		result := TextInsert(false, 1, insertStr, 1, mark)
@@ -344,7 +341,7 @@ func TestTextOvertype(t *testing.T) {
 			Col:  1,
 		}
 
-		overtypeStr := NewFilled(' ', MaxStrLen)
+		overtypeStr := NewBlankStrObject(MaxStrLen)
 		overtypeStr.Set(1, 'A')
 		overtypeStr.Set(2, 'B')
 
@@ -364,7 +361,7 @@ func TestTextOvertype(t *testing.T) {
 			Col:  2,
 		}
 
-		overtypeStr := NewFilled(' ', MaxStrLen)
+		overtypeStr := NewBlankStrObject(MaxStrLen)
 		overtypeStr.Set(1, 'X')
 		overtypeStr.Set(2, 'Y')
 
@@ -386,7 +383,7 @@ func TestTextOvertype(t *testing.T) {
 			Col:  1,
 		}
 
-		overtypeStr := NewFilled(' ', MaxStrLen)
+		overtypeStr := NewBlankStrObject(MaxStrLen)
 		overtypeStr.Set(1, 'Z')
 
 		result := TextOvertype(false, 5, overtypeStr, 1, mark)
@@ -405,7 +402,7 @@ func TestTextOvertype(t *testing.T) {
 			Col:  MaxStrLen - 5,
 		}
 
-		overtypeStr := NewFilled('X', MaxStrLen)
+		overtypeStr := NewBlankStrObject(MaxStrLen)
 
 		result := TextOvertype(false, 1, overtypeStr, 20, mark)
 		assert.False(t, result, "TextOvertype should fail when exceeding MaxStrLen")
@@ -867,7 +864,7 @@ func TestTextInsertTpar(t *testing.T) {
 		tpar := &TParObject{
 			Len: 5,
 			Dlm: 0,
-			Str: *NewFilled(' ', MaxStrLen),
+			Str: NewBlankStrObject(5),
 			Nxt: nil,
 			Con: nil,
 		}
@@ -901,7 +898,7 @@ func TestTextInsertTpar(t *testing.T) {
 		tpar := &TParObject{
 			Len: 0,
 			Dlm: 0,
-			Str: *NewFilled(' ', MaxStrLen),
+			Str: NewBlankStrObject(0),
 			Nxt: nil,
 			Con: nil,
 		}
@@ -927,7 +924,7 @@ func TestTextInsertTpar(t *testing.T) {
 		tpar1 := &TParObject{
 			Len: 6,
 			Dlm: 0,
-			Str: *NewFilled(' ', MaxStrLen),
+			Str: NewBlankStrObject(6),
 			Nxt: nil,
 			Con: nil,
 		}
@@ -938,7 +935,7 @@ func TestTextInsertTpar(t *testing.T) {
 		tpar2 := &TParObject{
 			Len: 5,
 			Dlm: 0,
-			Str: *NewFilled(' ', MaxStrLen),
+			Str: NewBlankStrObject(5),
 			Nxt: nil,
 			Con: nil,
 		}
@@ -949,7 +946,7 @@ func TestTextInsertTpar(t *testing.T) {
 		tpar3 := &TParObject{
 			Len: 5,
 			Dlm: 0,
-			Str: *NewFilled(' ', MaxStrLen),
+			Str: NewBlankStrObject(5),
 			Nxt: nil,
 			Con: nil,
 		}

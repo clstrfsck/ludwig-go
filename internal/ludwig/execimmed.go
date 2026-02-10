@@ -102,7 +102,7 @@ func ExecuteImmed() {
 					if EditMode == ModeInsert {
 						VduInsertMode(true)
 					}
-					inputBuf := NewFilled(' ', MaxStrLen)
+					inputBuf := NewBlankStrObject(MaxStrLen)
 					VduGetText(inputLen, inputBuf, &inputLen)
 					if EditMode == ModeInsert {
 						VduInsertMode(false)

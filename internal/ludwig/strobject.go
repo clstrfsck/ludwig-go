@@ -62,26 +62,37 @@ func (s *StrObject) clampEnd(end int) int {
 	return end
 }
 
-// NewFilled creates a new StrObject of the given size filled with the given element
-func NewFilled(elem byte, size int) *StrObject {
+// NewBlankStrObject creates a new StrObject of the given size filled with the
+// given element
+func NewBlankStrObject(size int) *StrObject {
 	s := &StrObject{array: make([]byte, size)}
 	for i := range s.array {
-		s.array[i] = elem
+		s.array[i] = ' '
 	}
 	return s
 }
 
+// NewStrObjectFrom creates a new StrObject from a string
 func NewStrObjectFrom(str string) *StrObject {
-	s := &StrObject{array: make([]byte, MaxStrLen)}
+	s := &StrObject{array: make([]byte, len(str))}
 	s.Assign(str)
 	return s
 }
 
+// NewStrObjectCopy creates a new StrObject by copying srcLen characters from
+// src starting at srcIndex, and filling the rest of dstLen with spaces if
+// dstLen > srcLen
 func NewStrObjectCopy(src *StrObject, srcIndex int, srcLen int, dstLen int) *StrObject {
 	s := &StrObject{array: make([]byte, dstLen)}
 	s.Copy(src, srcIndex, srcLen, 1)
 	s.Fill(' ', srcLen+1, dstLen)
 	return s
+}
+
+// EmptyStrObject returns a StrObject with an empty, zero length string
+func EmptyStrObject() *StrObject {
+	// We return a fresh object, but could consider a shared object.
+	return &StrObject{array: make([]byte, 0)}
 }
 
 // Clone creates a copy of the StrObject
@@ -103,8 +114,12 @@ func (s *StrObject) Set(index int, value byte) {
 	s.array[idx] = value
 }
 
-// Assign sets the content from a string, padding with spaces if needed
+// Assign sets the content from a string, reallocating if necessary
 func (s *StrObject) Assign(str string) {
+	thisLen := len(s.array)
+	if thisLen < len(str) {
+		s.array = make([]byte, len(str))
+	}
 	s.FillCopyBytes([]byte(str), 1, len(s.array), ' ')
 }
 
@@ -261,6 +276,11 @@ func (s *StrObject) Insert(n, at int) {
 	}
 	atIdx := s.adjustIndex(at, 0)
 	copy(s.array[atIdx+n:], s.array[atIdx:len(s.array)-n])
+}
+
+// Len returns the maximum size of the underlying array
+func (s *StrObject) Len() int {
+	return len(s.array)
 }
 
 // Length returns the position of the last character that is not equal to value,

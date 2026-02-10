@@ -190,7 +190,7 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 
 	var line, line2 *LineHdrObject
 	for count > fp.LineCount && !fp.Eof {
-		buffer := NewFilled(' ', MaxStrLen)
+		buffer := NewBlankStrObject(MaxStrLen)
 		var outlen int
 		if FilesysRead(fp, buffer, &outlen) {
 			if outlen > 0 {
@@ -204,7 +204,7 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 				LinesDestroy(&tmp1, &tmp2)
 				return false
 			}
-			ChFillCopy(buffer, 1, outlen, line.Str, 1, line.Len, ' ')
+			ChFillCopy(buffer, 1, outlen, line.Str, 1, line.Len(), ' ')
 			line.Used = outlen
 			line.BLink = fp.LastLine
 			if fp.LastLine != nil {
@@ -329,7 +329,7 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 		if current.InputFile != 0 {
 			if Files[current.InputFile] != nil {
 				if !Files[current.InputFile].Eof {
-					buffer := NewFilled(' ', MaxStrLen)
+					buffer := NewBlankStrObject(MaxStrLen)
 					var outlen int
 					for FilesysRead(Files[current.InputFile], buffer, &outlen) {
 						buflen := 0

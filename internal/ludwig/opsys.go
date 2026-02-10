@@ -39,7 +39,7 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 
 	opsysResult := false
 	for !mbx.Eof {
-		result := NewFilled(' ', MaxStrLen)
+		result := NewBlankStrObject(MaxStrLen)
 		var outlen int
 		if FilesysRead(&mbx, result, &outlen) {
 			var line *LineHdrObject
@@ -51,7 +51,7 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 				LinesDestroy(&line, &line2)
 				goto l98
 			}
-			ChFillCopy(result, 1, outlen, line.Str, 1, line.Len, ' ')
+			ChFillCopy(result, 1, outlen, line.Str, 1, line.Len(), ' ')
 			line.Used = outlen
 			line.BLink = *last
 			if *last != nil {

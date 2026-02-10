@@ -12,31 +12,19 @@ import (
 )
 
 // TestNewFilled tests the NewFilled constructor
-func TestNewFilled(t *testing.T) {
-	tests := []struct {
-		name string
-		elem byte
-	}{
-		{"filled with spaces", ' '},
-		{"filled with 'A'", 'A'},
-		{"filled with 'X'", 'X'},
-		{"filled with null", 0},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := NewFilled(tt.elem, MaxStrLen)
-			assert.NotNil(t, s, "NewFilled returned nil")
-			for i := 0; i < MaxStrLen; i++ {
-				assert.Equal(t, tt.elem, s.array[i], "NewFilled(): array[%d] mismatch", i)
-			}
-		})
-	}
+func TestNewBlankStrObject(t *testing.T) {
+	t.Run("Blank object contains blanks", func(t *testing.T) {
+		s := NewBlankStrObject(MaxStrLen)
+		assert.NotNil(t, s, "NewBlankStrObject returned nil")
+		for i := 0; i < MaxStrLen; i++ {
+			assert.Equal(t, byte(' '), s.array[i], "NewBlankStrObject(): array[%d] mismatch", i)
+		}
+	})
 }
 
 // TestClone tests the Clone method
 func TestClone(t *testing.T) {
-	original := NewFilled('A', MaxStrLen)
+	original := NewBlankStrObject(MaxStrLen)
 	original.Set(10, 'B')
 	original.Set(20, 'C')
 
@@ -52,7 +40,7 @@ func TestClone(t *testing.T) {
 
 // TestGetSet tests Get and Set methods
 func TestGetSet(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 
 	// Test valid indices (1-based)
 	testCases := []struct {
@@ -74,7 +62,7 @@ func TestGetSet(t *testing.T) {
 
 // TestGetSetPanics tests that Get/Set panic on invalid indices
 func TestGetSetPanics(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 
 	invalidIndices := []int{0, -1, MaxStrLen + 1, -100}
 
@@ -131,7 +119,7 @@ func TestAssign(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewFilled('X', MaxStrLen)
+			s := NewBlankStrObject(MaxStrLen)
 			s.Assign(tt.input)
 			assert.True(t, tt.expected(s), "Assign(%q) failed verification", tt.input)
 		})
@@ -140,10 +128,10 @@ func TestAssign(t *testing.T) {
 
 // TestEquals tests the Equals method
 func TestEquals(t *testing.T) {
-	s1 := NewFilled(' ', MaxStrLen)
+	s1 := NewBlankStrObject(MaxStrLen)
 	s1.Assign("ABCDEFGH")
 
-	s2 := NewFilled(' ', MaxStrLen)
+	s2 := NewBlankStrObject(MaxStrLen)
 	s2.Assign("ABCDXXGH")
 
 	tests := []struct {
@@ -170,7 +158,7 @@ func TestEquals(t *testing.T) {
 
 // TestApplyN tests the ApplyN method
 func TestApplyN(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	s.Assign("hello")
 
 	// Convert to uppercase
@@ -191,10 +179,11 @@ func TestApplyN(t *testing.T) {
 
 // TestCopy tests the Copy method
 func TestCopy(t *testing.T) {
-	src := NewFilled(' ', MaxStrLen)
+	src := NewBlankStrObject(MaxStrLen)
 	src.Assign("Source Text")
 
-	dst := NewFilled('X', MaxStrLen)
+	dst := NewBlankStrObject(MaxStrLen)
+	dst.Fill('X', 1, MaxStrLen)
 
 	// Copy 6 characters from position 1 to position 5
 	dst.Copy(src, 1, 6, 5)
@@ -212,7 +201,7 @@ func TestCopy(t *testing.T) {
 
 // TestCopyN tests the CopyN method
 func TestCopyN(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	src := []byte("Hello World")
 
 	s.CopyN(src, 5, 10)
@@ -225,7 +214,7 @@ func TestCopyN(t *testing.T) {
 
 // TestErase tests the Erase method
 func TestErase(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	s.Assign("ABCDEFGHIJ")
 
 	// Erase 3 characters starting at position 4
@@ -245,7 +234,7 @@ func TestErase(t *testing.T) {
 
 // TestFill tests the Fill method
 func TestFill(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 
 	s.Fill('X', 10, 20)
 
@@ -261,7 +250,7 @@ func TestFill(t *testing.T) {
 
 // TestFillN tests the FillN method
 func TestFillN(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 
 	s.FillN('Y', 10, 15)
 
@@ -279,10 +268,10 @@ func TestFillN(t *testing.T) {
 
 // TestFillCopy tests the FillCopy method
 func TestFillCopy(t *testing.T) {
-	src := NewFilled(' ', MaxStrLen)
+	src := NewBlankStrObject(MaxStrLen)
 	src.Assign("Source")
 
-	dst := NewFilled('X', MaxStrLen)
+	dst := NewBlankStrObject(MaxStrLen)
 
 	tests := []struct {
 		name     string
@@ -331,7 +320,7 @@ func TestFillCopy(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dst := NewFilled('X', MaxStrLen)
+			dst := NewBlankStrObject(MaxStrLen)
 			dst.FillCopy(src, tt.srcIndex, tt.srcLen, tt.dstIndex, tt.dstLen, tt.fillVal)
 			tt.verify(t, dst)
 		})
@@ -359,7 +348,7 @@ func TestFillCopyBytes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewFilled(' ', MaxStrLen)
+			s := NewBlankStrObject(MaxStrLen)
 			s.FillCopyBytes(src, tt.dstIndex, tt.dstLen, tt.fillVal)
 			got := s.Slice(tt.dstIndex, tt.dstLen)
 			assert.Equal(t, tt.expected, got, "FillCopyBytes() failed")
@@ -369,7 +358,7 @@ func TestFillCopyBytes(t *testing.T) {
 
 // TestInsert tests the Insert method
 func TestInsert(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	s.Assign("ABCDEFGH")
 
 	// Insert 3 spaces at position 4
@@ -407,7 +396,7 @@ func TestLength(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewFilled(tt.value, MaxStrLen)
+			s := NewBlankStrObject(MaxStrLen)
 			if tt.content != "" {
 				s.Assign(tt.content)
 			}
@@ -419,7 +408,7 @@ func TestLength(t *testing.T) {
 
 // TestSlice tests the Slice method
 func TestSlice(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	s.Assign("Hello World")
 
 	tests := []struct {
@@ -444,7 +433,8 @@ func TestSlice(t *testing.T) {
 
 // TestString tests the String method
 func TestString(t *testing.T) {
-	s := NewFilled('X', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
+	s.Fill('X', 1, MaxStrLen)
 	str := s.String()
 	assert.Len(t, str, MaxStrLen, "String() length mismatch")
 	assert.Equal(t, byte('X'), str[0], "String()[0] mismatch")
@@ -465,7 +455,7 @@ func TestTrimmedString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewFilled(' ', MaxStrLen)
+			s := NewBlankStrObject(MaxStrLen)
 			if tt.content != "" {
 				s.Assign(tt.content)
 			}
@@ -491,10 +481,10 @@ func TestCompare(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s1 := NewFilled(' ', MaxStrLen)
+			s1 := NewBlankStrObject(MaxStrLen)
 			s1.Assign(tt.content1)
 
-			s2 := NewFilled(' ', MaxStrLen)
+			s2 := NewBlankStrObject(MaxStrLen)
 			s2.Assign(tt.content2)
 
 			got := s1.Compare(s2)
@@ -512,17 +502,18 @@ func TestCompare(t *testing.T) {
 
 // TestEqual tests the Equal method
 func TestEqual(t *testing.T) {
-	s1 := NewFilled('A', MaxStrLen)
-	s2 := NewFilled('A', MaxStrLen)
-	s3 := NewFilled('B', MaxStrLen)
+	s1 := NewBlankStrObject(MaxStrLen)
+	s2 := NewBlankStrObject(MaxStrLen)
+	s3 := NewBlankStrObject(MaxStrLen)
+	s3.Fill('X', 1, MaxStrLen)
 
 	assert.True(t, s1.Equal(s2), "Equal objects not detected as equal")
 	assert.False(t, s1.Equal(s3), "Different objects detected as equal")
 
 	// Test with same content through Assign
-	s4 := NewFilled(' ', MaxStrLen)
+	s4 := NewBlankStrObject(MaxStrLen)
 	s4.Assign("Test")
-	s5 := NewFilled(' ', MaxStrLen)
+	s5 := NewBlankStrObject(MaxStrLen)
 	s5.Assign("Test")
 
 	assert.True(t, s4.Equal(s5), "Objects with same assigned content not equal")
@@ -530,7 +521,7 @@ func TestEqual(t *testing.T) {
 
 // TestBytes tests the Bytes method
 func TestBytes(t *testing.T) {
-	s := NewFilled('X', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	b := s.Bytes()
 
 	assert.Len(t, b, MaxStrLen, "Bytes() length mismatch")
@@ -542,7 +533,7 @@ func TestBytes(t *testing.T) {
 
 // TestFormat tests the Format method
 func TestFormat(t *testing.T) {
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	s.Assign("Hello")
 
 	tests := []struct {
@@ -570,7 +561,7 @@ func TestCheckIndexOverflow(t *testing.T) {
 		}
 	}()
 
-	s := NewFilled(' ', MaxStrLen)
+	s := NewBlankStrObject(MaxStrLen)
 	// This should cause an overflow panic
 	s.Get(math.MaxInt)
 }
