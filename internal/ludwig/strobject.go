@@ -43,25 +43,6 @@ func (s *StrObject) adjustIndex(index, offset int) int {
 	return index + offset - MinIndex
 }
 
-// clampLen clamps a length so that (index + length - 1) doesn't exceed the array size.
-// The start index must be valid (>= MinIndex and <= Size()+1).
-// Returns the clamped length (may be 0 if start is at Size()+1).
-func (s *StrObject) clampLen(index, length int) int {
-	maxLen := len(s.array) - index + MinIndex
-	if length > maxLen {
-		return maxLen
-	}
-	return length
-}
-
-// clampEnd clamps an end index to the array size
-func (s *StrObject) clampEnd(end int) int {
-	if end > len(s.array) {
-		return len(s.array)
-	}
-	return end
-}
-
 // NewBlankStrObject creates a new StrObject of the given size filled with the
 // given element
 func NewBlankStrObject(size int) *StrObject {
@@ -84,7 +65,7 @@ func NewStrObjectFrom(str string) *StrObject {
 // dstLen > srcLen
 func NewStrObjectCopy(src *StrObject, srcIndex int, srcLen int, dstLen int) *StrObject {
 	s := &StrObject{array: make([]byte, dstLen)}
-	s.Copy(src, srcIndex, srcLen, 1)
+	s.Copy(src, srcIndex, min(dstLen, srcLen), 1)
 	s.Fill(' ', srcLen+1, dstLen)
 	return s
 }
@@ -140,10 +121,10 @@ func (s *StrObject) ApplyN(f func(byte) byte, n, start int) {
 	if n <= 0 {
 		return
 	}
-	n = s.clampLen(start, n)
-	if n <= 0 {
-		return
-	}
+	// n = s.clampLen(start, n)
+	// if n <= 0 {
+	// return
+	// }
 	idx := s.adjustIndex(start, 0)
 	for i := idx; i < idx+n; i++ {
 		s.array[i] = f(s.array[i])
@@ -155,11 +136,11 @@ func (s *StrObject) Copy(src *StrObject, srcOffset, count, dstOffset int) {
 	if count <= 0 {
 		return
 	}
-	count = s.clampLen(dstOffset, count)
-	count = src.clampLen(srcOffset, count)
-	if count <= 0 {
-		return
-	}
+	// count = s.clampLen(dstOffset, count)
+	// count = src.clampLen(srcOffset, count)
+	// if count <= 0 {
+	// return
+	// }
 	srcIdx := src.adjustIndex(srcOffset, 0)
 	dstIdx := s.adjustIndex(dstOffset, 0)
 	copy(s.array[dstIdx:dstIdx+count], src.array[srcIdx:srcIdx+count])
@@ -170,10 +151,10 @@ func (s *StrObject) CopyN(src []byte, count, dstOffset int) {
 	if count <= 0 {
 		return
 	}
-	count = s.clampLen(dstOffset, count)
-	if count <= 0 {
-		return
-	}
+	// count = s.clampLen(dstOffset, count)
+	// if count <= 0 {
+	// 	return
+	// }
 	dstIdx := s.adjustIndex(dstOffset, 0)
 	copy(s.array[dstIdx:dstIdx+count], src[:count])
 }
@@ -183,24 +164,22 @@ func (s *StrObject) Erase(n, from int) {
 	if n <= 0 {
 		return
 	}
-	n = s.clampLen(from, n)
-	if n <= 0 {
-		return
-	}
+	// n = s.clampLen(from, n)
+	// if n <= 0 {
+	// 	return
+	// }
 	dstIdx := s.adjustIndex(from, 0)
 	copy(s.array[dstIdx:], s.array[dstIdx+n:])
 }
 
 // Fill fills the range [start, end] with value
 func (s *StrObject) Fill(value byte, start, end int) {
-	end = s.clampEnd(end)
-	if start > end {
-		return
-	}
-	startIdx := s.adjustIndex(start, 0)
-	endIdx := end // already 0-based upper bound (clamped to len)
-	for i := startIdx; i < endIdx; i++ {
-		s.array[i] = value
+	if start <= end {
+		startIdx := s.adjustIndex(start, 0)
+		endIdx := end // already 0-based upper bound (clamped to len)
+		for i := startIdx; i < endIdx; i++ {
+			s.array[i] = value
+		}
 	}
 }
 
@@ -209,10 +188,10 @@ func (s *StrObject) FillN(value byte, n, start int) {
 	if n <= 0 {
 		return
 	}
-	n = s.clampLen(start, n)
-	if n <= 0 {
-		return
-	}
+	// n = s.clampLen(start, n)
+	// if n <= 0 {
+	// 	return
+	// }
 	startIdx := s.adjustIndex(start, 0)
 	for i := startIdx; i < startIdx+n; i++ {
 		s.array[i] = value
@@ -225,19 +204,19 @@ func (s *StrObject) FillCopy(src *StrObject, srcIndex, srcLen, dstIndex, dstLen 
 	if dstLen <= 0 {
 		return
 	}
-	dstLen = s.clampLen(dstIndex, dstLen)
-	if dstLen <= 0 {
-		return
-	}
+	// dstLen = s.clampLen(dstIndex, dstLen)
+	// if dstLen <= 0 {
+	// 	return
+	// }
 	dstIdx := s.adjustIndex(dstIndex, 0)
 	length := min(srcLen, dstLen)
 
 	if length > 0 {
-		length = src.clampLen(srcIndex, length)
-		if length > 0 {
-			srcIdx := src.adjustIndex(srcIndex, 0)
-			copy(s.array[dstIdx:dstIdx+length], src.array[srcIdx:srcIdx+length])
-		}
+		// length = src.clampLen(srcIndex, length)
+		// if length > 0 {
+		srcIdx := src.adjustIndex(srcIndex, 0)
+		copy(s.array[dstIdx:dstIdx+length], src.array[srcIdx:srcIdx+length])
+		// }
 	}
 	for i := dstIdx + length; i < dstIdx+dstLen; i++ {
 		s.array[i] = value
@@ -247,10 +226,7 @@ func (s *StrObject) FillCopy(src *StrObject, srcIndex, srcLen, dstIndex, dstLen 
 // FillCopyBytes copies bytes from src to dstLen positions at dstIndex,
 // filling remaining positions with value if dstLen > len(src)
 func (s *StrObject) FillCopyBytes(src []byte, dstIndex, dstLen int, value byte) {
-	if dstLen <= 0 {
-		return
-	}
-	dstLen = s.clampLen(dstIndex, dstLen)
+	dstLen = min(dstLen, len(s.array)-dstIndex+MinIndex)
 	if dstLen <= 0 {
 		return
 	}
@@ -270,10 +246,6 @@ func (s *StrObject) Insert(n, at int) {
 	if n <= 0 {
 		return
 	}
-	n = s.clampLen(at, n)
-	if n <= 0 {
-		return
-	}
 	atIdx := s.adjustIndex(at, 0)
 	copy(s.array[atIdx+n:], s.array[atIdx:len(s.array)-n])
 }
@@ -286,11 +258,13 @@ func (s *StrObject) Len() int {
 // Length returns the position of the last character that is not equal to value,
 // searching backwards from the 'from' position
 func (s *StrObject) Length(value byte, from int) int {
-	from = s.clampEnd(from)
-	lastIdx := from - MinIndex
-	for i := lastIdx; i >= 0; i-- {
-		if s.array[i] != value {
-			return i + 1
+	from = min(from, len(s.array))
+	if from > 0 {
+		lastIdx := from - MinIndex
+		for i := lastIdx; i >= 0; i-- {
+			if s.array[i] != value {
+				return i + 1
+			}
 		}
 	}
 	return 0
