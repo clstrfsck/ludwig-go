@@ -209,12 +209,11 @@ func ChSearchStr(
 	foundLoc *int,
 ) bool {
 	// Create a copy of the text segment to search
-	var s StrObject
-	s.Copy(text, st2, len2, 1)
+	s := NewStrObjectCopy(text, st2, len2, len2)
 
 	// Reverse if searching backwards
 	if backwards {
-		ChReverseStr(&s, &s, len2)
+		ChReverseStr(s, s, len2)
 		*foundLoc = len2
 	} else {
 		*foundLoc = 0

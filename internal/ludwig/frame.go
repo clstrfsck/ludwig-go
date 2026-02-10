@@ -132,9 +132,10 @@ func FrameEdit(frameName string) bool {
 			if LineChangeLength(gptr.LastLine, NameLen+len(endOfFile)) {
 				// Copy end-of-file message and frame name
 				if gptr.LastLine.Str != nil {
-					gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, MaxStrLen, ' ')
+					lineLen := gptr.LastLine.Len()
+					gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, lineLen, ' ')
 					eofLen := len(endOfFile) + 1
-					gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, MaxStrLen-eofLen, ' ')
+					gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
 					gptr.LastLine.Used = 0 // Special feature of the NULL line!
 					CurrentFrame = fptr
 					return true
@@ -548,12 +549,7 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 			firstLine.Str.Set(CurrentFrame.MarginRight, 'R')
 		}
 		// Calculate used length
-		firstLine.Used = 0
-		for i := 1; i <= firstLine.Len; i++ {
-			if firstLine.Str.Get(i) != ' ' {
-				firstLine.Used = i
-			}
-		}
+		firstLine.Used = firstLine.Str.Length(' ', MaxStrLen)
 		if !LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line) {
 			return false
 		}
@@ -1048,7 +1044,7 @@ func FrameParameter(tpar *TParObject) bool {
 		ScreenWritelnClel()
 		ScreenGetLineP(newValues, &request.Str, &request.Len, 1, 1)
 		if request.Len > 0 {
-			ChApplyN(&request.Str, ChToUpper, request.Len)
+			ChApplyN(request.Str, ChToUpper, request.Len)
 			if !setparam(&request) {
 				ScreenBeep()
 			}

@@ -28,15 +28,11 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 	// Remember current line
 	oldDotCol := CurrentFrame.Dot.Col
 
-	var oldStr StrObject
-	ChFillCopy(
+	oldStr := NewStrObjectCopy(
 		CurrentFrame.Dot.Line.Str,
 		1,
 		CurrentFrame.Dot.Line.Used,
-		&oldStr,
-		1,
-		MaxStrLen,
-		' ',
+		CurrentFrame.Dot.Line.Used,
 	)
 
 	commandSet := big.NewInt(0)
@@ -109,11 +105,11 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		// Carry out the command
 		if cmdValid {
 			i := otherLine.Used + 1 - firstCol
-			var newStr StrObject
-			if i <= 0 {
-				newStr.FillN(' ', count, 1)
+			var newStr *StrObject
+			if i > 0 {
+				newStr = NewStrObjectCopy(otherLine.Str, firstCol, i, count)
 			} else {
-				ChFillCopy(otherLine.Str, firstCol, i, &newStr, 1, count, ' ')
+				newStr = NewBlankStrObject(count)
 			}
 
 			switch command {
@@ -204,7 +200,7 @@ l9:
 	if TtControlC {
 		cmdStatus = false
 		CurrentFrame.Dot.Col = 1
-		TextOvertype(false, 1, oldStr, MaxStrLen, CurrentFrame.Dot)
+		TextOvertype(false, 1, oldStr, oldStr.Len(), CurrentFrame.Dot)
 		CurrentFrame.Dot.Col = oldDotCol
 	} else if cmdStatus {
 		CurrentFrame.TextModified = true

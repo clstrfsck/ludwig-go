@@ -114,8 +114,7 @@ func errorMsg(ps *parseState, errText string) {
 				return
 			}
 
-			var str StrObject
-			str.Fill(' ', 1, MaxStrLen)
+			str := NewBlankStrObject(MaxStrLen)
 			i := ps.currentPoint.Col
 			str.Set(i, '!')
 			if i < MaxStrLen {
@@ -131,7 +130,7 @@ func errorMsg(ps *parseState, errText string) {
 				return
 			}
 			// "i" can't be zero here, so e_line->str != nullptr
-			eLine.Str.Copy(&str, 1, i, 1)
+			eLine.Str.Copy(str, 1, i, 1)
 			eLine.Used = str.Length(' ', i)
 			if !LinesInject(eLine, eLine, ps.currentPoint.Line) {
 				return
@@ -362,7 +361,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 		for tci := 1; tci <= tc; tci++ {
 			for {
 				parLength := 0
-				var parString StrObject
+				parString := *NewBlankStrObject(MaxStrLen)
 				for {
 					if !nextKey(ps) {
 						return false
@@ -386,7 +385,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 				tp := &TParObject{
 					Len: parLength,
 					Dlm: byte(parDelim),
-					Str: parString,
+					Str: &parString,
 					Nxt: nil,
 					Con: nil,
 				}
@@ -590,6 +589,7 @@ func scanSimpleCommand(
 				}
 			} else {
 				*tparam = &TParObject{
+					Str: EmptyStrObject(),
 					Len: 0,
 					Dlm: TpdPrompt,
 					Nxt: nil,
@@ -598,6 +598,7 @@ func scanSimpleCommand(
 				tmpTp := *tparam
 				for i := 2; i <= CmdAttrib[command].TpCount; i++ {
 					tmpTp.Nxt = &TParObject{
+						Str: EmptyStrObject(),
 						Len: 0,
 						Dlm: TpdPrompt,
 						Nxt: nil,

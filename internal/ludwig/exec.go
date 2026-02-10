@@ -160,7 +160,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	var eqSet bool            // These 3 are used for
 	var oldFrame *FrameObject // the setting up of
 	var oldDot MarkObject     // the commands = behaviour
-	var newStr StrObject
+	var newStr *StrObject
 
 	cmdSuccess = false
 	request.Nxt = nil
@@ -686,7 +686,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		if count > i {
 			goto l99
 		}
-		newStr = BlankString
+		newStr = BlankString.Clone()
 		i = 0
 		for i < count {
 			key = VduGetKey()

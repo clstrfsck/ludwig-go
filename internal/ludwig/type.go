@@ -307,7 +307,7 @@ const (
 type TParObject struct {
 	Len int // strlen_range
 	Dlm byte
-	Str StrObject
+	Str *StrObject
 	Nxt *TParObject
 	Con *TParObject
 }
@@ -420,9 +420,15 @@ type LineHdrObject struct {
 	OffsetNr int
 	Marks    []*MarkObject
 	Str      *StrObject
-	Len      int
 	Used     int
 	ScrRowNr int
+}
+
+func (l *LineHdrObject) Len() int {
+	if l.Str == nil {
+		return 0
+	}
+	return l.Str.Len()
 }
 
 // SpanObject represents a span

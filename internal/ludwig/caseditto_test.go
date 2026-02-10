@@ -36,10 +36,9 @@ func setupTestFrame(lineCount int) (*FrameObject, []*LineHdrObject) {
 		lines[i] = &LineHdrObject{
 			Group:    group,
 			OffsetNr: i,
-			Len:      MaxStrLen,
 			Used:     0,
 			ScrRowNr: 0, // Set to 0 to disable screen updates
-			Str:      NewFilled(' '),
+			Str:      NewBlankStrObject(MaxStrLen),
 			Marks:    make([]*MarkObject, 0),
 		}
 	}
@@ -48,10 +47,9 @@ func setupTestFrame(lineCount int) (*FrameObject, []*LineHdrObject) {
 	nullLine := &LineHdrObject{
 		Group:    group,
 		OffsetNr: lineCount,
-		Len:      0,
 		Used:     0,
 		ScrRowNr: 0,
-		Str:      NewFilled(' '),
+		Str:      EmptyStrObject(),
 		Marks:    make([]*MarkObject, 0),
 	}
 
@@ -95,7 +93,7 @@ func setupTestFrame(lineCount int) (*FrameObject, []*LineHdrObject) {
 func setLineContent(line *LineHdrObject, content string) {
 	line.Str.Assign(content)
 	line.Used = len(content)
-	line.Str.FillN(' ', MaxStrLen-line.Used, line.Used+1)
+	line.Str.FillN(' ', line.Len()-line.Used, line.Used+1)
 }
 
 // getLineContent extracts the used content from a line

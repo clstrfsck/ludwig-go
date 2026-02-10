@@ -17,6 +17,8 @@ package ludwig
 
 import (
 	"os"
+	"strconv"
+	"time"
 
 	nc "ludwig-go/internal/ncurses"
 )
@@ -29,7 +31,8 @@ const (
 	SPC = 32
 	DEL = 127
 
-	OutMClearEOL = 1
+	OutMClearEOL    = 1
+	NumControlChars = 33
 )
 
 // Key code ranges
@@ -45,7 +48,6 @@ var (
 	NumNcursesKeys  int
 	NcursesSubtract int
 	MassagedMax     int
-	NumControlChars = 33
 )
 
 // Global variables
@@ -57,6 +59,7 @@ var (
 	gCtrlC       *bool
 	gWinChange   *bool
 	stdscr       *nc.Window
+	refreshDelay int
 )
 
 func init() {
@@ -73,6 +76,17 @@ func init() {
 		0x7F: true,
 	}
 	terminators = make(map[int]bool)
+	value := os.Getenv("LUD_REFRESH_DELAY")
+	if value == "" {
+		refreshDelay = 0
+	} else {
+		parsed, err := strconv.Atoi(value)
+		if err != nil || parsed < 0 {
+			refreshDelay = 0
+		} else {
+			refreshDelay = parsed
+		}
+	}
 }
 
 // massageKey converts ncurses key codes to Ludwig key codes
@@ -106,6 +120,9 @@ func VduMoveCurs(x, y int) {
 // VduFlush refreshes the screen
 func VduFlush() {
 	stdscr.Refresh()
+	if refreshDelay > 0 {
+		time.Sleep(time.Duration(refreshDelay) * time.Millisecond)
+	}
 }
 
 // VduBeep produces a beep or flash
@@ -136,8 +153,9 @@ func VduDisplayStr(str string, opts int) {
 
 	if !hitMargin && (opts&OutMClearEOL) != 0 {
 		VduClearEOL()
+	} else {
+		VduFlush()
 	}
-	VduFlush()
 }
 
 // VduDisplayCh displays a single character
@@ -223,6 +241,7 @@ func VduNewIntroducer(key int) {
 
 // VduGetKey gets a single key from the user
 func VduGetKey() int {
+	nc.CursSet(1)
 	VduFlush()
 	var rawKey nc.Key
 	for {
@@ -235,21 +254,22 @@ func VduGetKey() int {
 	if rawKey == nc.KEY_RESIZE && gWinChange != nil {
 		*gWinChange = true
 	}
+	nc.CursSet(0)
 	return massageKey(int(rawKey))
 }
 
 // VduGetInput gets a line of input from the user with a prompt
-func VduGetInput(prompt string, get *StrObject, getLen int, outlen *int) {
+func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 	VduAttrBold()
 	VduDisplayStr(prompt, OutMClearEOL)
 	VduAttrNormal()
 
 	// Fill get with spaces
-	get.Fill(' ', 1, MaxStrLen)
+	*get = NewBlankStrObject(MaxStrLen)
 
 	_, curX := stdscr.CursorYX()
 	maxY, maxX := stdscr.MaxYX()
-	maxlen := maxX - curX
+	maxlen := min(MaxStrLen, maxX-curX)
 
 	if getLen > maxlen {
 		getLen = maxlen
@@ -271,7 +291,7 @@ func VduGetInput(prompt string, get *StrObject, getLen int, outlen *int) {
 			} else {
 				getLen--
 				*outlen++
-				get.Set(*outlen, byte(key))
+				(*get).Set(*outlen, byte(key))
 				stdscr.AddChar(nc.Char(key))
 			}
 		}
@@ -554,6 +574,7 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 			nc.Raw(true)
 			nc.Echo(false)
 			nc.NewLines(false)
+			nc.CursSet(0)
 			stdscr.IntrFlush(false)
 			stdscr.Keypad(true)
 			stdscr.Idlok(true)

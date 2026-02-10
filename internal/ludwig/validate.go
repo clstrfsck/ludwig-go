@@ -132,11 +132,11 @@ func ValidateCommand() bool {
 							return false
 						}
 					}
-					if thisLine.Str == nil && thisLine.Len != 0 {
+					if thisLine.Str == nil && thisLine.Len() != 0 {
 						ScreenMessage(DbgInvalidLineLength)
 						return false
 					}
-					if thisLine.Used > thisLine.Len {
+					if thisLine.Used > thisLine.Len() {
 						ScreenMessage(DbgInvalidLineUsedLength)
 						return false
 					}

@@ -45,7 +45,7 @@ func eqsgetrepSamePatternDef(pattern1 *PatternDefType, pattern2 *PatternDefType)
 }
 
 func eqsgetrepPatternBuild(tpar TParObject, patternPtr **DFATableObject) bool {
-	var patternDefinition PatternDefType
+	patternDefinition := PatternDefType{Strng: *NewBlankStrObject(MaxStrLen)}
 	var nfaTable NFATableType
 	var firstPatternStart int
 	var patternFinalState int
@@ -140,7 +140,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 
 		var nchIdent int
 		result := ChCompareStr(
-			&tpar.Str,
+			tpar.Str,
 			1,
 			tpar.Len,
 			CurrentFrame.Dot.Line.Str,
@@ -185,13 +185,13 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 	} else {
 		tailSpace = false
 	}
-	var newstr StrObject
+	newstr := NewBlankStrObject(MaxStrLen)
 	var backwards bool
 	var startCol int
 	var length int
 	if count < 0 {
 		count = -count
-		ChReverseStr(&tpar.Str, &newstr, newlen)
+		ChReverseStr(tpar.Str, newstr, newlen)
 		backwards = true
 		startCol = 1
 		length = CurrentFrame.Dot.Col - 1
@@ -216,7 +216,7 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 			found = false
 		} else {
 			found = ChSearchStr(
-				&newstr,
+				newstr,
 				1,
 				newlen,
 				line.Str,
