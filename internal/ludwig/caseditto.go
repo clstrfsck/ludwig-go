@@ -200,7 +200,7 @@ l9:
 	if TtControlC {
 		cmdStatus = false
 		CurrentFrame.Dot.Col = 1
-		TextOvertype(false, 1, oldStr, MaxStrLen, CurrentFrame.Dot)
+		TextOvertype(false, 1, oldStr, oldStr.Len(), CurrentFrame.Dot)
 		CurrentFrame.Dot.Col = oldDotCol
 	} else if cmdStatus {
 		CurrentFrame.TextModified = true
