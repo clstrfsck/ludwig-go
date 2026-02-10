@@ -111,9 +111,6 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			} else {
 				newStr = NewBlankStrObject(count)
 			}
-			if i > 0 {
-				ChFillCopy(otherLine.Str, firstCol, i, newStr, 1, count, ' ')
-			}
 
 			switch command {
 			case CmdCaseUp:
