@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestNewFilled tests the NewFilled constructor
+// TestNewBlankStrObject tests the NewBlankStrObject constructor
 func TestNewBlankStrObject(t *testing.T) {
 	t.Run("Blank object contains blanks", func(t *testing.T) {
 		s := NewBlankStrObject(MaxStrLen)

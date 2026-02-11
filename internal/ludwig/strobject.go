@@ -43,8 +43,8 @@ func (s *StrObject) adjustIndex(index, offset int) int {
 	return index + offset - MinIndex
 }
 
-// NewBlankStrObject creates a new StrObject of the given size filled with the
-// given element
+// NewBlankStrObject creates a new StrObject of the given size filled with
+// spaces
 func NewBlankStrObject(size int) *StrObject {
 	s := &StrObject{array: make([]byte, size)}
 	for i := range s.array {
@@ -176,7 +176,7 @@ func (s *StrObject) Erase(n, from int) {
 func (s *StrObject) Fill(value byte, start, end int) {
 	if start <= end {
 		startIdx := s.adjustIndex(start, 0)
-		endIdx := end // already 0-based upper bound (clamped to len)
+		endIdx := s.adjustIndex(end, 0) + 1
 		for i := startIdx; i < endIdx; i++ {
 			s.array[i] = value
 		}
@@ -224,7 +224,8 @@ func (s *StrObject) FillCopy(src *StrObject, srcIndex, srcLen, dstIndex, dstLen 
 }
 
 // FillCopyBytes copies bytes from src to dstLen positions at dstIndex,
-// filling remaining positions with value if dstLen > len(src)
+// filling remaining positions with value if dstLen > len(src). dstLen is
+// clamped to the available space in the array starting at dstIndex.
 func (s *StrObject) FillCopyBytes(src []byte, dstIndex, dstLen int, value byte) {
 	dstLen = min(dstLen, len(s.array)-dstIndex+MinIndex)
 	if dstLen <= 0 {
@@ -256,11 +257,12 @@ func (s *StrObject) Len() int {
 }
 
 // Length returns the position of the last character that is not equal to value,
-// searching backwards from the 'from' position
+// searching backwards from the 'from' position.
+// Note that 'from' is adjusted to start within the array bounds.
 func (s *StrObject) Length(value byte, from int) int {
 	from = min(from, len(s.array))
 	if from > 0 {
-		lastIdx := from - MinIndex
+		lastIdx := s.adjustIndex(from, 0)
 		for i := lastIdx; i >= 0; i-- {
 			if s.array[i] != value {
 				return i + 1
