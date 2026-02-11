@@ -26,9 +26,17 @@ func createTestTpar(content string) *TParObject {
 	tpar := &TParObject{
 		Str: NewStrObjectFrom(content),
 		Len: len(content),
-		Dlm: TpdLit,
+		Dlm: TpdSmart,
 	}
 	return tpar
+}
+
+func setupParser() (*NFATableType, *PatternDefType) {
+	nfaTable := &NFATableType{}
+	patternDef := &PatternDefType{
+		Strng: *NewBlankStrObject(MaxStrLen),
+	}
+	return nfaTable, patternDef
 }
 
 // Tests for helper functions
@@ -347,14 +355,6 @@ func TestStaticAcceptSets(t *testing.T) {
 
 func TestPatternParser(t *testing.T) {
 	// Helper to create test environment
-	setupParser := func() (*NFATableType, *PatternDefType) {
-		nfaTable := &NFATableType{}
-		patternDef := &PatternDefType{
-			Strng: *NewBlankStrObject(MaxStrLen),
-		}
-		return nfaTable, patternDef
-	}
-
 	t.Run("EmptyPattern", func(t *testing.T) {
 		nfaTable, patternDef := setupParser()
 		pattern := createTestTpar("")
@@ -656,14 +656,6 @@ func TestPatternParser(t *testing.T) {
 // Edge case tests
 
 func TestPatternParserEdgeCases(t *testing.T) {
-	setupParser := func() (*NFATableType, *PatternDefType) {
-		nfaTable := &NFATableType{}
-		patternDef := &PatternDefType{
-			Strng: *NewBlankStrObject(MaxStrLen),
-		}
-		return nfaTable, patternDef
-	}
-
 	t.Run("SpacesInPattern", func(t *testing.T) {
 		nfaTable, patternDef := setupParser()
 		pattern := createTestTpar("  'a'  ")
@@ -748,13 +740,6 @@ func TestPatternParserEdgeCases(t *testing.T) {
 // Integration tests
 
 func TestPatternParserIntegration(t *testing.T) {
-	setupParser := func() (*NFATableType, *PatternDefType) {
-		nfaTable := &NFATableType{}
-		patternDef := &PatternDefType{
-			Strng: *NewBlankStrObject(MaxStrLen),
-		}
-		return nfaTable, patternDef
-	}
 
 	t.Run("EmailPattern", func(t *testing.T) {
 		nfaTable, patternDef := setupParser()
