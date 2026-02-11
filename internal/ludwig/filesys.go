@@ -597,9 +597,8 @@ func FilesysParse(
 		if len(file) > 0 {
 			input.Filename = file[0]
 		} else if memory != "" {
-			if SysReadFilename(memory, &input.Filename) {
-				// This is a bit annoying when the file is removed.
-				// checkInput = true
+			if SysReadFilename(memory, &input.Filename) && SysFileExists(input.Filename) {
+				checkInput = true
 			} else {
 				if parseType == ParseCommand {
 					input.Filename = ""
