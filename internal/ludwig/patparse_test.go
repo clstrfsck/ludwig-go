@@ -12,8 +12,8 @@ import (
 
 // Helper functions for testing
 
-// OnesCount returns the number of set bits in a big.Int
-func OnesCount(x *big.Int) int {
+// onesCount returns the number of set bits in a big.Int
+func onesCount(x *big.Int) int {
 	count := 0
 	for _, word := range x.Bits() {
 		count += bits.OnesCount(uint(word))
@@ -37,7 +37,7 @@ func TestSingletonSet(t *testing.T) {
 	t.Run("CreateSingletonSet", func(t *testing.T) {
 		set := singletonSet('a')
 		assert.NotNil(t, set, "Set should not be nil")
-		assert.Equal(t, 1, OnesCount(set), "Only one bit should be set in the singleton set")
+		assert.Equal(t, 1, onesCount(set), "Only one bit should be set in the singleton set")
 		assert.Equal(t, uint(1), set.Bit(int('a')), "Bit for 'a' should be set")
 		assert.Equal(t, uint(0), set.Bit(int('b')), "Bit for 'b' should not be set")
 	})
@@ -48,11 +48,11 @@ func TestSingletonSet(t *testing.T) {
 		set0 := singletonSet('0')
 
 		assert.Equal(t, uint(1), setA.Bit(int('A')), "Bit for 'A' should be set")
-		assert.Equal(t, 1, OnesCount(setA), "Only one bit should be set in the singleton set")
+		assert.Equal(t, 1, onesCount(setA), "Only one bit should be set in the singleton set")
 		assert.Equal(t, uint(1), setZ.Bit(int('Z')), "Bit for 'Z' should be set")
-		assert.Equal(t, 1, OnesCount(setZ), "Only one bit should be set in the singleton set")
+		assert.Equal(t, 1, onesCount(setZ), "Only one bit should be set in the singleton set")
 		assert.Equal(t, uint(1), set0.Bit(int('0')), "Bit for '0' should be set")
-		assert.Equal(t, 1, OnesCount(set0), "Only one bit should be set in the singleton set")
+		assert.Equal(t, 1, onesCount(set0), "Only one bit should be set in the singleton set")
 
 		assert.Equal(t, uint(0), setA.Bit(int('Z')), "Bit for 'Z' should not be in setA")
 	})
@@ -64,7 +64,7 @@ func TestRangeSet(t *testing.T) {
 		assert.NotNil(t, set, "Set should not be nil")
 
 		// Check all lowercase letters are in the set
-		assert.Equal(t, 26, OnesCount(set), "There should be 26 bits set for letters a-z")
+		assert.Equal(t, 26, onesCount(set), "There should be 26 bits set for letters a-z")
 		for ch := byte('a'); ch <= byte('z'); ch++ {
 			assert.Equal(t, uint(1), set.Bit(int(ch)), "Bit for '%c' should be set", ch)
 		}
@@ -75,7 +75,7 @@ func TestRangeSet(t *testing.T) {
 
 	t.Run("SingleCharRange", func(t *testing.T) {
 		set := rangeSet('x', 'x')
-		assert.Equal(t, 1, OnesCount(set), "Only one bit should be set for a single char range")
+		assert.Equal(t, 1, onesCount(set), "Only one bit should be set for a single char range")
 		assert.Equal(t, uint(1), set.Bit(int('x')), "Bit for 'x' should be set")
 		assert.Equal(t, uint(0), set.Bit(int('y')), "Bit for 'y' should not be set")
 	})
@@ -86,7 +86,7 @@ func TestSetAdd(t *testing.T) {
 		set := new(big.Int)
 		setAdd(set, 'x')
 
-		assert.Equal(t, 1, OnesCount(set), "Only one bit should be set after adding a character")
+		assert.Equal(t, 1, onesCount(set), "Only one bit should be set after adding a character")
 		assert.Equal(t, uint(1), set.Bit(int('x')), "Bit for 'x' should be set")
 		assert.Equal(t, uint(0), set.Bit(int('y')), "Bit for 'y' should not be set")
 	})
@@ -97,7 +97,7 @@ func TestSetAdd(t *testing.T) {
 		setAdd(set, 'b')
 		setAdd(set, 'c')
 
-		assert.Equal(t, 3, OnesCount(set), "Three bits should be set after adding three characters")
+		assert.Equal(t, 3, onesCount(set), "Three bits should be set after adding three characters")
 		assert.Equal(t, uint(1), set.Bit(int('a')), "Bit for 'a' should be set")
 		assert.Equal(t, uint(1), set.Bit(int('b')), "Bit for 'b' should be set")
 		assert.Equal(t, uint(1), set.Bit(int('c')), "Bit for 'c' should be set")
@@ -109,7 +109,7 @@ func TestSetAddRange(t *testing.T) {
 		set := new(big.Int)
 		setAddRange(set, 'a', 'e')
 
-		assert.Equal(t, 5, OnesCount(set), "Five bits should be set after adding five characters")
+		assert.Equal(t, 5, onesCount(set), "Five bits should be set after adding five characters")
 		for ch := byte('a'); ch <= byte('e'); ch++ {
 			assert.Equal(t, uint(1), set.Bit(int(ch)), "Bit for '%c' should be set", ch)
 		}
@@ -121,7 +121,7 @@ func TestSetAddRange(t *testing.T) {
 		setAddRange(set, 'a', 'c')
 		setAddRange(set, 'x', 'z')
 
-		assert.Equal(t, 3+3, OnesCount(set), "Six bits should be set after adding two ranges")
+		assert.Equal(t, 3+3, onesCount(set), "Six bits should be set after adding two ranges")
 		assert.Equal(t, uint(1), set.Bit(int('a')), "Bit for 'a' should be set")
 		assert.Equal(t, uint(1), set.Bit(int('b')), "Bit for 'b' should be set")
 		assert.Equal(t, uint(1), set.Bit(int('c')), "Bit for 'c' should be set")
@@ -139,7 +139,7 @@ func TestSetClear(t *testing.T) {
 
 		setClear(set)
 
-		assert.Equal(t, 0, OnesCount(set), "All bits should be cleared after setClear")
+		assert.Equal(t, 0, onesCount(set), "All bits should be cleared after setClear")
 		assert.Equal(t, uint(0), set.Bit(int('a')), "Bit for 'a' should be cleared")
 		assert.Equal(t, uint(0), set.Bit(int('m')), "Bit for 'm' should be cleared")
 		assert.Equal(t, uint(0), set.Bit(int('z')), "Bit for 'z' should be cleared")
@@ -153,7 +153,7 @@ func TestSetUnion(t *testing.T) {
 
 		result := setUnion(setA, setB)
 
-		assert.Equal(t, 3+3, OnesCount(result), "Six bits should be set in the union of two ranges")
+		assert.Equal(t, 3+3, onesCount(result), "Six bits should be set in the union of two ranges")
 		assert.Equal(t, uint(1), result.Bit(int('a')), "Bit for 'a' should be set")
 		assert.Equal(t, uint(1), result.Bit(int('b')), "Bit for 'b' should be set")
 		assert.Equal(t, uint(1), result.Bit(int('c')), "Bit for 'c' should be set")
@@ -169,7 +169,7 @@ func TestSetUnion(t *testing.T) {
 
 		result := setUnion(setA, setB)
 
-		assert.Equal(t, 3, OnesCount(result), "Three bits should be set when union with empty set")
+		assert.Equal(t, 3, onesCount(result), "Three bits should be set when union with empty set")
 		assert.Equal(t, uint(1), result.Bit(int('a')), "Bit for 'a' should be set")
 		assert.Equal(t, uint(1), result.Bit(int('b')), "Bit for 'b' should be set")
 		assert.Equal(t, uint(1), result.Bit(int('c')), "Bit for 'c' should be set")
@@ -181,7 +181,7 @@ func TestSetUnion(t *testing.T) {
 
 		result := setUnion(setA, setB)
 
-		assert.Equal(t, 7, OnesCount(result), "Seven bits should be set in the union with overlap")
+		assert.Equal(t, 7, onesCount(result), "Seven bits should be set in the union with overlap")
 		for ch := byte('a'); ch <= byte('g'); ch++ {
 			assert.Equal(t, uint(1), result.Bit(int(ch)), "Bit for '%c' should be set", ch)
 		}
@@ -195,7 +195,7 @@ func TestSetRemove(t *testing.T) {
 
 		result := setRemove(setA, setB)
 
-		assert.Equal(t, 26-4, OnesCount(result), "Four bits should be removed from the original set")
+		assert.Equal(t, 26-4, onesCount(result), "Four bits should be removed from the original set")
 		assert.Equal(t, uint(1), result.Bit(int('a')), "Bit for 'a' should still be set")
 		assert.Equal(t, uint(1), result.Bit(int('l')), "Bit for 'l' should still be set")
 		assert.Equal(t, uint(0), result.Bit(int('m')), "Bit for 'm' should be removed")
