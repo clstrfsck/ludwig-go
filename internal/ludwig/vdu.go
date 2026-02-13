@@ -153,7 +153,6 @@ func VduDisplayStr(str string, opts int) {
 	if !hitMargin && (opts&OutMClearEOL) != 0 {
 		VduClearEOL()
 	}
-	VduFlush()
 }
 
 // VduDisplayCh displays a single character
@@ -235,7 +234,7 @@ func VduNewIntroducer(key int) {
 
 // VduGetKey gets a single key from the user
 func VduGetKey() int {
-	// nc.CursSet(1)
+	nc.CursSet(1)
 	VduFlush()
 	var rawKey nc.Key
 	for {
@@ -248,7 +247,7 @@ func VduGetKey() int {
 	if rawKey == nc.KEY_RESIZE && gWinChange != nil {
 		*gWinChange = true
 	}
-	// nc.CursSet(0)
+	nc.CursSet(0)
 	return massageKey(int(rawKey))
 }
 
@@ -566,7 +565,7 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 			nc.Raw(true)
 			nc.Echo(false)
 			nc.NewLines(false)
-			// nc.CursSet(0)
+			nc.CursSet(0)
 			stdscr.IntrFlush(false)
 			stdscr.Keypad(true)
 			stdscr.Idlok(true)
@@ -586,7 +585,6 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 			terminalInfo.Name = os.Getenv("TERM")
 
 			VduClearScr()
-			VduFlush()
 		}
 		return true
 	}
