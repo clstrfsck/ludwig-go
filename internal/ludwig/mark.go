@@ -55,6 +55,9 @@ func MarkCreate(inLine *LineHdrObject, column int, mark **MarkObject) bool {
 
 // MarkDestroy removes a mark from its line and sets the pointer to nil.
 func MarkDestroy(mark **MarkObject) bool {
+	if *mark == nil {
+		return false
+	}
 	removeFromMarks(&(*mark).Line.Marks, *mark)
 	*mark = nil
 	return true
