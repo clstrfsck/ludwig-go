@@ -611,13 +611,13 @@ func VduGetNewDimensions(newX *int, newY *int) {
 	*newY = maxY
 }
 
-// VduHighlight turns on bold attribute
+// VduBold turns on bold attribute
 func VduBold() {
 	stdscr.AttrOn(nc.A_BOLD)
 	stdscr.AttrOff(nc.A_DIM)
 }
 
-// VduHighlight turns on bold attribute
+// VduDim turns on dim attribute
 func VduDim() {
 	stdscr.AttrOff(nc.A_BOLD)
 	stdscr.AttrOn(nc.A_DIM)
