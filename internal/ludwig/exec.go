@@ -109,7 +109,7 @@ func ExecComputeLineRange(
 		}
 
 	case LeadParamMarker:
-		markLine := frame.Marks[count-MinMarkNumber].Line
+		markLine := frame.Marks[count].Line
 		if markLine == *firstLine { // TRY TO OPTIMIZE MOST COMMON CASES
 			*firstLine = nil
 		} else if markLine.FLink == *firstLine {
@@ -275,7 +275,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			newLine = theMark.Line
 		}
 
-		if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+		if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals]) {
 			goto l99
 		}
 		MarkCreate(newLine, 1, &CurrentFrame.Dot)
@@ -311,21 +311,21 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					goto l99
 				}
 				cmdSuccess = TextMove(
-					false,                  // Don't copy, transfer
-					1,                      // One instance of
-					theOtherMark,           // starting pos
-					theMark,                // ending pos
-					FrameOops.Span.MarkTwo, // destination
-					&FrameOops.Marks[MarkEquals-MinMarkNumber], // leave at start
-					&FrameOops.Dot, // leave at end
+					false,                        // Don't copy, transfer
+					1,                            // One instance of
+					theOtherMark,                 // starting pos
+					theMark,                      // ending pos
+					FrameOops.Span.MarkTwo,       // destination
+					&FrameOops.Marks[MarkEquals], // leave at start
+					&FrameOops.Dot,               // leave at end
 				)
 				FrameOops.TextModified = true
-				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified-MinMarkNumber])
+				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified])
 			} else {
 				cmdSuccess = TextRemove(theOtherMark, theMark)
 			}
 			CurrentFrame.TextModified = true
-			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified-MinMarkNumber])
+			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 		}
 
 	case CmdDeleteLine:
@@ -348,20 +348,20 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesInject(firstLine, lastLine, FrameOops.LastGroup.LastLine) {
 					goto l99
 				}
-				if !MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals-MinMarkNumber]) {
+				if !MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals]) {
 					goto l99
 				}
 				if !MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot) {
 					goto l99
 				}
 				FrameOops.TextModified = true
-				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified-MinMarkNumber])
+				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified])
 			} else if !LinesDestroy(&firstLine, &lastLine) {
 				goto l99
 			}
 			CurrentFrame.Dot.Col = dotCol
 			CurrentFrame.TextModified = true
-			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified-MinMarkNumber])
+			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 		}
 		cmdSuccess = true
 
@@ -502,7 +502,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 
 			// Insert the new tpar into frame COMMAND
-			if !TextInsertTpar(&request, FrameCmd.Dot, &FrameCmd.Marks[MarkEquals-MinMarkNumber]) {
+			if !TextInsertTpar(&request, FrameCmd.Dot, &FrameCmd.Marks[MarkEquals]) {
 				goto l99
 			}
 
@@ -624,19 +624,19 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			if cmdSuccess {
 				if count > 0 {
 					cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-						&CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+						&CurrentFrame.Marks[MarkEquals])
 					cmdSuccess = MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 				} else {
 					cmdSuccess = MarkCreate(firstLine, CurrentFrame.Dot.Col,
-						&CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+						&CurrentFrame.Marks[MarkEquals])
 				}
 				CurrentFrame.TextModified = true
 				MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-					&CurrentFrame.Marks[MarkModified-MinMarkNumber])
+					&CurrentFrame.Marks[MarkModified])
 			}
 		} else {
 			cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-				&CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+				&CurrentFrame.Marks[MarkEquals])
 		}
 
 	case CmdInsertMode:
@@ -657,17 +657,17 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if cmdSuccess && (count*request.Len != 0) {
 					CurrentFrame.TextModified = true
 					cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-						&CurrentFrame.Marks[MarkModified-MinMarkNumber])
+						&CurrentFrame.Marks[MarkModified])
 				}
 			} else {
 				for i = 1; i <= count; i++ {
-					if !TextInsertTpar(&request, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+					if !TextInsertTpar(&request, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
 						goto l99
 					}
 				}
 				CurrentFrame.TextModified = true
 				cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-					&CurrentFrame.Marks[MarkModified-MinMarkNumber])
+					&CurrentFrame.Marks[MarkModified])
 			}
 		}
 
@@ -710,7 +710,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		if cmdSuccess && count != 0 {
 			CurrentFrame.TextModified = true
 			if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-				&CurrentFrame.Marks[MarkModified-MinMarkNumber]) {
+				&CurrentFrame.Marks[MarkModified]) {
 				cmdSuccess = false
 			}
 		}
@@ -832,7 +832,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			if cmdSuccess && (count*request.Len != 0) {
 				CurrentFrame.TextModified = true
 				if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-					&CurrentFrame.Marks[MarkModified-MinMarkNumber]) {
+					&CurrentFrame.Marks[MarkModified]) {
 					cmdSuccess = false
 				}
 			}
@@ -860,11 +860,11 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line) {
 					goto l99
 				}
-				if !MarkCreate(firstLine, 1, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+				if !MarkCreate(firstLine, 1, &CurrentFrame.Marks[MarkEquals]) {
 					goto l99
 				}
 				CurrentFrame.TextModified = true
-				if !MarkCreate(lastLine.FLink, 1, &CurrentFrame.Marks[MarkModified-MinMarkNumber]) {
+				if !MarkCreate(lastLine.FLink, 1, &CurrentFrame.Marks[MarkModified]) {
 					goto l99
 				}
 				if !MarkCreate(lastLine.FLink, 1, &CurrentFrame.Dot) {
@@ -890,7 +890,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 		cmdSuccess = true
 		if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+			&CurrentFrame.Marks[MarkEquals]) {
 			goto l99
 		}
 		MarkCreate(newLine, 1, &CurrentFrame.Dot)
@@ -969,15 +969,15 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					}
 					if newLine.Group.Frame == CurrentFrame {
 						cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-							&CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+							&CurrentFrame.Marks[MarkEquals])
 						if cmdSuccess {
 							cmdSuccess = MarkCreate(newLine, newCol, &CurrentFrame.Dot)
 						}
 					} else {
 						fr := newLine.Group.Frame
 						if FrameEdit(fr.Span.Name) {
-							if fr.Marks[MarkEquals-MinMarkNumber] != nil {
-								MarkDestroy(&fr.Marks[MarkEquals-MinMarkNumber])
+							if fr.Marks[MarkEquals] != nil {
+								MarkDestroy(&fr.Marks[MarkEquals])
 							}
 							cmdSuccess = MarkCreate(newLine, newCol, &fr.Dot)
 						}
@@ -993,13 +993,13 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 						count,
 						newSpan.MarkOne,
 						newSpan.MarkTwo,
-						CurrentFrame.Dot, // Dest
-						&CurrentFrame.Marks[MarkEquals-MinMarkNumber], // New_Start
-						&CurrentFrame.Dot, // New_End
+						CurrentFrame.Dot,                // Dest
+						&CurrentFrame.Marks[MarkEquals], // New_Start
+						&CurrentFrame.Dot,               // New_End
 					)
 					if command == CmdSpanTransfer && newSpan.Frame == nil && cmdSuccess {
-						MarkCreate(CurrentFrame.Marks[MarkEquals-MinMarkNumber].Line,
-							CurrentFrame.Marks[MarkEquals-MinMarkNumber].Col, &newSpan.MarkOne)
+						MarkCreate(CurrentFrame.Marks[MarkEquals].Line,
+							CurrentFrame.Marks[MarkEquals].Col, &newSpan.MarkOne)
 						MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newSpan.MarkTwo)
 					}
 				} else {
@@ -1051,9 +1051,9 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					1,     // One instance of
 					newSpan.MarkOne,
 					newSpan.MarkTwo,
-					FrameOops.Span.MarkTwo, // destination
-					&FrameOops.Marks[MarkEquals-MinMarkNumber], // leave at start
-					&FrameOops.Dot, // leave at end
+					FrameOops.Span.MarkTwo,       // destination
+					&FrameOops.Marks[MarkEquals], // leave at start
+					&FrameOops.Dot,               // leave at end
 				) {
 					goto l99
 				}
@@ -1076,7 +1076,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 		fr := newSpan.MarkTwo.Line.Group.Frame
 		fr.TextModified = true
-		cmdSuccess = MarkCreate(newSpan.MarkTwo.Line, newSpan.MarkTwo.Col, &fr.Marks[MarkModified-MinMarkNumber])
+		cmdSuccess = MarkCreate(newSpan.MarkTwo.Line, newSpan.MarkTwo.Col, &fr.Marks[MarkModified])
 
 	case CmdSplitLine:
 		if CurrentFrame.Dot.Line.FLink == nil {
@@ -1084,7 +1084,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				goto l99
 			}
 		}
-		cmdSuccess = TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+		cmdSuccess = TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals])
 
 	case CmdSwapLine:
 		cmdSuccess = SwapLine(rept, count)
@@ -1148,10 +1148,10 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	if cmdSuccess {
 		switch CmdAttrib[command].EqAction {
 		case EqOld:
-			eqSet = MarkCreate(oldDot.Line, oldDot.Col, &oldFrame.Marks[MarkEquals-MinMarkNumber])
+			eqSet = MarkCreate(oldDot.Line, oldDot.Col, &oldFrame.Marks[MarkEquals])
 		case EqDel:
-			eqSet = (oldFrame.Marks[MarkEquals-MinMarkNumber] == nil) ||
-				MarkDestroy(&oldFrame.Marks[MarkEquals-MinMarkNumber])
+			eqSet = (oldFrame.Marks[MarkEquals] == nil) ||
+				MarkDestroy(&oldFrame.Marks[MarkEquals])
 		case EqNil:
 			eqSet = true
 		}

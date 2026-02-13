@@ -116,7 +116,9 @@ func FileFixEOP(eof bool, eopLine *LineHdrObject) {
 		eopLine.Str.FillCopyBytes([]byte("<Page Boundary>"), 1, MaxStrLen, ' ')
 	}
 	if eopLine.ScrRowNr != 0 {
+		VduDim()
 		ScreenDrawLine(eopLine)
+		VduNormal()
 	}
 }
 
@@ -756,11 +758,11 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			if !LinesInject(first, last, CurrentFrame.Dot.Line) {
 				goto l99
 			}
-			if !MarkCreate(first, 1, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+			if !MarkCreate(first, 1, &CurrentFrame.Marks[MarkEquals]) {
 				goto l99
 			}
 			CurrentFrame.TextModified = true
-			if !MarkCreate(last.FLink, 1, &CurrentFrame.Marks[MarkModified-MinMarkNumber]) {
+			if !MarkCreate(last.FLink, 1, &CurrentFrame.Marks[MarkModified]) {
 				goto l99
 			}
 			if !MarkCreate(last.FLink, 1, &CurrentFrame.Dot) {

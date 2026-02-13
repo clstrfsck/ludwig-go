@@ -65,11 +65,11 @@ func patternGetInputElt(
 				markFound = true
 			}
 			if len(line.Marks) > 0 { // if any marks on this line
-				for markNo := MinMarkNumber; markNo <= MaxMarkNumber; markNo++ {
+				for markNo := 0; markNo <= MaxMarkNumber; markNo++ {
 					// run through user accessible ones
-					if CurrentFrame.Marks[markNo-MinMarkNumber] != nil {
-						if (CurrentFrame.Marks[markNo-MinMarkNumber].Line == line) &&
-							(CurrentFrame.Marks[markNo-MinMarkNumber].Col == *column) {
+					if CurrentFrame.Marks[markNo] != nil {
+						if (CurrentFrame.Marks[markNo].Line == line) &&
+							(CurrentFrame.Marks[markNo].Col == *column) {
 							setAdd(inputSet, byte(markNo+PatternMarksStart))
 							markFound = true
 						}

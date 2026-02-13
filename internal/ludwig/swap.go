@@ -52,7 +52,7 @@ func SwapLine(rept LeadParam, count int) bool {
 	case LeadParamNIndef:
 		destLine = CurrentFrame.FirstGroup.FirstLine
 	case LeadParamMarker:
-		destLine = CurrentFrame.Marks[count-MinMarkNumber].Line
+		destLine = CurrentFrame.Marks[count].Line
 	}
 
 	if !MarkCreate(thisLine, 1, &topMark) {
@@ -70,7 +70,7 @@ func SwapLine(rept LeadParam, count int) bool {
 	CurrentFrame.TextModified = true
 	CurrentFrame.Dot.Col = dotCol
 	if !MarkCreate(
-		CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified-MinMarkNumber],
+		CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified],
 	) {
 		goto l99
 	}

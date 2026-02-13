@@ -64,12 +64,12 @@ func ValidateCommand() bool {
 		}
 		if thisSpan.Frame != nil {
 			thisFrame := thisSpan.Frame
-			if thisFrame == FrameCmd {
+			switch thisFrame {
+			case FrameCmd:
 				frameList |= cmd
-			} else if thisFrame == FrameOops {
+			case FrameOops:
 				frameList |= oops
-			}
-			if thisFrame == FrameHeap {
+			case FrameHeap:
 				frameList |= heap
 			}
 
@@ -193,9 +193,9 @@ func ValidateCommand() bool {
 				ScreenMessage(DbgMarkInWrongFrame)
 				return false
 			}
-			for markNr := MinMarkNumber; markNr <= MaxMarkNumber; markNr++ {
-				if thisFrame.Marks[markNr-MinMarkNumber] != nil {
-					if thisFrame.Marks[markNr-MinMarkNumber].Line.Group.Frame != thisFrame {
+			for markNr := 0; markNr <= MaxMarkNumber; markNr++ {
+				if thisFrame.Marks[markNr] != nil {
+					if thisFrame.Marks[markNr].Line.Group.Frame != thisFrame {
 						ScreenMessage(DbgMarkInWrongFrame)
 						return false
 					}

@@ -132,8 +132,8 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 	}
 	if rept == LeadParamMarker {
 		if !MarkCreate(
-			CurrentFrame.Marks[count-MinMarkNumber].Line,
-			CurrentFrame.Marks[count-MinMarkNumber].Col,
+			CurrentFrame.Marks[count].Line,
+			CurrentFrame.Marks[count].Col,
 			&newDot,
 		) {
 			goto l98
@@ -276,13 +276,13 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 			goto l99
 		}
 		result = TextMove(
-			false,                  // Don't copy, transfer
-			1,                      // One instance of
-			theOtherMark,           // starting pos.
-			here,                   // ending pos.
-			FrameOops.Span.MarkTwo, // destination.
-			&FrameOops.Marks[MarkEquals-MinMarkNumber], // leave at start.
-			&FrameOops.Dot, // leave at end.
+			false,                        // Don't copy, transfer
+			1,                            // One instance of
+			theOtherMark,                 // starting pos.
+			here,                         // ending pos.
+			FrameOops.Span.MarkTwo,       // destination.
+			&FrameOops.Marks[MarkEquals], // leave at start.
+			&FrameOops.Dot,               // leave at end.
 		)
 	} else {
 		result = TextRemove(
@@ -390,8 +390,8 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 	}
 	if rept == LeadParamMarker {
 		if !MarkCreate(
-			CurrentFrame.Marks[count-MinMarkNumber].Line,
-			CurrentFrame.Marks[count-MinMarkNumber].Col,
+			CurrentFrame.Marks[count].Line,
+			CurrentFrame.Marks[count].Col,
 			&newDot,
 		) {
 			goto l98
@@ -524,13 +524,13 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 			goto l99
 		}
 		result = TextMove(
-			false,                  // Don't copy, transfer
-			1,                      // One instance of
-			theOtherMark,           // starting pos.
-			here,                   // ending pos.
-			FrameOops.Span.MarkTwo, // destination.
-			&FrameOops.Marks[MarkEquals-MinMarkNumber], // leave at start.
-			&FrameOops.Dot, // leave at end.
+			false,                        // Don't copy, transfer
+			1,                            // One instance of
+			theOtherMark,                 // starting pos.
+			here,                         // ending pos.
+			FrameOops.Span.MarkTwo,       // destination.
+			&FrameOops.Marks[MarkEquals], // leave at start.
+			&FrameOops.Dot,               // leave at end.
 		)
 	} else {
 		result = TextRemove(

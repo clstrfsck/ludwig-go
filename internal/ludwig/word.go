@@ -301,7 +301,7 @@ func WordFill(rept LeadParam, count int) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			goto cleanup
 		}
@@ -405,7 +405,7 @@ func WordCentre(rept LeadParam, count int) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			goto cleanup
 		}
@@ -533,7 +533,7 @@ func WordJustify(rept LeadParam, count int) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			goto cleanup
 		}
@@ -624,7 +624,7 @@ func WordSqueeze(rept LeadParam, count int) bool {
 			goto cleanup
 		}
 		CurrentFrame.TextModified = true
-		if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified-MinMarkNumber]) {
+		if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified]) {
 			goto cleanup
 		}
 	}
@@ -725,7 +725,7 @@ func WordRight(rept LeadParam, count int) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			goto cleanup
 		}
@@ -826,7 +826,7 @@ func WordLeft(rept LeadParam, count int) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			goto cleanup
 		}
@@ -1055,7 +1055,7 @@ func WordDeleteWord(rept LeadParam, count int) bool {
 			theOtherMark,
 			here,
 			FrameOops.Span.MarkTwo,
-			&FrameOops.Marks[0-MinMarkNumber],
+			&FrameOops.Marks[MarkEquals],
 			&FrameOops.Dot,
 		)
 	} else {

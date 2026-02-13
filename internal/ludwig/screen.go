@@ -51,13 +51,8 @@ const (
 	scrollRedraw
 )
 
-// Helper functions for output
-func writeln(message string) {
-	fmt.Println(message)
-}
-
-func write(message string) {
-	fmt.Print(message)
+func spc(count int) string {
+	return strings.Repeat(" ", count)
 }
 
 // ScreenMessage puts a message out to the user
@@ -67,21 +62,20 @@ func ScreenMessage(message string) {
 	}
 
 	if LudwigMode == LudwigScreen {
-		i := 0
-		for i < len(message) {
+		for i := 0; i < len(message); {
 			ScreenFreeBottomLine()
 			VduMoveCurs(1, TerminalInfo.Height)
 			j := len(message) - i
 			if j > TerminalInfo.Width-1 {
 				j = TerminalInfo.Width - 1
 			}
-			VduAttrBold()
+			VduBold()
 			VduDisplayStr(message[i:i+j], 3)
-			VduAttrNormal()
+			VduNormal()
 			i += j
 		}
 	} else {
-		writeln(message)
+		fmt.Println(message)
 	}
 }
 
@@ -91,11 +85,13 @@ func ScreenDrawLine(line *LineHdrObject) {
 	offset := ScrFrame.ScrOffset
 	var strlen int
 
+	eopLine := false
 	if line.FLink != nil {
 		strlen = line.Used - offset
 	} else {
 		strlen = line.Len()
 		offset = 0
+		eopLine = true
 	}
 
 	if strlen <= 0 {
@@ -104,7 +100,13 @@ func ScreenDrawLine(line *LineHdrObject) {
 		if strlen > ScrFrame.ScrWidth {
 			strlen = ScrFrame.ScrWidth
 		}
+		if eopLine {
+			VduDim()
+		}
 		VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
+		if eopLine {
+			VduNormal()
+		}
 	}
 
 	if line.ScrRowNr == ScrMsgRow {
@@ -455,9 +457,9 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 		if curRow < TerminalInfo.Height {
 			curRow += 1
 			VduMoveCurs(1, curRow)
-			VduAttrBold()
+			VduBold()
 			VduDisplayStr("<BOTTOM>", 3)
-			VduAttrNormal()
+			VduNormal()
 			if curRow == ScrMsgRow {
 				ScrMsgRow += 1
 			}
@@ -466,9 +468,9 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 
 	if ScrTopLine.ScrRowNr > 1 {
 		VduMoveCurs(1, ScrTopLine.ScrRowNr-1)
-		VduAttrBold()
+		VduBold()
 		VduDisplayStr("<TOP>", 3)
-		VduAttrNormal()
+		VduNormal()
 	}
 }
 
@@ -643,26 +645,27 @@ func ScreenLoad(line *LineHdrObject) {
 		newRow = 1
 		for newRow <= frame.ScrHeight && line != nil {
 			if newRow == 1 {
-				writeln("WINDOW:")
+				fmt.Println("WINDOW:")
 			}
 			buflen := line.Used
 			if line.FLink == nil {
 				buflen = line.Len()
 			}
 			if buflen > 0 && line.Str != nil {
-				writeln(line.Str.Slice(1, buflen))
+				fmt.Println(line.Str.Slice(1, buflen))
 			} else {
-				writeln("")
+				fmt.Println("")
 			}
 			if line == dotLine {
-				if dotCol == 1 {
-					writeln("<")
-				} else if dotCol == MaxStrLenP {
-					write(strings.Repeat(" ", MaxStrLen-1))
-					writeln(">")
-				} else {
-					write(strings.Repeat(" ", dotCol-2))
-					writeln("><")
+				switch dotCol {
+				case 1:
+					fmt.Println("<")
+				case MaxStrLenP:
+					fmt.Print(strings.Repeat(" ", MaxStrLen-1))
+					fmt.Println(">")
+				default:
+					fmt.Print(strings.Repeat(" ", dotCol-2))
+					fmt.Println("><")
 				}
 			}
 			newRow++
@@ -1081,9 +1084,8 @@ func ScreenGetLineP(
 					}
 				}
 			}
-			VduFlush()
 		} else {
-			write(prompt)
+			fmt.Print(prompt)
 			// Read from stdin (simplified version)
 			*outlen = 0
 		}
@@ -1175,13 +1177,13 @@ func ScreenVerify(prompt string) VerifyResponse {
 		switch LudwigMode {
 		case LudwigScreen:
 			ScreenFixup()
-			VduAttrBold()
+			VduBold()
 			if usePrompt {
 				ScreenMessage(prompt)
 			} else {
 				ScreenMessage(YNAQM_MSG)
 			}
-			VduAttrNormal()
+			VduNormal()
 			VduMoveCurs(
 				CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
 				CurrentFrame.Dot.Line.ScrRowNr,
@@ -1287,9 +1289,10 @@ func ScreenHome(clear bool) {
 		if clear {
 			VduClearScr()
 		}
+		VduFlush()
 	} else {
-		writeln("")
-		writeln("")
+		fmt.Println("")
+		fmt.Println("")
 	}
 }
 
@@ -1297,7 +1300,7 @@ func ScreenHome(clear bool) {
 func ScreenWriteInt(intVal int, width int) {
 	if LudwigMode == LudwigScreen {
 		str := fmt.Sprintf("%*d", width, intVal)
-		write(str)
+		VduDisplayStr(str, 0)
 	} else {
 		fmt.Printf("%d", intVal)
 	}
@@ -1306,72 +1309,53 @@ func ScreenWriteInt(intVal int, width int) {
 // ScreenWriteCh writes a character with indent
 func ScreenWriteCh(indent int, ch byte) {
 	if LudwigMode == LudwigScreen {
-		write(strings.Repeat(" ", indent) + string(ch))
+		VduDisplayStr(spc(indent)+string(ch), 0)
 	} else {
-		write(strings.Repeat(" ", indent) + string(ch))
+		fmt.Print(spc(indent) + string(ch))
 	}
 }
 
 // ScreenWriteStr writes a string with indent
 func ScreenWriteStr(indent int, str string) {
 	if LudwigMode == LudwigScreen {
-		for range indent {
-			VduDisplayCh(' ')
-		}
-		for i := 0; i < len(str); i++ {
-			VduDisplayCh(str[i])
-		}
+		VduDisplayStr(spc(indent)+str, 3)
+		VduFlush()
 	} else {
-		write(strings.Repeat(" ", indent) + str)
+		fmt.Print(spc(indent) + str)
 	}
 }
 
 // ScreenWriteStrWidth writes a string with indent and width
 func ScreenWriteStrWidth(indent int, str string, width int) {
 	if LudwigMode == LudwigScreen {
-		for range indent {
-			VduDisplayCh(' ')
-		}
-		for i := range min(len(str), width) {
-			VduDisplayCh(str[i])
-		}
+		strLen := min(len(str), width)
+		trailingSpaces := width - strLen
+		VduDisplayStr(spc(indent)+str[:strLen]+spc(trailingSpaces), 3)
 	} else {
-		write(strings.Repeat(" ", indent) + str)
+		fmt.Print(spc(indent) + str)
 	}
 }
 
 // ScreenWriteNameStr writes a name string with indent and width
 func ScreenWriteNameStr(indent int, str string, width int) {
+	strLen := min(len(str), width)
+	trailingSpaces := width - strLen
 	if LudwigMode == LudwigScreen {
-		for i := 0; i < indent; i++ {
-			VduDisplayCh(' ')
-		}
-		for i := range width {
-			if i < len(str) {
-				VduDisplayCh(str[i])
-			} else {
-				VduDisplayCh(' ')
-			}
-		}
+		VduDisplayStr(spc(indent)+str[:strLen]+spc(trailingSpaces), 3)
 	} else {
-		write(strings.Repeat(" ", indent))
-		for i := range width {
-			if i < len(str) {
-				write(string(str[i]))
-			} else {
-				write(" ")
-			}
-		}
+		fmt.Print(spc(indent))
+		fmt.Print(str[:strLen])
+		fmt.Print(spc(trailingSpaces))
 	}
 }
 
 // ScreenWriteFileNameStr writes a file name with indent and width
 func ScreenWriteFileNameStr(indent int, str string, width int) {
 	if LudwigMode == LudwigScreen {
-		for i := 0; i < indent; i++ {
+		for range indent {
 			VduDisplayCh(' ')
 		}
-		for i := 0; i < width; i++ {
+		for i := range width {
 			if i < len(str) && str[i] >= 32 && str[i] <= 126 {
 				VduDisplayCh(str[i])
 			} else {
@@ -1379,12 +1363,12 @@ func ScreenWriteFileNameStr(indent int, str string, width int) {
 			}
 		}
 	} else {
-		write(strings.Repeat(" ", indent))
+		fmt.Print(spc(indent))
 		for i := 0; i < width; i++ {
 			if i < len(str) {
-				write(string(str[i]))
+				fmt.Print(string(str[i]))
 			} else {
-				write(" ")
+				fmt.Print(" ")
 			}
 		}
 	}
@@ -1395,7 +1379,7 @@ func ScreenWriteln() {
 	if LudwigMode == LudwigScreen {
 		VduDisplayCrLf()
 	} else {
-		writeln("")
+		fmt.Println("")
 	}
 }
 
@@ -1405,7 +1389,7 @@ func ScreenWritelnClel() {
 		VduClearEOL()
 		VduDisplayCrLf()
 	} else {
-		writeln("")
+		fmt.Println("")
 	}
 }
 
@@ -1416,11 +1400,11 @@ func ScreenHelpPrompt(prompt string) string {
 	switch LudwigMode {
 	case LudwigScreen, LudwigHardcopy:
 		if LudwigMode == LudwigScreen {
-			VduAttrBold()
+			VduBold()
 		}
 		ScreenWriteStr(0, prompt)
 		if LudwigMode == LudwigScreen {
-			VduAttrNormal()
+			VduNormal()
 		}
 		terminated := false
 		for !terminated {

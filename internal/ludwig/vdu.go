@@ -133,7 +133,6 @@ func VduBeep() {
 // VduClearEOL clears from cursor to end of line
 func VduClearEOL() {
 	stdscr.ClearToEOL()
-	VduFlush()
 }
 
 // VduDisplayStr displays a string with optional clear to end of line
@@ -153,8 +152,6 @@ func VduDisplayStr(str string, opts int) {
 
 	if !hitMargin && (opts&OutMClearEOL) != 0 {
 		VduClearEOL()
-	} else {
-		VduFlush()
 	}
 }
 
@@ -183,13 +180,11 @@ func VduScrollUp(n int) {
 // VduDeleteLines deletes n lines at current position
 func VduDeleteLines(n int) {
 	stdscr.InsDelLines(-n)
-	VduFlush()
 }
 
 // VduInsertLines inserts n lines at current position
 func VduInsertLines(n int) {
 	stdscr.InsDelLines(n)
-	VduFlush()
 }
 
 // VduInsertChars inserts n characters at current position
@@ -197,7 +192,6 @@ func VduInsertChars(n int) {
 	for range n {
 		stdscr.InsChar(nc.Char(' '))
 	}
-	VduFlush()
 }
 
 // VduDeleteChars deletes n characters at current position
@@ -205,7 +199,6 @@ func VduDeleteChars(n int) {
 	for range n {
 		stdscr.DelChar()
 	}
-	VduFlush()
 }
 
 // VduDisplayCrLf displays a carriage return / line feed
@@ -260,9 +253,9 @@ func VduGetKey() int {
 
 // VduGetInput gets a line of input from the user with a prompt
 func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
-	VduAttrBold()
+	VduBold()
 	VduDisplayStr(prompt, OutMClearEOL)
-	VduAttrNormal()
+	VduNormal()
 
 	// Fill get with spaces
 	*get = NewBlankStrObject(MaxStrLen)
@@ -309,8 +302,6 @@ func VduInsertMode(turnOn bool) {
 func VduGetText(strLen int, str *StrObject, outlen *int) {
 	// Fill str with spaces
 	str.Fill(' ', 1, MaxStrLen)
-
-	VduFlush()
 
 	*outlen = 0
 	_, curX := stdscr.CursorYX()
@@ -594,7 +585,6 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 			terminalInfo.Name = os.Getenv("TERM")
 
 			VduClearScr()
-			VduFlush()
 		}
 		return true
 	}
@@ -621,13 +611,20 @@ func VduGetNewDimensions(newX *int, newY *int) {
 	*newY = maxY
 }
 
-// VduAttrBold turns on bold attribute
-func VduAttrBold() {
+// VduHighlight turns on bold attribute
+func VduBold() {
 	stdscr.AttrOn(nc.A_BOLD)
+	stdscr.AttrOff(nc.A_DIM)
 }
 
-// VduAttrNormal turns off all attributes
-func VduAttrNormal() {
+// VduHighlight turns on bold attribute
+func VduDim() {
 	stdscr.AttrOff(nc.A_BOLD)
-	stdscr.AttrOff(nc.A_REVERSE)
+	stdscr.AttrOn(nc.A_DIM)
+}
+
+// VduNormal turns off all attributes
+func VduNormal() {
+	stdscr.AttrOff(nc.A_BOLD)
+	stdscr.AttrOff(nc.A_DIM)
 }

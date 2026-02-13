@@ -450,11 +450,12 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 					}
 				}
 			}
-			if delim == TpdSpan {
+			switch delim {
+			case TpdSpan:
 				if !tparSubstitute(tran, cmd, thisTp) {
 					return false
 				}
-			} else if delim == TpdEnvironment {
+			case TpdEnvironment:
 				if FileData.OldCmds {
 					ScreenMessage(MsgReservedTpd)
 					return false
@@ -463,7 +464,7 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 						return false
 					}
 				}
-			} else if delim == TpdPrompt {
+			case TpdPrompt:
 				if LudwigMode != LudwigBatch {
 					if cmd == CmdVerify {
 						var verifyReply VerifyResponse
@@ -502,7 +503,7 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 					ScreenMessage(MsgInteractiveModeOnly)
 					return false
 				}
-			} else {
+			default:
 				ended = true
 			}
 		}

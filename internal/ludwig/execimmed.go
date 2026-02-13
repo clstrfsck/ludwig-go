@@ -125,14 +125,14 @@ func ExecuteImmed() {
 						if !MarkCreate(
 							CurrentFrame.Dot.Line,
 							CurrentFrame.Dot.Col,
-							&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+							&CurrentFrame.Marks[MarkModified],
 						) {
 							cmdSuccess = false
 						}
 						if !MarkCreate(
 							CurrentFrame.Dot.Line,
 							CurrentFrame.Dot.Col-inputLen,
-							&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+							&CurrentFrame.Marks[MarkEquals],
 						) {
 							cmdSuccess = false
 						}
@@ -176,7 +176,7 @@ func ExecuteImmed() {
 								}
 								CurrentFrame.Dot.Col++
 								cmdSuccess = TextSplitLine(
-									CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+									CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals],
 								)
 								CurrentFrame.Dot.Col += CurrentFrame.MarginRight - col1
 								goto l2 // Simulate break of inner loop

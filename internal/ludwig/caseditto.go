@@ -207,12 +207,12 @@ l9:
 		MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		)
 		MarkCreate(
 			CurrentFrame.Dot.Line,
 			oldDotCol,
-			&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+			&CurrentFrame.Marks[MarkEquals],
 		)
 	}
 	return cmdStatus || !fromSpan

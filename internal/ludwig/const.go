@@ -34,7 +34,6 @@ const (
 	// MaxLines is the maximum lines per frame
 	MaxLines = MaxInt
 
-	MinMarkNumber     = 0
 	MaxMarkNumber     = 10
 	MinUserMarkNumber = 1
 	MaxUserMarkNumber = 9
