@@ -122,7 +122,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 			success = (endPos >= CurrentFrame.Dot.Line.Used) && found
 		}
 		if success && rept != LeadParamMinus {
-			success = MarkCreate(CurrentFrame.Dot.Line, endPos, &CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+			success = MarkCreate(CurrentFrame.Dot.Line, endPos, &CurrentFrame.Marks[MarkEquals])
 		}
 	} else {
 		exactcase := eqsgetrepExactcase(&tpar)
@@ -163,7 +163,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 			success = MarkCreate(
 				CurrentFrame.Dot.Line,
 				CurrentFrame.Dot.Col+nchIdent,
-				&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+				&CurrentFrame.Marks[MarkEquals],
 			)
 		}
 	}
@@ -276,11 +276,11 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 					}
 				}
 				if backwards {
-					if !MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+					if !MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals]) {
 						goto l99
 					}
 				} else {
-					if !MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+					if !MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals]) {
 						goto l99
 					}
 				}
@@ -383,10 +383,10 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 						}
 					}
 					if backwards {
-						if !MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+						if !MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals]) {
 							goto l99
 						}
-					} else if !MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+					} else if !MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals]) {
 						goto l99
 					}
 					result = true
@@ -455,10 +455,10 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 	if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot) {
 		goto l99
 	}
-	if CurrentFrame.Marks[MarkEquals-MinMarkNumber] != nil {
+	if CurrentFrame.Marks[MarkEquals] != nil {
 		if !MarkCreate(
-			CurrentFrame.Marks[MarkEquals-MinMarkNumber].Line,
-			CurrentFrame.Marks[MarkEquals-MinMarkNumber].Col,
+			CurrentFrame.Marks[MarkEquals].Line,
+			CurrentFrame.Marks[MarkEquals].Col,
 			&oldEquals,
 		) {
 			goto l99
@@ -508,10 +508,10 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				break
 			}
 		}
-		length = CurrentFrame.Marks[MarkEquals-MinMarkNumber].Col - CurrentFrame.Dot.Col
+		length = CurrentFrame.Marks[MarkEquals].Col - CurrentFrame.Dot.Col
 		if length < 0 {
-			CurrentFrame.Dot.Col = CurrentFrame.Marks[MarkEquals-MinMarkNumber].Col
-			CurrentFrame.Marks[MarkEquals-MinMarkNumber].Col = CurrentFrame.Dot.Col - length
+			CurrentFrame.Dot.Col = CurrentFrame.Marks[MarkEquals].Col
+			CurrentFrame.Marks[MarkEquals].Col = CurrentFrame.Dot.Col - length
 			length = -length
 		}
 		if tpar2.Con == nil {
@@ -537,7 +537,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 			}
 			if getcount > 0 {
 				if !MarkCreate(
-					CurrentFrame.Dot.Line, startCol, &CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+					CurrentFrame.Dot.Line, startCol, &CurrentFrame.Marks[MarkEquals],
 				) {
 					goto l99
 				}
@@ -545,7 +545,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				if !MarkCreate(
 					CurrentFrame.Dot.Line,
 					startCol+tpar2.Len,
-					&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+					&CurrentFrame.Marks[MarkEquals],
 				) {
 					goto l99
 				}
@@ -555,7 +555,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 			if !CharcmdDelete(CmdDeleteChar, LeadParamPInt, length, true) {
 				goto l99
 			}
-			if !TextInsertTpar(&tpar2, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+			if !TextInsertTpar(&tpar2, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
 				goto l99
 			}
 		}
@@ -563,8 +563,8 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 			goto l99
 		}
 		if !MarkCreate(
-			CurrentFrame.Marks[MarkEquals-MinMarkNumber].Line,
-			CurrentFrame.Marks[MarkEquals-MinMarkNumber].Col,
+			CurrentFrame.Marks[MarkEquals].Line,
+			CurrentFrame.Marks[MarkEquals].Col,
 			&oldEquals,
 		) {
 			goto l99
@@ -573,7 +573,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			goto l99
 		}
@@ -587,14 +587,14 @@ l1:
 		goto l99
 	}
 	if oldEquals != nil {
-		if !MarkCreate(oldEquals.Line, oldEquals.Col, &CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+		if !MarkCreate(oldEquals.Line, oldEquals.Col, &CurrentFrame.Marks[MarkEquals]) {
 			goto l99
 		}
 		if !MarkDestroy(&oldEquals) {
 			goto l99
 		}
-	} else if CurrentFrame.Marks[MarkEquals-MinMarkNumber] != nil {
-		if !MarkDestroy(&CurrentFrame.Marks[MarkEquals-MinMarkNumber]) {
+	} else if CurrentFrame.Marks[MarkEquals] != nil {
+		if !MarkDestroy(&CurrentFrame.Marks[MarkEquals]) {
 			goto l99
 		}
 	}

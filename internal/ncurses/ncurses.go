@@ -39,6 +39,7 @@ type Char rune
 // Attribute constants
 const (
 	A_BOLD    int = C.A_BOLD
+	A_DIM     int = C.A_DIM
 	A_REVERSE int = C.A_REVERSE
 )
 

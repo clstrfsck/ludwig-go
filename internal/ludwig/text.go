@@ -67,7 +67,7 @@ func TextRealizeNull(oldNull *LineHdrObject) bool {
 				if MarkCreate(
 					newNull.Group.Frame.Dot.Line,
 					newNull.Group.Frame.Dot.Col,
-					&newNull.Group.Frame.Marks[MarkModified-MinMarkNumber],
+					&newNull.Group.Frame.Marks[MarkModified],
 				) {
 					return true
 				}
@@ -848,7 +848,7 @@ func TextMove(
 			if !MarkCreate(
 				markTwo.Line,
 				markTwo.Col,
-				&markTwo.Line.Group.Frame.Marks[MarkModified-MinMarkNumber],
+				&markTwo.Line.Group.Frame.Marks[MarkModified],
 			) {
 				return false
 			}
@@ -857,7 +857,7 @@ func TextMove(
 		if !MarkCreate(
 			(*newEnd).Line,
 			(*newEnd).Col,
-			&(*newEnd).Line.Group.Frame.Marks[MarkModified-MinMarkNumber],
+			&(*newEnd).Line.Group.Frame.Marks[MarkModified],
 		) {
 			return false
 		}
@@ -1001,7 +1001,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	if !MarkCreate(
 		beforeMark.Line,
 		beforeMark.Col,
-		&beforeMark.Line.Group.Frame.Marks[MarkModified-MinMarkNumber],
+		&beforeMark.Line.Group.Frame.Marks[MarkModified],
 	) {
 		goto cleanup
 	}

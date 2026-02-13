@@ -141,12 +141,10 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 		if CurrentFrame == ScrFrame {
 			var key int
 			for {
-				if rept == LeadParamPIndef {
-					count = CurrentFrame.Dot.Line.ScrRowNr - 1
-					if count < 0 {
-						count = 0
-					}
-				} else if rept == LeadParamNIndef {
+				switch rept {
+				case LeadParamPIndef:
+					count = max(CurrentFrame.Dot.Line.ScrRowNr-1, 0)
+				case LeadParamNIndef:
 					count = CurrentFrame.Dot.Line.ScrRowNr - CurrentFrame.ScrHeight
 				}
 				if rept != LeadParamNone {

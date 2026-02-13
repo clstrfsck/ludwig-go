@@ -97,7 +97,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 	} else {
 		// Define Equals.
 		if cmdStatus {
-			MarkCreate(newEql.Line, newEql.Col, &CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+			MarkCreate(newEql.Line, newEql.Col, &CurrentFrame.Marks[MarkEquals])
 			if (command == CmdDown) && (rept != LeadParamPIndef) &&
 				(CurrentFrame.Dot.Line.FLink == nil) {
 				cmdStatus = false

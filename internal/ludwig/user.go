@@ -145,7 +145,7 @@ func UserCommandIntroducer() bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+			&CurrentFrame.Marks[MarkModified],
 		) {
 			cmdSuccess = false
 		}

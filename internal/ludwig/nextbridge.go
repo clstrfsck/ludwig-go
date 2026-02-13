@@ -83,7 +83,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+			&CurrentFrame.Marks[MarkEquals],
 		) {
 			return false
 		}
@@ -126,7 +126,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+			&CurrentFrame.Marks[MarkEquals],
 		) {
 			return false
 		}
@@ -134,7 +134,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 		return MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkEquals-MinMarkNumber],
+			&CurrentFrame.Marks[MarkEquals],
 		)
 	}
 

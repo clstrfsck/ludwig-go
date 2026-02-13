@@ -213,9 +213,9 @@ func FrameKill(frameName string) bool {
 	if !MarkDestroy(&thisFrame.Dot) {
 		return false
 	}
-	for i := MinMarkNumber; i <= MaxMarkNumber; i++ {
-		if thisFrame.Marks[i-MinMarkNumber] != nil {
-			if !MarkDestroy(&thisFrame.Marks[i-MinMarkNumber]) {
+	for i := 0; i <= MaxMarkNumber; i++ {
+		if thisFrame.Marks[i] != nil {
+			if !MarkDestroy(&thisFrame.Marks[i]) {
 				return false
 			}
 		}
@@ -475,13 +475,14 @@ func setcmdintr(request *TParObject, pos *int) bool {
 // setMode sets the editing mode
 func setMode(request *TParObject, pos *int) bool {
 	ch := nextchar(request, pos)
-	if ch == 'I' {
+	switch ch {
+	case 'I':
 		EditMode = ModeInsert
-	} else if ch == 'O' {
+	case 'O':
 		EditMode = ModeOvertype
-	} else if ch == 'C' {
+	case 'C':
 		EditMode = ModeCommand
-	} else {
+	default:
 		ScreenMessage(MsgModeError)
 		// FIXME: Original always returns true, but this should probably fail.
 		// return false
@@ -557,7 +558,7 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 			return false
 		}
 		CurrentFrame.TextModified = true
-		if !MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified-MinMarkNumber]) {
+		if !MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified]) {
 			return false
 		}
 
@@ -649,6 +650,27 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 			InitialTabStops[CurrentFrame.Dot.Col] = false
 		}
 		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = false
+
+	case 'W': // Regular width tabs
+		var temptab TabArray
+		for i := range temptab {
+			temptab[i] = false
+		}
+		var w int
+		if (!TparToInt(request, pos, &w)) || w <= 0 {
+			return false
+		}
+		temptab[0] = true
+		temptab[MaxStrLenP] = true
+		for i := 1; i <= MaxStrLen; i++ {
+			if i%w == 1 {
+				temptab[i] = true
+			}
+		}
+		if setInitial {
+			InitialTabStops = temptab
+		}
+		CurrentFrame.TabStops = temptab
 
 	case '(': // multi-columns specified
 		var temptab TabArray

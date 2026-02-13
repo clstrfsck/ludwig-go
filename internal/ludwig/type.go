@@ -359,7 +359,7 @@ type MarkObject struct {
 }
 
 // MarkArray represents an array of mark pointers
-type MarkArray [MaxMarkNumber - MinMarkNumber + 1]*MarkObject
+type MarkArray [MaxMarkNumber + 1]*MarkObject
 
 // TabArray represents an array of tab stops
 type TabArray [MaxStrLenP + 1]bool

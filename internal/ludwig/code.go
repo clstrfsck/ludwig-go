@@ -106,8 +106,8 @@ func errorMsg(ps *parseState, errText string) {
 			if !FrameEdit(ps.currentPoint.Line.Group.Frame.Span.Name) {
 				return
 			}
-			if CurrentFrame.Marks[MarkEquals-MinMarkNumber] != nil {
-				MarkDestroy(&CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+			if CurrentFrame.Marks[MarkEquals] != nil {
+				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 			}
 			var eLine *LineHdrObject
 			if !LinesCreate(1, &eLine, &eLine) {
