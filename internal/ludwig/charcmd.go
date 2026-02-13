@@ -93,12 +93,29 @@ l9:
 			MarkCreate(
 				CurrentFrame.Dot.Line,
 				CurrentFrame.Dot.Col,
-				&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+				&CurrentFrame.Marks[MarkModified],
 			)
-			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
 		}
 	}
 	return cmdStatus || !fromSpan
+}
+
+func joinLines() bool {
+	// Only join lines if we are in the newline mode and there is a previous line to join to
+	if !CurrentFrame.Options.Has(OptNewLine) {
+		return false
+	}
+	prevLine := CurrentFrame.Dot.Line.BLink
+	if prevLine == nil {
+		return false
+	}
+	var theOtherMark *MarkObject
+	if MarkCreate(prevLine, prevLine.Used+1, &theOtherMark) && TextRemove(theOtherMark, CurrentFrame.Dot) {
+		CurrentFrame.TextModified = true
+		return MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+	}
+	return false
 }
 
 // CharcmdDelete handles character deletion commands
@@ -116,17 +133,23 @@ func CharcmdDelete(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 
 	for {
 		cmdValid := true
+		dotCol := CurrentFrame.Dot.Col
 		switch rept {
 		case LeadParamNone, LeadParamPlus, LeadParamPInt:
-			if count > MaxStrLenP-CurrentFrame.Dot.Col {
+			if count > MaxStrLenP-dotCol {
 				cmdValid = false
 			}
 		case LeadParamPIndef:
-			count = MaxStrLenP - CurrentFrame.Dot.Col
+			count = MaxStrLenP - dotCol
 		case LeadParamMinus, LeadParamNInt:
 			count = -count
-			if count < CurrentFrame.Dot.Col {
+			if count < dotCol {
 				CurrentFrame.Dot.Col -= count
+			} else if !fromSpan && count == 1 && dotCol == 1 {
+				// Backspace in column 1 joins the current line with
+				// the previous line if typed from the keyboard.
+				cmdValid = joinLines()
+				count = 0
 			} else {
 				cmdValid = false
 			}
@@ -234,9 +257,9 @@ l9:
 			oldDotCol,
 		)
 		CurrentFrame.TextModified = true
-		MarkCreate(line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified-MinMarkNumber])
-		if CurrentFrame.Marks[MarkEquals-MinMarkNumber] != nil {
-			MarkDestroy(&CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+		MarkCreate(line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+		if CurrentFrame.Marks[MarkEquals] != nil {
+			MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 		}
 	}
 	return cmdStatus || !fromSpan
@@ -310,9 +333,9 @@ func CharcmdRubout(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 			MarkCreate(
 				CurrentFrame.Dot.Line,
 				CurrentFrame.Dot.Col,
-				&CurrentFrame.Marks[MarkModified-MinMarkNumber],
+				&CurrentFrame.Marks[MarkModified],
 			)
-			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals-MinMarkNumber])
+			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
 		}
 	}
 	return cmdStatus || !fromSpan
