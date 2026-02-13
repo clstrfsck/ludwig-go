@@ -39,11 +39,7 @@ func setupTestFrameForCharCmd(content string) (*FrameObject, *LineHdrObject) {
 	}
 
 	// Copy content into the line
-	for i, ch := range content {
-		if i < MaxStrLen {
-			line.Str.Set(i+1, byte(ch))
-		}
-	}
+	line.Str.Assign(content)
 
 	// Add NULL line at the end
 	nullLine := &LineHdrObject{
@@ -106,11 +102,7 @@ func setupMultiLineFrame(lines []string) *FrameObject {
 		}
 
 		// Copy content
-		for j, ch := range content {
-			if j < MaxStrLen {
-				line.Str.Set(j+1, byte(ch))
-			}
-		}
+		line.Str.Assign(content)
 
 		if prevLine != nil {
 			prevLine.FLink = line
@@ -471,24 +463,23 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteAtStartBackward", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("test")
+		frame := setupMultiLineFrame([]string{"first", "second"})
+		frame.Options.Set(OptNewLine)
 		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
 		CurrentFrame = frame
-		TtControlC = false
 		defer func() {
 			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
 		}()
 
+		// Second line, first column
+		frame.Dot.Line = frame.FirstGroup.FirstLine.FLink
 		frame.Dot.Col = 1
 
 		// Try to delete backward from start - should fail or join lines
-		result := CharcmdDelete(CmdDeleteChar, LeadParamNInt, 1, true)
+		result := CharcmdDelete(CmdDeleteChar, LeadParamNInt, -1, false)
 
-		// When fromSpan is true and we can't delete, result depends on join behavior
-		// Just verify no crash occurred
-		_ = result
+		assert.True(t, result, "Expected delete to succeed")
+		assert.Equal(t, getLineContent(frame.FirstGroup.FirstLine), "firstsecond", "Expected lines to be joined")
 	})
 
 	t.Run("DeleteUpdatesModifiedMark", func(t *testing.T) {
