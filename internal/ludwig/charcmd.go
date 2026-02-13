@@ -106,14 +106,17 @@ func joinLines() bool {
 	if !CurrentFrame.Options.Has(OptNewLine) {
 		return false
 	}
-	prevLine := CurrentFrame.Dot.Line.BLink
-	if prevLine == nil {
+	bLine := CurrentFrame.Dot.Line.BLink
+	if bLine == nil {
 		return false
 	}
 	var theOtherMark *MarkObject
-	if MarkCreate(prevLine, prevLine.Used+1, &theOtherMark) && TextRemove(theOtherMark, CurrentFrame.Dot) {
-		CurrentFrame.TextModified = true
-		return MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+	if MarkCreate(bLine, bLine.Used+1, &theOtherMark) {
+		defer MarkDestroy(&theOtherMark)
+		if TextRemove(theOtherMark, CurrentFrame.Dot) {
+			CurrentFrame.TextModified = true
+			return MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+		}
 	}
 	return false
 }
@@ -145,11 +148,9 @@ func CharcmdDelete(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 			count = -count
 			if count < dotCol {
 				CurrentFrame.Dot.Col -= count
-			} else if !fromSpan && count == 1 && dotCol == 1 {
-				// Backspace in column 1 joins the current line with
-				// the previous line if typed from the keyboard.
-				cmdValid = joinLines()
-				count = 0
+			} else if !fromSpan && count == 1 && dotCol == 1 && joinLines() {
+				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+				return true
 			} else {
 				cmdValid = false
 			}
