@@ -42,7 +42,7 @@ task build
 # Build release binary (no symbols)
 task build-release
 # Run unit tests
-task tests
+task test
 # Build everything and run all available tests
 task check
 # See Taskfile.yml for more

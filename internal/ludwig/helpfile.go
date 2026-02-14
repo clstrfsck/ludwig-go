@@ -91,7 +91,7 @@ func readIndex() bool {
 	if err != nil {
 		return false
 	}
-	parts := strings.Fields(strings.TrimSpace(firstLine))
+	parts := strings.Fields(firstLine)
 	if len(parts) != 2 {
 		return false
 	}
@@ -118,7 +118,7 @@ func readIndex() bool {
 		}
 
 		var k keyType
-		k.key = strings.TrimSpace(fields[0])
+		k.key = fields[0]
 		k.startPos, err = strconv.ParseInt(fields[1], 10, 64)
 		if err != nil {
 			return false

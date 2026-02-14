@@ -14,33 +14,66 @@ tasks:
 
   build:
     desc: Build debug binary
-    deps: [setup, build-help]
+    deps:
+      - setup
+      - build-help
+    sources:
+      - ./{{.ludpkg}}/*.go
+      - ./internal/**/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - ./{{.output_dir}}/ludwig-debug
     cmds:
       - go build -o {{.output_dir}}/ludwig-debug -gcflags "all=-N -l" {{.ludpkg}}
 
   build-release:
     desc: Build release binary
-    deps: [setup, build-help]
+    deps:
+      - setup
+      - build-help
+    sources:
+      - ./{{.ludpkg}}/*.go
+      - ./internal/**/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - ./{{.output_dir}}/ludwig
     cmds:
       - go build -o {{.output_dir}}/ludwig -ldflags "-s -w" {{.ludpkg}}
 
   build-help:
     desc: Build help documentation
     deps: [build-hlpbld]
+    sources:
+      - ./ludwighlp.txt
+      - ./ludwignewhlp.txt
+    generates:
+      - ./{{.output_dir}}/ludwighlp.idx
+      - ./{{.output_dir}}/ludwignewhlp.idx
+      - ./{{.embed_dir}}/ludwighlp.idx
+      - ./{{.embed_dir}}/ludwignewhlp.idx
     cmds:
-      - go run {{.hlppkg}} ludwighlp.txt {{.output_dir}}/ludwighlp.idx
-      - go run {{.hlppkg}} ludwignewhlp.txt {{.output_dir}}/ludwignewhlp.idx
+      - ./{{.output_dir}}/ludwighlpbld ludwighlp.txt {{.output_dir}}/ludwighlp.idx
+      - ./{{.output_dir}}/ludwighlpbld ludwignewhlp.txt {{.output_dir}}/ludwignewhlp.idx
       - mkdir -p {{.embed_dir}}
       - cp {{.output_dir}}/ludwighlp.idx {{.output_dir}}/ludwignewhlp.idx {{.embed_dir}}
 
   build-hlpbld:
     desc: Build help documentation builder
     deps: [setup]
+    sources:
+      - ./{{.hlppkg}}/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - ./bin/ludwighlpbld
     cmds:
       - go build -o {{.output_dir}}/ludwighlpbld -ldflags "-s -w" {{.hlppkg}}
 
   test:
     desc: Run tests
+    deps: [build-help]
     cmds:
       - go test ./internal/ludwig
 
