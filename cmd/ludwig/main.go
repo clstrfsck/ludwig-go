@@ -808,6 +808,13 @@ l99:
 }
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			VduFree() // Try to get us back to a sane state on-screen
+			progWindup(false)
+			panic(r) // Re-panic to show stack trace
+		}
+	}()
 	SysInitSig()
 	ValueInitializations()
 	initialize()                        // Stuff VALUE can't do, like creating frames etc.

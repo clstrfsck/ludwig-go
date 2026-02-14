@@ -594,6 +594,7 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 // VduFree cleans up the VDU system
 func VduFree() {
 	if vduSetup {
+		vduSetup = false
 		VduScrollUp(1)
 		maxY, _ := stdscr.MaxYX()
 		VduMoveCurs(1, maxY)
