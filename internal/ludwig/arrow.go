@@ -108,6 +108,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 }
 
 func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) bool {
+	*newEql = *CurrentFrame.Dot
 	dotLine := CurrentFrame.Dot.Line
 	var lineNr int
 	if !LineToNumber(dotLine, &lineNr) {
@@ -116,7 +117,6 @@ func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) boo
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if lineNr+count <= eopLineNr {
-			*newEql = *CurrentFrame.Dot
 			if count < MaxGroupLines/2 {
 				for counter := 1; counter <= count; counter++ {
 					dotLine = dotLine.FLink
@@ -128,7 +128,6 @@ func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) boo
 			}
 		}
 	case LeadParamPIndef:
-		*newEql = *CurrentFrame.Dot
 		dotLine = CurrentFrame.LastGroup.LastLine
 	}
 	if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
@@ -148,16 +147,15 @@ func doCmdHome(newEql *MarkObject) bool {
 }
 
 func doCmdLeft(rept LeadParam, count int, newEql *MarkObject) bool {
+	*newEql = *CurrentFrame.Dot
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if CurrentFrame.Dot.Col-count >= 1 {
-			*newEql = *CurrentFrame.Dot
 			CurrentFrame.Dot.Col -= count
 			return true
 		}
 	case LeadParamPIndef:
 		if CurrentFrame.Dot.Col >= CurrentFrame.MarginLeft {
-			*newEql = *CurrentFrame.Dot
 			CurrentFrame.Dot.Col = CurrentFrame.MarginLeft
 			return true
 		}
@@ -166,16 +164,15 @@ func doCmdLeft(rept LeadParam, count int, newEql *MarkObject) bool {
 }
 
 func doCmdRight(rept LeadParam, count int, newEql *MarkObject) bool {
+	*newEql = *CurrentFrame.Dot
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if CurrentFrame.Dot.Col+count <= MaxStrLenP {
-			*newEql = *CurrentFrame.Dot
 			CurrentFrame.Dot.Col += count
 			return true
 		}
 	case LeadParamPIndef:
 		if CurrentFrame.Dot.Col <= CurrentFrame.MarginRight {
-			*newEql = *CurrentFrame.Dot
 			CurrentFrame.Dot.Col = CurrentFrame.MarginRight
 			return true
 		}
@@ -184,6 +181,7 @@ func doCmdRight(rept LeadParam, count int, newEql *MarkObject) bool {
 }
 
 func doCmdTabBacktab(step, count int, newEql *MarkObject) bool {
+	*newEql = *CurrentFrame.Dot
 	newCol := CurrentFrame.Dot.Col
 	for counter := 1; counter <= count; counter++ {
 		for {
@@ -199,12 +197,12 @@ func doCmdTabBacktab(step, count int, newEql *MarkObject) bool {
 			return false
 		}
 	}
-	*newEql = *CurrentFrame.Dot
 	CurrentFrame.Dot.Col = newCol
 	return true
 }
 
 func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
+	*newEql = *CurrentFrame.Dot
 	dotLine := CurrentFrame.Dot.Line
 	var lineNr int
 	if !LineToNumber(dotLine, &lineNr) {
@@ -213,7 +211,6 @@ func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if lineNr-count > 0 {
-			*newEql = *CurrentFrame.Dot
 			if count < MaxGroupLines/2 {
 				for counter := 1; counter <= count; counter++ {
 					dotLine = dotLine.BLink
@@ -223,9 +220,10 @@ func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 					return false
 				}
 			}
+		} else {
+			return false
 		}
 	case LeadParamPIndef:
-		*newEql = *CurrentFrame.Dot
 		dotLine = CurrentFrame.FirstGroup.FirstLine
 	}
 	if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
