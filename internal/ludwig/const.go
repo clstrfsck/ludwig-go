@@ -90,10 +90,6 @@ const (
 	MaxNrKeyNames  = 1000
 	MaxParseTable  = 300
 
-	// Application exit codes
-	NormalExit   = 0
-	AbnormalExit = 1
-
 	// Regular expression state machine
 	MaxNFAStateRange = 200        // no of states in NFA
 	MaxDFAStateRange = 255        // no of states in DFA
@@ -123,11 +119,11 @@ const (
 	PatternSpace       = ' '
 
 	// set locations for line end specifiers
-	PatternBegLine     = 0 // the <  (beginning of line) specifier
-	PatternEndLine     = 1 // the >  (end of line) specifier
-	PatternLeftMargin  = 3 // l.brace( left margin ) specifier
-	PatternRightMargin = 4 // r.brace( right margin ) specifier
-	PatternDotColumn   = 5 // the ^  ( dots column)   specifier
+	PatternBegLine     = 0 // the < ( beg. of line ) specifier
+	PatternEndLine     = 1 // the > ( end of line  ) specifier
+	PatternLeftMargin  = 3 // the { ( left margin  ) specifier
+	PatternRightMargin = 4 // the } ( right margin ) specifier
+	PatternDotColumn   = 5 // the ^ ( dot's column ) specifier
 
 	PatternMarksStart    = 19 // mark 1 = 20, 2 = 21, etc
 	PatternMarksModified = 29 // marks_start + mark_modified
@@ -294,21 +290,3 @@ const (
 	DbgTparNil                 = "Tpar should not be nil."
 	DbgWrongRowNr              = "Wrong row nr."
 )
-
-// GetFileNameLen returns the appropriate file name length for the current OS
-func GetFileNameLen() int {
-	// In Go, we could use a more dynamic approach
-	// For Unix-like systems, PATH_MAX is typically 4096
-	// For simplicity, we'll use a reasonable default
-	return FileNameLen
-}
-
-// ExitSuccess returns the appropriate exit code for success
-func ExitSuccess() int {
-	return 0
-}
-
-// ExitFailure returns the appropriate exit code for failure
-func ExitFailure() int {
-	return 1
-}
