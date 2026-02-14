@@ -320,13 +320,13 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				}
 				i++
 			}
-			tabs = i / 8
+			tabs = (i - 1) / 8
 			offset = tabs * 7
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, '\t')
 			}
 		}
-		count := SysWrite(fyle.Fd, []byte(buffer.Slice(offset+1, bufsiz)))
+		count := SysWrite(fyle.Fd, []byte(buffer.Slice(offset+1, bufsiz-offset)))
 		if tabs > 0 {
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, ' ')

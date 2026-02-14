@@ -53,8 +53,7 @@ func ExecComputeLineRange(
 			if !LineToNumber(*firstLine, &lineNr) {
 				goto l99
 			}
-			// FIXME: Should this be "frame" rather than "CurrentFrame"
-			if !LineFromNumber(CurrentFrame, lineNr+count-1, lastLine) {
+			if !LineFromNumber(frame, lineNr+count-1, lastLine) {
 				goto l99
 			}
 			if *lastLine == nil {
@@ -87,8 +86,7 @@ func ExecComputeLineRange(
 				goto l99
 			}
 			lineNr = lineNr - count + 1
-			// FIXME: Not sure if "CurrentFrame" should be "frame"
-			if !LineFromNumber(CurrentFrame, lineNr, firstLine) {
+			if !LineFromNumber(frame, lineNr, firstLine) {
 				goto l99
 			}
 		}
