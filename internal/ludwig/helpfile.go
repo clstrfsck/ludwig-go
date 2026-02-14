@@ -16,11 +16,19 @@ package ludwig
 
 import (
 	"bufio"
+	"bytes"
+	_ "embed"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 )
+
+//go:embed data/ludwighlp.idx
+var oldHelpFileData []byte
+
+//go:embed data/ludwignewhlp.idx
+var newHelpFileData []byte
 
 const (
 	newHelpfileEnv    = "LUD_NEWHELPFILE"
@@ -38,7 +46,7 @@ type keyType struct {
 }
 
 var (
-	helpfile   *os.File
+	helpSeeker io.ReadSeeker
 	helpReader *bufio.Reader
 	table      map[string]keyType
 	currentKey keyType
@@ -47,69 +55,75 @@ var (
 // helpOpenFile opens a help file
 func helpOpenFile(filename string) bool {
 	var err error
-	helpfile, err = os.Open(filename)
+	helpSeeker, err = os.Open(filename)
 	if err != nil {
 		return false
 	}
-	helpReader = bufio.NewReader(helpfile)
+	helpReader = bufio.NewReader(helpSeeker)
 	return true
 }
 
-// helpTryOpenFile tries to open a help file from environment or default location
-func helpTryOpenFile(envName string, defaultFilename string) bool {
-	helpPath := os.Getenv(envName)
-	if helpPath == "" || !helpOpenFile(helpPath) {
-		return helpOpenFile(defaultFilename)
-	}
+func helpOpenEmbedded(data []byte) bool {
+	helpSeeker = bytes.NewReader(data)
+	helpReader = bufio.NewReader(helpSeeker)
 	return true
+}
+
+func helpTryOpenFile(envName string, defaultFilename string, embeddedData []byte) bool {
+	// First try environment variable (for development/override)
+	helpPath := os.Getenv(envName)
+	if helpPath != "" && helpOpenFile(helpPath) {
+		return true
+	}
+	// Then try embedded data
+	if len(embeddedData) > 0 {
+		return helpOpenEmbedded(embeddedData)
+	}
+	// Fallback to filesystem
+	return helpOpenFile(defaultFilename)
 }
 
 // readIndex reads the help file index
 func readIndex() bool {
 	// Read in the size of the index, and the size in lines of the contents
-	indexSizeLine, err := helpReader.ReadString('\n')
+	// Both values are on the same line, space-separated
+	firstLine, err := helpReader.ReadString('\n')
 	if err != nil {
 		return false
 	}
-	indexSize, err := strconv.ParseInt(strings.TrimSpace(indexSizeLine), 10, 64)
+	parts := strings.Fields(firstLine)
+	if len(parts) != 2 {
+		return false
+	}
+	indexSize, err := strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
 		return false
 	}
-
-	contentsLinesLine, err := helpReader.ReadString('\n')
-	if err != nil {
-		return false
-	}
-	contentsLines, err := strconv.ParseInt(strings.TrimSpace(contentsLinesLine), 10, 64)
+	contentsLines, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
 		return false
 	}
 
 	// Read in indexSize keys
 	table = make(map[string]keyType)
-	for i := int64(0); i < indexSize; i++ {
+	for range indexSize {
+		indexLine, err := helpReader.ReadString('\n')
+		if err != nil {
+			return false
+		}
+
+		fields := strings.Fields(indexLine)
+		if len(fields) != 3 {
+			return false
+		}
+
 		var k keyType
-
-		keyLine, err := helpReader.ReadString('\n')
+		k.key = fields[0]
+		k.startPos, err = strconv.ParseInt(fields[1], 10, 64)
 		if err != nil {
 			return false
 		}
-		k.key = strings.TrimSpace(keyLine)
-
-		startPosLine, err := helpReader.ReadString('\n')
-		if err != nil {
-			return false
-		}
-		k.startPos, err = strconv.ParseInt(strings.TrimSpace(startPosLine), 10, 64)
-		if err != nil {
-			return false
-		}
-
-		endPosLine, err := helpReader.ReadString('\n')
-		if err != nil {
-			return false
-		}
-		k.endPos, err = strconv.ParseInt(strings.TrimSpace(endPosLine), 10, 64)
+		k.endPos, err = strconv.ParseInt(fields[2], 10, 64)
 		if err != nil {
 			return false
 		}
@@ -123,7 +137,7 @@ func readIndex() bool {
 	// bulk of the entries.
 	var contents keyType
 	contents.key = "0"
-	currentPos, err := helpfile.Seek(0, io.SeekCurrent)
+	currentPos, err := helpSeeker.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return false
 	}
@@ -131,14 +145,14 @@ func readIndex() bool {
 	currentPos -= int64(helpReader.Buffered())
 	contents.startPos = currentPos
 
-	for i := int64(0); i < contentsLines; i++ {
+	for range contentsLines {
 		_, err := helpReader.ReadString('\n')
 		if err != nil {
 			return false
 		}
 	}
 
-	currentPos, err = helpfile.Seek(0, io.SeekCurrent)
+	currentPos, err = helpSeeker.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return false
 	}
@@ -160,9 +174,11 @@ func readIndex() bool {
 
 // HelpfileClose closes the help file and clears the index
 func HelpfileClose() {
-	if helpfile != nil {
-		helpfile.Close()
-		helpfile = nil
+	if helpSeeker != nil {
+		if closer, ok := helpSeeker.(io.Closer); ok {
+			closer.Close()
+		}
+		helpSeeker = nil
 		helpReader = nil
 	}
 	currentKey.key = ""
@@ -171,28 +187,17 @@ func HelpfileClose() {
 
 // HelpfileOpen opens a help file (old or new version)
 func HelpfileOpen(oldVersion bool) bool {
-	if helpfile != nil { // we have done this before, don't do it again!
+	if helpSeeker != nil { // we have done this before, don't do it again!
 		return true
 	}
 	if oldVersion {
-		if !helpTryOpenFile(oldHelpfileEnv, oldDefaultHlpFile) {
+		if !helpTryOpenFile(oldHelpfileEnv, oldDefaultHlpFile, oldHelpFileData) {
 			return false
 		}
 	} else {
-		if !helpTryOpenFile(newHelpfileEnv, newDefaultHlpFile) {
+		if !helpTryOpenFile(newHelpfileEnv, newDefaultHlpFile, newHelpFileData) {
 			return false
 		}
-	}
-	return readIndex()
-}
-
-// HelpfileOpenFile opens a specific help file
-func HelpfileOpenFile(filename string) bool {
-	if helpfile != nil { // we have done this before, don't do it again!
-		return true
-	}
-	if !helpOpenFile(filename) {
-		return false
 	}
 	return readIndex()
 }
@@ -208,12 +213,12 @@ func HelpfileRead(keystr string, buffer *HelpRecord) bool {
 
 	// Find the offset in the helpfile for the entry and go there now
 	currentKey = entry
-	_, err := helpfile.Seek(currentKey.startPos, io.SeekStart)
+	_, err := helpSeeker.Seek(currentKey.startPos, io.SeekStart)
 	if err != nil {
 		return false
 	}
 	// Need to create a new reader after seeking
-	helpReader = bufio.NewReader(helpfile)
+	helpReader = bufio.NewReader(helpSeeker)
 
 	// Get the first line in the entry and package it up in a HelpRecord
 	line, err := helpReader.ReadString('\n')
@@ -229,7 +234,7 @@ func HelpfileRead(keystr string, buffer *HelpRecord) bool {
 func HelpfileNext(buffer *HelpRecord) bool {
 	// if the current position >= the end of the entry return false,
 	// else give back the next line nicely packaged.
-	currentPos, err := helpfile.Seek(0, io.SeekCurrent)
+	currentPos, err := helpSeeker.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return false
 	}

@@ -2,3 +2,4 @@
 bin/
 c_src/
 system-test/
+internal/ludwig/data/
