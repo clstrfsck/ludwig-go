@@ -14,8 +14,8 @@
 
 package ludwig
 
-// SetupInitialValues initializes all global variables to their default values
-func SetupInitialValues() {
+// setupInitialValues initializes all global variables to their default values
+func setupInitialValues() {
 	CurrentFrame = nil
 	LudwigAborted = false
 	ExitAbort = false
@@ -134,8 +134,8 @@ func allLeadParams() []LeadParam {
 	}
 }
 
-// InitializeCommandTablePart1 initializes the first part of the command table
-func InitializeCommandTablePart1() {
+// initializeCommandTablePart1 initializes the first part of the command table
+func initializeCommandTablePart1() {
 	initCmd(CmdNoop, allLeadParams(), EqNil, 0, NoPrompt, false, false, NoPrompt, false, false)
 	initCmd(CmdUp, []LeadParam{LeadParamNone, LeadParamPlus, LeadParamPInt, LeadParamPIndef}, EqNil, 0, NoPrompt, false, false, NoPrompt, false, false)
 	initCmd(CmdDown, []LeadParam{LeadParamNone, LeadParamPlus, LeadParamPInt, LeadParamPIndef}, EqNil, 0, NoPrompt, false, false, NoPrompt, false, false)
@@ -184,8 +184,8 @@ func InitializeCommandTablePart1() {
 	initCmd(CmdDeleteChar, allLeadParams(), EqNil, 0, NoPrompt, false, false, NoPrompt, false, false)
 }
 
-// InitializeCommandTablePart2 initializes the second part of the command table
-func InitializeCommandTablePart2() {
+// initializeCommandTablePart2 initializes the second part of the command table
+func initializeCommandTablePart2() {
 	initCmd(CmdSwapLine, allLeadParams(), EqDel, 0, NoPrompt, false, false, NoPrompt, false, false)
 	initCmd(CmdSplitLine, []LeadParam{LeadParamNone}, EqNil, 0, NoPrompt, false, false, NoPrompt, false, false)
 	initCmd(CmdDittoUp, []LeadParam{LeadParamNone, LeadParamPlus, LeadParamMinus, LeadParamPInt, LeadParamNInt, LeadParamPIndef, LeadParamNIndef}, EqNil, 0, NoPrompt, false, false, NoPrompt, false, false)
@@ -262,7 +262,7 @@ func InitializeCommandTablePart2() {
 
 // ValueInitializations performs all value initializations
 func ValueInitializations() {
-	SetupInitialValues()
-	InitializeCommandTablePart1()
-	InitializeCommandTablePart2()
+	setupInitialValues()
+	initializeCommandTablePart1()
+	initializeCommandTablePart2()
 }
