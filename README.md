@@ -29,16 +29,10 @@ There is also a C++ port available here:
 
 ## Building
 
-You can use `go` or `task` to build:
-
-Using `go`:
-
-```sh
-go build ./cmd/ludwig
-go build ./cmd/ludwighlpbld
-./ludwighlpbld ludwighlp.txt ludwighlp.idx
-./ludwighlpbld ludwignewhlp.txt ludwignewhlp.idx
-```
+The easiest way to build is by using `task`.  The build is a multi-stage build
+where the indexed helpfile is embedded into the output binary.  This means the
+online help is always available.  The minor downside is that the build process
+is slightly more complicated.
 
 Using `task`:
 
@@ -47,20 +41,20 @@ Using `task`:
 task build
 # Build release binary (no symbols)
 task build-release
-# Index help files
-task build-help
 # Run unit tests
 task tests
+# Build everything and run all available tests
+task check
 # See Taskfile.yml for more
 ```
 
 The release build will produce a `ludwig` executable which can be copied to
 your preferred directory for local binaries, eg `/usr/local/bin`.
 
-Note that two help files are also built, `ludwighlp.idx` and `ludwignewhlp.idx`
-for the old and new command sets respectively.  Ludwig is hardcoded to find
-these files in `/usr/local/help`, or alternatively in a location pointed to by
-the environment variables `LUD_HELPFILE` and `LUD_NEWHELPFILE`.
+If you would prefer to use a different help file than the embedded
+documentation, you can set the environment variables `LUD_HELPFILE` and
+`LUD_NEWHELPFILE` to point to the locations of the old and new command help
+files respectively.
 
 ## Coverage
 
@@ -116,6 +110,22 @@ a pty for screen / window commands.
 
 I have checked that the system tests run as expected using the original Pascal
 version as an oracle, as well as running them against this port.
+
+### More tips on setting up Python
+
+You can use `virtual-env` to easily set up an environment without adding to
+your global python packages:
+
+```sh
+python3 -m venv .venv
+source ./.venv/bin/activate
+pip install pytest
+pip install pexpect
+```
+
+**Please be aware** that the `run-system-tests.sh` script included in the
+system tests will automatically source `./.venv/bin/activate` if it is found
+in the current directory.
 
 ## Usage
 

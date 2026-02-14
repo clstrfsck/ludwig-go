@@ -2,6 +2,7 @@ version: '3'
 
 vars:
   output_dir: bin
+  embed_dir: internal/ludwig/data
   ludpkg: ./cmd/ludwig
   hlppkg: ./cmd/ludwighlpbld
 
@@ -13,13 +14,13 @@ tasks:
 
   build:
     desc: Build debug binary
-    deps: [setup]
+    deps: [setup, build-help]
     cmds:
       - go build -o {{.output_dir}}/ludwig-debug -gcflags "all=-N -l" {{.ludpkg}}
 
   build-release:
     desc: Build release binary
-    deps: [setup]
+    deps: [setup, build-help]
     cmds:
       - go build -o {{.output_dir}}/ludwig -ldflags "-s -w" {{.ludpkg}}
 
@@ -29,6 +30,8 @@ tasks:
     cmds:
       - go run {{.hlppkg}} ludwighlp.txt {{.output_dir}}/ludwighlp.idx
       - go run {{.hlppkg}} ludwignewhlp.txt {{.output_dir}}/ludwignewhlp.idx
+      - mkdir -p {{.embed_dir}}
+      - cp {{.output_dir}}/ludwighlp.idx {{.output_dir}}/ludwignewhlp.idx {{.embed_dir}}
 
   build-hlpbld:
     desc: Build help documentation builder
@@ -58,11 +61,11 @@ tasks:
     cmds:
       - task: build
       - task: build-release
-      - task: build-help
       - task: test
       - task: system-test
 
   clean:
-    desc: Remove built binaries
+    desc: Remove built binaries and help files
     cmds:
       - rm -rf {{.output_dir}}
+      - rm -rf {{.embed_dir}}
