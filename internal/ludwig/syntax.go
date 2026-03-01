@@ -104,49 +104,96 @@ func SyntaxDetect(filename string) *highlight.Highlighter {
 }
 
 // LudwigBuffer implements highlight.LineStates over a frame's line list
+// using lazy cursor-based navigation to avoid materialising the full line slice.
 type LudwigBuffer struct {
-	lines []*LineHdrObject
+	frame    *FrameObject
+	numLines int
+	curIdx   int
+	curLine  *LineHdrObject
 }
 
+// newLudwigBuffer creates a LudwigBuffer for frame. It counts lines in
+// O(groups) time rather than walking every line.
 func newLudwigBuffer(frame *FrameObject) *LudwigBuffer {
-	var lines []*LineHdrObject
-	line := frame.FirstGroup.FirstLine
-	for line != nil && line.FLink != nil { // FLink==nil means EOP
-		lines = append(lines, line)
-		line = line.FLink
+	total := 0
+	for g := frame.FirstGroup; g != nil; g = g.FLink {
+		total += g.NrLines
 	}
-	return &LudwigBuffer{lines: lines}
+	if total > 0 {
+		total-- // non-empty frame: subtract 1 to exclude the EOP sentinel (last line with FLink==nil)
+	}
+	return &LudwigBuffer{frame: frame, numLines: total, curIdx: -1}
+}
+
+// lineAt returns the line at 0-based index n. Sequential forward/backward
+// access is O(1) via the cursor; random access uses group metadata (O(groups)).
+func (b *LudwigBuffer) lineAt(n int) *LineHdrObject {
+	if n < 0 || n >= b.numLines {
+		return nil
+	}
+	if b.curIdx == n && b.curLine != nil {
+		return b.curLine
+	}
+	// Common cases: one step forward or backward from the cursor.
+	if b.curIdx >= 0 && b.curLine != nil {
+		if n == b.curIdx+1 {
+			if line := b.curLine.FLink; line != nil {
+				b.curIdx, b.curLine = n, line
+				return line
+			}
+		} else if n == b.curIdx-1 {
+			if line := b.curLine.BLink; line != nil {
+				b.curIdx, b.curLine = n, line
+				return line
+			}
+		}
+	}
+	// General case: locate the group that owns 1-based line n+1, then walk
+	// within it. Groups hold at most MaxGroupLines lines each, so the
+	// inner walk is bounded and fast in practice.
+	oneBasedN := n + 1
+	for g := b.frame.FirstGroup; g != nil; g = g.FLink {
+		if oneBasedN >= g.FirstLineNr && oneBasedN < g.FirstLineNr+g.NrLines {
+			offset := oneBasedN - g.FirstLineNr
+			line := g.FirstLine
+			for i := 0; i < offset; i++ {
+				if line = line.FLink; line == nil {
+					return nil
+				}
+			}
+			b.curIdx, b.curLine = n, line
+			return line
+		}
+	}
+	return nil
 }
 
 func (b *LudwigBuffer) LineBytes(n int) []byte {
-	if n >= len(b.lines) {
-		return nil
-	}
-	line := b.lines[n]
-	if line.Str == nil || line.Used == 0 {
+	line := b.lineAt(n)
+	if line == nil || line.Str == nil || line.Used == 0 {
 		return nil
 	}
 	return []byte(line.Str.Slice(1, line.Used))
 }
 
-func (b *LudwigBuffer) LinesNum() int { return len(b.lines) }
+func (b *LudwigBuffer) LinesNum() int { return b.numLines }
 
 func (b *LudwigBuffer) State(n int) highlight.State {
-	if n >= len(b.lines) {
-		return nil
+	if line := b.lineAt(n); line != nil {
+		return line.HlState
 	}
-	return b.lines[n].HlState
+	return nil
 }
 
 func (b *LudwigBuffer) SetState(n int, s highlight.State) {
-	if n < len(b.lines) {
-		b.lines[n].HlState = s
+	if line := b.lineAt(n); line != nil {
+		line.HlState = s
 	}
 }
 
 func (b *LudwigBuffer) SetMatch(n int, m highlight.LineMatch) {
-	if n < len(b.lines) {
-		b.lines[n].HlMatch = m
+	if line := b.lineAt(n); line != nil {
+		line.HlMatch = m
 	}
 }
 
