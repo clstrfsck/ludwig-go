@@ -98,7 +98,7 @@ func Init() (*Window, error) {
 }
 
 // End cleans up ncurses
-func End() {
+func EndWin() {
 	C.endwin()
 }
 
@@ -269,9 +269,31 @@ func UseDefaultColors() { C.use_default_colors() }
 // HasColors returns true if the terminal supports colors
 func HasColors() bool { return bool(C.has_colors()) }
 
+// Colors returns the number of colors supported
+func Colors() int { return int(C.COLORS) }
+
+// ColorPairs returns the number of color pairs supported
+func ColorPairs() int { return int(C.COLOR_PAIRS) }
+
+func CanChangeColor() bool { return bool(C.can_change_color()) }
+
 // InitPair initializes a color pair (pair, fg, bg); use -1 for default color
 func InitPair(pair, fg, bg int) {
 	C.init_pair(C.short(pair), C.short(fg), C.short(bg))
+}
+
+// InitColor initializes a color definition (color, r, g, b) with RGB values 0-1000
+func InitColor(color, r, g, b int) {
+	C.init_color(C.short(color), C.short(r), C.short(g), C.short(b))
+}
+
+// Retrieve current color
+func ColorContent(color int, r, g, b *int) {
+	var cr, cg, cb C.short
+	C.color_content(C.short(color), &cr, &cg, &cb)
+	*r = int(cr)
+	*g = int(cg)
+	*b = int(cb)
 }
 
 // ColorPair returns the attribute value for a color pair

@@ -10,22 +10,8 @@ import (
 var syntaxColorTable [256]int
 
 // buildColorTable maps micro highlight group names to ncurses color pairs
-func buildColorTable() {
-	groupColors := map[string]int{
-		"statement":  ColorPairKeyword,
-		"keyword":    ColorPairKeyword,
-		"type":       ColorPairType,
-		"string":     ColorPairString,
-		"stringx":    ColorPairString,
-		"comment":    ColorPairComment,
-		"preproc":    ColorPairPreproc,
-		"constant":   ColorPairConstant,
-		"special":    ColorPairSpecial,
-		"underlined": ColorPairSpecial,
-		"todo":       ColorPairSpecial,
-		"error":      ColorPairError,
-	}
-	for name, pair := range groupColors {
+func buildColorTable(groupColours *map[string]int) {
+	for name, pair := range *groupColours {
 		if g, ok := highlight.Groups[name]; ok {
 			syntaxColorTable[g] = pair
 		}
@@ -39,7 +25,7 @@ var (
 )
 
 // SyntaxInit loads all embedded syntax definitions
-func SyntaxInit() {
+func SyntaxInit(groupColours *map[string]int) {
 	if !colorsEnabled {
 		return
 	}
@@ -75,7 +61,7 @@ func SyntaxInit() {
 			highlight.ResolveIncludes(syntaxDefs[i], files)
 		}
 	}
-	buildColorTable()
+	buildColorTable(groupColours)
 	syntaxEnabled = len(syntaxDefs) > 0
 }
 

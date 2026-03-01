@@ -142,44 +142,44 @@ func SysCopyFilename(srcPath string, dstPath *string) bool {
 }
 
 // SysOpenCommand opens a pipe to a command
-func SysOpenCommand(cmd string) int {
+func SysOpenCommand(cmd string) *os.File {
 	command := exec.Command("sh", "-c", cmd)
 
 	stdout, err := command.StdoutPipe()
 	if err != nil {
-		return -1
+		return nil
 	}
 
 	command.Stderr = command.Stdout
 
 	if err := command.Start(); err != nil {
-		return -1
+		return nil
 	}
 
 	// Convert the pipe to a file descriptor
 	if f, ok := stdout.(*os.File); ok {
-		return int(f.Fd())
+		return f
 	}
 
-	return -1
+	return nil
 }
 
 // SysOpenFile opens a file for reading
-func SysOpenFile(filename string) int {
+func SysOpenFile(filename string) *os.File {
 	f, err := os.Open(filename)
 	if err != nil {
-		return -1
+		return nil
 	}
-	return int(f.Fd())
+	return f
 }
 
 // SysCreateFile creates a file for reading and writing
-func SysCreateFile(filename string) int {
+func SysCreateFile(filename string) *os.File {
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
-		return -1
+		return nil
 	}
-	return int(f.Fd())
+	return f
 }
 
 // SysFileMask returns the current file creation mask
@@ -249,8 +249,8 @@ func SysReapChildren() {
 }
 
 // SysRead reads from a file descriptor
-func SysRead(fd int, buf []byte) int64 {
-	n, err := syscall.Read(fd, buf)
+func SysRead(osFile *os.File, buf []byte) int64 {
+	n, err := osFile.Read(buf)
 	if err != nil {
 		return -1
 	}
@@ -258,8 +258,8 @@ func SysRead(fd int, buf []byte) int64 {
 }
 
 // SysWrite writes to a file descriptor
-func SysWrite(fd int, buf []byte) int64 {
-	n, err := syscall.Write(fd, buf)
+func SysWrite(osFile *os.File, buf []byte) int64 {
+	n, err := osFile.Write(buf)
 	if err != nil {
 		return -1
 	}
@@ -267,8 +267,8 @@ func SysWrite(fd int, buf []byte) int64 {
 }
 
 // SysClose closes a file descriptor
-func SysClose(fd int) int {
-	err := syscall.Close(fd)
+func SysClose(osFile *os.File) int {
+	err := osFile.Close()
 	if err != nil {
 		return -1
 	}
@@ -291,14 +291,14 @@ func SysChmod(filename string, mask int) bool {
 }
 
 // SysSeek seeks to a position in a file
-func SysSeek(fd int, where int64) bool {
-	_, err := syscall.Seek(fd, where, 0) // SEEK_SET = 0
+func SysSeek(osFile *os.File, where int64) bool {
+	_, err := osFile.Seek(where, 0) // SEEK_SET = 0
 	return err == nil
 }
 
 // SysTell returns the current position in a file
-func SysTell(fd int) int64 {
-	pos, err := syscall.Seek(fd, 0, 1) // SEEK_CUR = 1
+func SysTell(osFile *os.File) int64 {
+	pos, err := osFile.Seek(0, 1) // SEEK_CUR = 1
 	if err != nil {
 		return -1
 	}

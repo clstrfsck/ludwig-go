@@ -69,8 +69,8 @@ func TestFilesysWriteEntab(t *testing.T) {
 			defer f.Close()
 
 			fyle := &FileObject{
-				Fd:    int(f.Fd()),
-				Entab: tc.entab,
+				OsFile: f,
+				Entab:  tc.entab,
 			}
 			buf := newTestStrObject(tc.input)
 			ok := FilesysWrite(fyle, buf, tc.bufsiz)

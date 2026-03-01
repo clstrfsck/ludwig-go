@@ -14,6 +14,7 @@ package ludwig
 
 import (
 	"math/big"
+	"os"
 )
 
 // VerifyResponse represents user's response to a verify prompt
@@ -340,7 +341,7 @@ type FileObject struct {
 	Tnm            string
 	Entab          bool
 	Create         bool
-	Fd             int
+	OsFile         *os.File
 	Mode           int
 	Idx            int
 	Len            int
