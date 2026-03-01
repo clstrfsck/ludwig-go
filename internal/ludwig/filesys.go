@@ -446,6 +446,7 @@ func FilesysParse(
 	argv = append(argv, cl...)
 
 	entab := fileData.Entab
+	highlighting := fileData.Highlighting
 	space := fileData.Space
 	purge := fileData.Purge
 	versions := fileData.Versions
@@ -490,41 +491,6 @@ func FilesysParse(
 			}
 
 			switch c {
-			case 'c':
-				if readOnlyFlag {
-					errors++
-				} else {
-					createFlag = true
-				}
-			case 'r':
-				if createFlag {
-					errors++
-				} else {
-					readOnlyFlag = true
-				}
-			case 'i':
-				initialize = optarg
-				optind++
-			case 'I':
-				initialize = ""
-			case 's':
-				val, err := strconv.Atoi(optarg)
-				if err != nil {
-					errors++
-				} else {
-					space = val
-					spaceFlag = true
-					optind++
-				}
-			case 'm':
-				memory = optarg
-				optind++
-			case 'M':
-				memory = ""
-			case 't':
-				entab = true
-			case 'T':
-				entab = false
 			case 'b':
 				val, err := strconv.Atoi(optarg)
 				if err != nil {
@@ -543,12 +509,51 @@ func FilesysParse(
 					purge = true
 					optind++
 				}
+			case 'c':
+				if readOnlyFlag {
+					errors++
+				} else {
+					createFlag = true
+				}
+			case 'h':
+				highlighting = true
+			case 'H':
+				highlighting = false
+			case 'i':
+				initialize = optarg
+				optind++
+			case 'I':
+				initialize = ""
+			case 'm':
+				memory = optarg
+				optind++
+			case 'M':
+				memory = ""
 			case 'o':
 				versionFlag = true
 				fileData.OldCmds = true
 			case 'O':
 				versionFlag = true
 				fileData.OldCmds = false
+			case 'r':
+				if createFlag {
+					errors++
+				} else {
+					readOnlyFlag = true
+				}
+			case 's':
+				val, err := strconv.Atoi(optarg)
+				if err != nil {
+					errors++
+				} else {
+					space = val
+					spaceFlag = true
+					optind++
+				}
+			case 't':
+				entab = true
+			case 'T':
+				entab = false
 			case 'u':
 				usageFlag = true
 			}
@@ -568,6 +573,7 @@ func FilesysParse(
 		fileData.Initial = initialize
 		fileData.Space = space
 		fileData.Entab = entab
+		fileData.Highlighting = highlighting
 		fileData.Purge = purge
 		fileData.Versions = versions
 	} else if createFlag || readOnlyFlag || initialize != "" || spaceFlag || versionFlag {

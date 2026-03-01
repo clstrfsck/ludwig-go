@@ -517,12 +517,13 @@ type NFATableType [MaxNFAStateRange + 1]NFATransitionType
 
 // FileDataType represents global file defaults
 type FileDataType struct {
-	OldCmds  bool
-	Entab    bool
-	Space    int
-	Initial  string
-	Purge    bool
-	Versions int
+	OldCmds      bool
+	Highlighting bool
+	Entab        bool
+	Space        int
+	Initial      string
+	Purge        bool
+	Versions     int
 }
 
 // CodeObject represents a code instruction

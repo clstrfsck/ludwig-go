@@ -608,8 +608,12 @@ func VduInit(
 			terminalInfo.Height = maxY
 			terminalInfo.Name = os.Getenv("TERM")
 
-			enabled, colors := vduInitColors()
-			colorsEnabled = enabled
+			var colors *map[string]int
+			if FileData.Highlighting {
+				colorsEnabled, colors = vduInitColors()
+			} else {
+				colorsEnabled = false
+			}
 			VduClearScr()
 			return colors, true
 		}
@@ -791,8 +795,10 @@ func vduInitColors() (bool, *map[string]int) {
 
 // vduResetColors resets all color pairs to default
 func vduResetColors() {
-	for index, color := range *OriginalColors {
-		nc.InitColor(index, color.r, color.g, color.b)
+	if OriginalColors != nil {
+		for index, color := range *OriginalColors {
+			nc.InitColor(index, color.r, color.g, color.b)
+		}
 	}
 }
 
