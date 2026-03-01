@@ -629,8 +629,10 @@ func VduFree() {
 		maxY, _ := stdscr.MaxYX()
 		VduMoveCurs(1, maxY)
 		VduFlush()
-		nc.UseDefaultColors()
-		vduResetColors()
+		if colorsEnabled {
+			nc.UseDefaultColors()
+			vduResetColors()
+		}
 		nc.EndWin()
 	}
 }
