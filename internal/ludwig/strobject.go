@@ -46,11 +46,7 @@ func (s *StrObject) adjustIndex(index, offset int) int {
 // NewBlankStrObject creates a new StrObject of the given size filled with
 // spaces
 func NewBlankStrObject(size int) *StrObject {
-	s := &StrObject{array: make([]byte, size)}
-	for i := range s.array {
-		s.array[i] = ' '
-	}
-	return s
+	return &StrObject{array: bytes.Repeat([]byte{' '}, size)}
 }
 
 // NewStrObjectFrom creates a new StrObject from a string
@@ -121,10 +117,6 @@ func (s *StrObject) ApplyN(f func(byte) byte, n, start int) {
 	if n <= 0 {
 		return
 	}
-	// n = s.clampLen(start, n)
-	// if n <= 0 {
-	// return
-	// }
 	idx := s.adjustIndex(start, 0)
 	for i := idx; i < idx+n; i++ {
 		s.array[i] = f(s.array[i])
@@ -136,11 +128,6 @@ func (s *StrObject) Copy(src *StrObject, srcOffset, count, dstOffset int) {
 	if count <= 0 {
 		return
 	}
-	// count = s.clampLen(dstOffset, count)
-	// count = src.clampLen(srcOffset, count)
-	// if count <= 0 {
-	// return
-	// }
 	srcIdx := src.adjustIndex(srcOffset, 0)
 	dstIdx := s.adjustIndex(dstOffset, 0)
 	copy(s.array[dstIdx:dstIdx+count], src.array[srcIdx:srcIdx+count])
@@ -151,10 +138,6 @@ func (s *StrObject) CopyN(src []byte, count, dstOffset int) {
 	if count <= 0 {
 		return
 	}
-	// count = s.clampLen(dstOffset, count)
-	// if count <= 0 {
-	// 	return
-	// }
 	dstIdx := s.adjustIndex(dstOffset, 0)
 	copy(s.array[dstIdx:dstIdx+count], src[:count])
 }
@@ -164,12 +147,9 @@ func (s *StrObject) Erase(n, from int) {
 	if n <= 0 {
 		return
 	}
-	// n = s.clampLen(from, n)
-	// if n <= 0 {
-	// 	return
-	// }
 	dstIdx := s.adjustIndex(from, 0)
 	copy(s.array[dstIdx:], s.array[dstIdx+n:])
+	s.Fill(' ', len(s.array)-n+dstIdx, len(s.array))
 }
 
 // Fill fills the range [start, end] with value
@@ -188,10 +168,6 @@ func (s *StrObject) FillN(value byte, n, start int) {
 	if n <= 0 {
 		return
 	}
-	// n = s.clampLen(start, n)
-	// if n <= 0 {
-	// 	return
-	// }
 	startIdx := s.adjustIndex(start, 0)
 	for i := startIdx; i < startIdx+n; i++ {
 		s.array[i] = value
@@ -204,19 +180,12 @@ func (s *StrObject) FillCopy(src *StrObject, srcIndex, srcLen, dstIndex, dstLen 
 	if dstLen <= 0 {
 		return
 	}
-	// dstLen = s.clampLen(dstIndex, dstLen)
-	// if dstLen <= 0 {
-	// 	return
-	// }
 	dstIdx := s.adjustIndex(dstIndex, 0)
 	length := min(srcLen, dstLen)
 
 	if length > 0 {
-		// length = src.clampLen(srcIndex, length)
-		// if length > 0 {
 		srcIdx := src.adjustIndex(srcIndex, 0)
 		copy(s.array[dstIdx:dstIdx+length], src.array[srcIdx:srcIdx+length])
-		// }
 	}
 	for i := dstIdx + length; i < dstIdx+dstLen; i++ {
 		s.array[i] = value

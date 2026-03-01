@@ -11,9 +11,9 @@ import (
 var syntaxColorLookup map[highlight.Group]int
 
 // buildColorTable maps highlight group names to ncurses color pairs
-func buildColorTable(groupColours *map[string]int) {
+func buildColorTable(groupColours map[string]int) {
 	syntaxColorLookup = make(map[highlight.Group]int)
-	for name, pair := range *groupColours {
+	for name, pair := range groupColours {
 		if g, ok := highlight.Groups[name]; ok {
 			syntaxColorLookup[g] = pair
 		}
@@ -50,7 +50,7 @@ var (
 )
 
 // SyntaxInit loads all embedded syntax definitions
-func SyntaxInit(groupColours *map[string]int) {
+func SyntaxInit(groupColours map[string]int) {
 	if !colorsEnabled {
 		return
 	}
@@ -252,7 +252,7 @@ func SyntaxApplyDirty(frame *FrameObject) {
 		if ScrFrame == frame && ScrTopLine != nil {
 			scrTopLineNum := ScrTopLine.Group.FirstLineNr + ScrTopLine.OffsetNr
 			line := ScrTopLine
-			for idx+1 > scrTopLineNum {
+			for idx+1 > scrTopLineNum && line.FLink != nil {
 				line = line.FLink
 				scrTopLineNum += 1
 			}

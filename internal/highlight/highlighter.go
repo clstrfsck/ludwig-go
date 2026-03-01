@@ -6,10 +6,10 @@ import (
 )
 
 func sliceStart(slc []byte, index int) []byte {
-	len := len(slc)
+	slcLen := len(slc)
 	i := 0
 	totalSize := 0
-	for totalSize < len {
+	for totalSize < slcLen {
 		if i >= index {
 			return slc[totalSize:]
 		}
@@ -23,10 +23,10 @@ func sliceStart(slc []byte, index int) []byte {
 }
 
 func sliceEnd(slc []byte, index int) []byte {
-	len := len(slc)
+	slcLen := len(slc)
 	i := 0
 	totalSize := 0
-	for totalSize < len {
+	for totalSize < slcLen {
 		if i >= index {
 			return slc[:totalSize]
 		}
@@ -316,7 +316,7 @@ func (h *Highlighter) HighlightStates(input LineStates) {
 // It sets all other matches in the buffer to nil to conserve memory
 // This assumes that all the states are set correctly
 func (h *Highlighter) HighlightMatches(input LineStates, startline, endline int) {
-	for i := startline; i <= endline; i++ {
+	for i := startline; i < endline; i++ {
 		input.Lock()
 		if i >= input.LinesNum() {
 			input.Unlock()
