@@ -102,10 +102,13 @@ func ScreenDrawLine(line *LineHdrObject) {
 		}
 		if eopLine {
 			VduDim()
-		}
-		VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
-		if eopLine {
+			VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
 			VduNormal()
+		} else if line.HlMatch != nil {
+			syntaxDrawLine(line, offset, strlen)
+			VduClearEOL()
+		} else {
+			VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
 		}
 	}
 
@@ -1004,6 +1007,7 @@ func ScreenFixup() {
 			}
 		}
 		ScrNeedsFix = false
+		SyntaxApplyDirty(CurrentFrame)
 		screenExpand(true, true)
 		VduMoveCurs(
 			CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,

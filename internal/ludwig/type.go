@@ -13,7 +13,9 @@
 package ludwig
 
 import (
+	"ludwig-go/internal/highlight"
 	"math/big"
+	"os"
 )
 
 // VerifyResponse represents user's response to a verify prompt
@@ -340,7 +342,7 @@ type FileObject struct {
 	Tnm            string
 	Entab          bool
 	Create         bool
-	Fd             int
+	OsFile         *os.File
 	Mode           int
 	Idx            int
 	Len            int
@@ -399,6 +401,8 @@ type FrameObject struct {
 	RepPatternPtr *DFATableObject
 	Rep2Tpar      TParObject
 	VerifyTpar    TParObject
+	Highlighter   *highlight.Highlighter
+	DirtyLine     int
 }
 
 // GroupObject represents a group of lines
@@ -422,6 +426,8 @@ type LineHdrObject struct {
 	Str      *StrObject
 	Used     int
 	ScrRowNr int
+	HlState  highlight.State     // nil = unset
+	HlMatch  highlight.LineMatch // nil = unset
 }
 
 func (l *LineHdrObject) Len() int {
@@ -511,12 +517,13 @@ type NFATableType [MaxNFAStateRange + 1]NFATransitionType
 
 // FileDataType represents global file defaults
 type FileDataType struct {
-	OldCmds  bool
-	Entab    bool
-	Space    int
-	Initial  string
-	Purge    bool
-	Versions int
+	OldCmds      bool
+	Highlighting bool
+	Entab        bool
+	Space        int
+	Initial      string
+	Purge        bool
+	Versions     int
 }
 
 // CodeObject represents a code instruction

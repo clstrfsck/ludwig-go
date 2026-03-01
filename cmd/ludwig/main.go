@@ -686,7 +686,7 @@ func startUp(argc int, argv []string) bool {
 	// Try to get started on the terminal.  If this fails assume carry on
 	// in BATCH mode.
 	LudwigMode = LudwigBatch
-	if VduInit(&TerminalInfo, &TtControlC, &TtWinChanged) {
+	if colors, ok := VduInit(&TerminalInfo, &TtControlC, &TtWinChanged); ok {
 		InitialScrWidth = TerminalInfo.Width
 		InitialScrHeight = TerminalInfo.Height
 		InitialMarginRight = TerminalInfo.Width
@@ -696,6 +696,9 @@ func startUp(argc int, argv []string) bool {
 		{
 			LudwigMode = LudwigScreen
 			VduNewIntroducer(CommandIntroducer)
+		}
+		if colors != nil {
+			SyntaxInit(colors)
 		}
 	}
 	// Set the scr_msg_row as one more than the terminal height (which may
@@ -771,6 +774,14 @@ func startUp(argc int, argv []string) bool {
 	}
 	if LudwigMode != LudwigBatch {
 		ScreenClearMsgs(false)
+	}
+	if CurrentFrame.InputFile > 0 && Files[CurrentFrame.InputFile] != nil {
+		if filename := Files[CurrentFrame.InputFile].Filename; filename != "" {
+			if h := SyntaxDetect(filename); h != nil {
+				SyntaxAttach(CurrentFrame, h)
+				SyntaxHighlightFrame(CurrentFrame, h)
+			}
+		}
 	}
 	if LudwigMode == LudwigScreen {
 		ScreenFixup()

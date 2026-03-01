@@ -16,6 +16,7 @@ package ludwig
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"unicode"
@@ -47,12 +48,12 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 			return false
 		}
 		if !ordinaryOpen { // really executing a command
-			fd := SysOpenCommand(fyle.Filename)
-			if fd == -1 {
+			osFile := SysOpenCommand(fyle.Filename)
+			if osFile == nil {
 				ScreenMessage("Cannot create pipe")
 				return false
 			}
-			fyle.Fd = fd
+			fyle.OsFile = osFile
 		} else {
 			if !SysExpandFilename(&fyle.Filename) {
 				ScreenMessage(fmt.Sprintf("Error in filename (%s)", fyle.Filename))
@@ -62,8 +63,8 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 			if !fs.Valid || fs.IsDir {
 				return false
 			}
-			fyle.Fd = SysOpenFile(fyle.Filename)
-			if fyle.Fd < 0 {
+			fyle.OsFile = SysOpenFile(fyle.Filename)
+			if fyle.OsFile == nil {
 				return false
 			}
 			fyle.Mode = fs.Mode
@@ -123,8 +124,8 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 			uniq++
 			fyle.Tnm = fyle.Filename + "-lw" + strconv.Itoa(uniq)
 		}
-		fyle.Fd = SysCreateFile(fyle.Tnm)
-		if fyle.Fd < 0 {
+		fyle.OsFile = SysCreateFile(fyle.Tnm)
+		if fyle.OsFile == nil {
 			ScreenMessage(fmt.Sprintf("Error opening (%s) as output", fyle.Tnm))
 			return false
 		}
@@ -145,7 +146,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 		// reap any children
 		SysReapChildren()
 		// an ordinary input file, just close
-		if SysClose(fyle.Fd) < 0 {
+		if SysClose(fyle.OsFile) < 0 {
 			return false
 		}
 		if msgs {
@@ -160,7 +161,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 	}
 
 	// an output file to close
-	if action != 2 && SysClose(fyle.Fd) < 0 {
+	if action != 2 && SysClose(fyle.OsFile) < 0 {
 		return false
 	}
 	if action == 1 {
@@ -256,7 +257,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 	for {
 		if fyle.Idx >= fyle.Len {
 			fyle.Buf = make([]byte, MaxStrLen)
-			fyle.Len = int(SysRead(fyle.Fd, fyle.Buf))
+			fyle.Len = int(SysRead(fyle.OsFile, fyle.Buf))
 			fyle.Idx = 0
 		}
 		if fyle.Len <= 0 {
@@ -295,7 +296,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 
 // FilesysRewind rewinds file described by the fyle pointer
 func FilesysRewind(fyle *FileObject) bool {
-	if !SysSeek(fyle.Fd, 0) {
+	if !SysSeek(fyle.OsFile, 0) {
 		return false
 	}
 	fyle.Idx = 0
@@ -326,7 +327,7 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				buffer.Set(offset+i, '\t')
 			}
 		}
-		count := SysWrite(fyle.Fd, []byte(buffer.Slice(offset+1, bufsiz-offset)))
+		count := SysWrite(fyle.OsFile, []byte(buffer.Slice(offset+1, bufsiz-offset)))
 		if tabs > 0 {
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, ' ')
@@ -336,7 +337,7 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 			return false
 		}
 	}
-	ok := SysWrite(fyle.Fd, []byte(filesysNL)) == filesysNLSize
+	ok := SysWrite(fyle.OsFile, []byte(filesysNL)) == filesysNLSize
 	fyle.LCounter++
 	return ok
 }
@@ -353,7 +354,7 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 	if iFyle != nil {
 		// remember things to be restored
 		inputEof = iFyle.Eof
-		inputPosition = SysTell(oFyle.Fd)
+		inputPosition = SysTell(oFyle.OsFile)
 
 		// copy unread portion of input file to output file
 		for {
@@ -383,7 +384,7 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 		iFyle.LineCount = 0
 	}
 	iFyle.Filename = oFyle.Filename
-	iFyle.Fd = oFyle.Fd
+	iFyle.OsFile = oFyle.OsFile
 
 	// rewind the input file
 	FilesysRewind(iFyle)
@@ -406,10 +407,10 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 
 	// reposition or close the input file
 	if iFyle == &fyle {
-		SysClose(iFyle.Fd)
+		SysClose(iFyle.OsFile)
 	} else {
 		iFyle.Eof = inputEof
-		SysSeek(iFyle.Fd, inputPosition)
+		SysSeek(iFyle.OsFile, inputPosition)
 		iFyle.Idx = 0
 		iFyle.Len = 0
 	}
@@ -433,7 +434,7 @@ func FilesysParse(
 
 	if parseType == ParseStdin {
 		input.Valid = true
-		input.Fd = 0
+		input.OsFile = os.Stdin
 		input.Eof = false
 		input.LCounter = 0
 		return true
@@ -445,6 +446,7 @@ func FilesysParse(
 	argv = append(argv, cl...)
 
 	entab := fileData.Entab
+	highlighting := fileData.Highlighting
 	space := fileData.Space
 	purge := fileData.Purge
 	versions := fileData.Versions
@@ -489,41 +491,6 @@ func FilesysParse(
 			}
 
 			switch c {
-			case 'c':
-				if readOnlyFlag {
-					errors++
-				} else {
-					createFlag = true
-				}
-			case 'r':
-				if createFlag {
-					errors++
-				} else {
-					readOnlyFlag = true
-				}
-			case 'i':
-				initialize = optarg
-				optind++
-			case 'I':
-				initialize = ""
-			case 's':
-				val, err := strconv.Atoi(optarg)
-				if err != nil {
-					errors++
-				} else {
-					space = val
-					spaceFlag = true
-					optind++
-				}
-			case 'm':
-				memory = optarg
-				optind++
-			case 'M':
-				memory = ""
-			case 't':
-				entab = true
-			case 'T':
-				entab = false
 			case 'b':
 				val, err := strconv.Atoi(optarg)
 				if err != nil {
@@ -542,12 +509,51 @@ func FilesysParse(
 					purge = true
 					optind++
 				}
+			case 'c':
+				if readOnlyFlag {
+					errors++
+				} else {
+					createFlag = true
+				}
+			case 'h':
+				highlighting = true
+			case 'H':
+				highlighting = false
+			case 'i':
+				initialize = optarg
+				optind++
+			case 'I':
+				initialize = ""
+			case 'm':
+				memory = optarg
+				optind++
+			case 'M':
+				memory = ""
 			case 'o':
 				versionFlag = true
 				fileData.OldCmds = true
 			case 'O':
 				versionFlag = true
 				fileData.OldCmds = false
+			case 'r':
+				if createFlag {
+					errors++
+				} else {
+					readOnlyFlag = true
+				}
+			case 's':
+				val, err := strconv.Atoi(optarg)
+				if err != nil {
+					errors++
+				} else {
+					space = val
+					spaceFlag = true
+					optind++
+				}
+			case 't':
+				entab = true
+			case 'T':
+				entab = false
 			case 'u':
 				usageFlag = true
 			}
@@ -567,6 +573,7 @@ func FilesysParse(
 		fileData.Initial = initialize
 		fileData.Space = space
 		fileData.Entab = entab
+		fileData.Highlighting = highlighting
 		fileData.Purge = purge
 		fileData.Versions = versions
 	} else if createFlag || readOnlyFlag || initialize != "" || spaceFlag || versionFlag {

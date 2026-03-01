@@ -1,5 +1,6 @@
 # MIT License
 
+```text
 Copyright (c) 2026 Ludwig contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,3 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+Please note that files in `internal/highlight` and `internal/highlight/syntax`
+have different authorship, but substantially similar terms.
