@@ -50,16 +50,29 @@ var (
 	MassagedMax     int
 )
 
+// Color pair assignments (indices into ncurses color table)
+const (
+	ColorPairKeyword  = 1
+	ColorPairString   = 2
+	ColorPairComment  = 3
+	ColorPairType     = 4
+	ColorPairPreproc  = 5
+	ColorPairConstant = 6
+	ColorPairSpecial  = 7
+	ColorPairError    = 8
+)
+
 // Global variables
 var (
-	controlChars map[int]bool
-	terminators  map[int]bool
-	vduSetup     bool
-	inInsertMode bool
-	gCtrlC       *bool
-	gWinChange   *bool
-	stdscr       *nc.Window
-	refreshDelay int
+	controlChars  map[int]bool
+	terminators   map[int]bool
+	vduSetup      bool
+	inInsertMode  bool
+	gCtrlC        *bool
+	gWinChange    *bool
+	stdscr        *nc.Window
+	refreshDelay  int
+	colorsEnabled bool
 )
 
 func init() {
@@ -584,6 +597,7 @@ func VduInit(terminalInfo *TerminalInfoType, ctrlCFlag *bool, winchangeFlag *boo
 			terminalInfo.Height = maxY
 			terminalInfo.Name = os.Getenv("TERM")
 
+			colorsEnabled = VduInitColors()
 			VduClearScr()
 		}
 		return true
@@ -629,3 +643,27 @@ func VduNormal() {
 	stdscr.AttrOff(nc.A_BOLD)
 	stdscr.AttrOff(nc.A_DIM)
 }
+
+// VduInitColors initializes color pairs; returns true if colors are available
+func VduInitColors() bool {
+	if !nc.HasColors() {
+		return false
+	}
+	nc.StartColor()
+	nc.UseDefaultColors()
+	nc.InitPair(ColorPairKeyword, nc.COLOR_YELLOW, -1)
+	nc.InitPair(ColorPairString, nc.COLOR_GREEN, -1)
+	nc.InitPair(ColorPairComment, nc.COLOR_CYAN, -1)
+	nc.InitPair(ColorPairType, nc.COLOR_BLUE, -1)
+	nc.InitPair(ColorPairPreproc, nc.COLOR_MAGENTA, -1)
+	nc.InitPair(ColorPairConstant, nc.COLOR_WHITE, -1)
+	nc.InitPair(ColorPairSpecial, nc.COLOR_WHITE, -1)
+	nc.InitPair(ColorPairError, nc.COLOR_RED, -1)
+	return true
+}
+
+// VduColorOn turns on the specified color pair
+func VduColorOn(pair int) { stdscr.ColorOn(pair) }
+
+// VduColorOff turns off the specified color pair
+func VduColorOff(pair int) { stdscr.ColorOff(pair) }

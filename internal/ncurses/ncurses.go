@@ -11,6 +11,11 @@ static int get_key_max() {
 	return KEY_MAX;
 }
 
+// Helper function to wrap COLOR_PAIR macro
+static int color_pair_attr(int pair) {
+	return (int)COLOR_PAIR(pair);
+}
+
 // Helper functions for getyx and getmaxyx macros
 static void get_yx(WINDOW *win, int *y, int *x) {
 	getyx(win, *y, *x);
@@ -41,6 +46,18 @@ const (
 	A_BOLD    int = C.A_BOLD
 	A_DIM     int = C.A_DIM
 	A_REVERSE int = C.A_REVERSE
+)
+
+// Color constants (standard ncurses values)
+const (
+	COLOR_BLACK   = 0
+	COLOR_RED     = 1
+	COLOR_GREEN   = 2
+	COLOR_YELLOW  = 3
+	COLOR_BLUE    = 4
+	COLOR_MAGENTA = 5
+	COLOR_CYAN    = 6
+	COLOR_WHITE   = 7
 )
 
 // Key constants
@@ -241,6 +258,33 @@ func (w *Window) AttrOn(attr int) {
 // AttrOff turns off the specified attributes
 func (w *Window) AttrOff(attr int) {
 	C.wattroff(w.win, C.int(attr))
+}
+
+// StartColor initializes color support
+func StartColor() { C.start_color() }
+
+// UseDefaultColors allows use of -1 as default terminal color
+func UseDefaultColors() { C.use_default_colors() }
+
+// HasColors returns true if the terminal supports colors
+func HasColors() bool { return bool(C.has_colors()) }
+
+// InitPair initializes a color pair (pair, fg, bg); use -1 for default color
+func InitPair(pair, fg, bg int) {
+	C.init_pair(C.short(pair), C.short(fg), C.short(bg))
+}
+
+// ColorPair returns the attribute value for a color pair
+func ColorPair(pair int) int { return int(C.color_pair_attr(C.int(pair))) }
+
+// ColorOn turns on the specified color pair
+func (w *Window) ColorOn(pair int) {
+	C.wattron(w.win, C.int(C.color_pair_attr(C.int(pair))))
+}
+
+// ColorOff turns off the specified color pair
+func (w *Window) ColorOff(pair int) {
+	C.wattroff(w.win, C.int(C.color_pair_attr(C.int(pair))))
 }
 
 // IntrFlush controls interrupt flush

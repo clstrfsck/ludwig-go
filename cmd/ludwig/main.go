@@ -697,6 +697,7 @@ func startUp(argc int, argv []string) bool {
 			LudwigMode = LudwigScreen
 			VduNewIntroducer(CommandIntroducer)
 		}
+		SyntaxInit()
 	}
 	// Set the scr_msg_row as one more than the terminal height (which may
 	// be zero). This avoids any need for special checks about Ludwig being
@@ -771,6 +772,14 @@ func startUp(argc int, argv []string) bool {
 	}
 	if LudwigMode != LudwigBatch {
 		ScreenClearMsgs(false)
+	}
+	if CurrentFrame.InputFile > 0 && Files[CurrentFrame.InputFile] != nil {
+		if filename := Files[CurrentFrame.InputFile].Filename; filename != "" {
+			if h := SyntaxDetect(filename); h != nil {
+				SyntaxAttach(CurrentFrame, h)
+				SyntaxHighlightFrame(CurrentFrame, h)
+			}
+		}
 	}
 	if LudwigMode == LudwigScreen {
 		ScreenFixup()
