@@ -2,6 +2,7 @@ package ludwig
 
 import (
 	"sort"
+	"strings"
 
 	"ludwig-go/internal/highlight"
 )
@@ -145,17 +146,57 @@ func SyntaxRehighlightFrom(frame *FrameObject, h *highlight.Highlighter, fromLin
 	h.HighlightMatches(buf, fromLine, end+1)
 }
 
-// per-frame highlighter storage
-var frameHighlighters = map[*FrameObject]*highlight.Highlighter{}
-
 // SyntaxAttach attaches a highlighter to a frame
 func SyntaxAttach(frame *FrameObject, h *highlight.Highlighter) {
-	frameHighlighters[frame] = h
+	frame.Highlighter = h
 }
 
 // SyntaxGet returns the highlighter for a frame (may be nil)
 func SyntaxGet(frame *FrameObject) *highlight.Highlighter {
-	return frameHighlighters[frame]
+	return frame.Highlighter
+}
+
+// SyntaxMarkLineDirty records that a line has been modified and needs re-highlighting.
+// The re-highlighting is deferred and applied by SyntaxApplyDirty before the next screen redraw.
+func SyntaxMarkLineDirty(frame *FrameObject, line *LineHdrObject) {
+	if SyntaxGet(frame) == nil {
+		return
+	}
+	idx := max(line.Group.FirstLineNr+line.OffsetNr, 1)
+	if frame.DirtyLine == 0 || idx < frame.DirtyLine {
+		frame.DirtyLine = idx
+	}
+}
+
+// SyntaxApplyDirty applies any pending incremental re-highlighting for the frame
+// and redraws all currently visible lines so the updated colours take effect.
+// screenExpand only draws lines not yet on screen, so we must do this ourselves.
+func SyntaxApplyDirty(frame *FrameObject) {
+	h := SyntaxGet(frame)
+	if h == nil {
+		return
+	}
+	if frame.DirtyLine > 0 {
+		idx := frame.DirtyLine - 1
+		frame.DirtyLine = 0
+		SyntaxRehighlightFrom(frame, h, idx)
+		// Redraw visible lines so updated HlMatch values are shown.
+		if ScrFrame == frame && ScrTopLine != nil {
+			scrTopLineNum := ScrTopLine.Group.FirstLineNr + ScrTopLine.OffsetNr
+			line := ScrTopLine
+			for idx+1 > scrTopLineNum {
+				line = line.FLink
+				scrTopLineNum += 1
+			}
+			for {
+				ScreenDrawLine(line)
+				if line == ScrBotLine {
+					break
+				}
+				line = line.FLink
+			}
+		}
+	}
 }
 
 // syntaxDrawLine renders line content with syntax highlighting.
@@ -183,8 +224,7 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		if pos >= end {
 			break
 		}
-		group := match[pos]
-		newPair := syntaxColorTable[group]
+		newPair := findHighlightPair(match[pos])
 
 		// Render any gap before this position
 		if pos > col {
@@ -213,4 +253,29 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 	if currentPair != 0 {
 		VduColorOff(currentPair)
 	}
+}
+
+func findHighlightPair(groupID highlight.Group) int {
+	id := syntaxColorTable[groupID]
+	if id != 0 {
+		return id
+	}
+	name := groupID.String()
+	for {
+		// Strip the last component (e.g., "a.b.c.d" -> "a.b.c")
+		idx := strings.LastIndex(name, ".")
+		if idx == -1 {
+			break
+		}
+		name = name[:idx]
+
+		// Check if this shorter name has a color mapping
+		if g, ok := highlight.Groups[name]; ok {
+			id = syntaxColorTable[g]
+			if id != 0 {
+				return id
+			}
+		}
+	}
+	return 0
 }

@@ -1007,6 +1007,7 @@ func ScreenFixup() {
 			}
 		}
 		ScrNeedsFix = false
+		SyntaxApplyDirty(CurrentFrame)
 		screenExpand(true, true)
 		VduMoveCurs(
 			CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,

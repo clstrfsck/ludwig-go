@@ -13,6 +13,7 @@
 package ludwig
 
 import (
+	"ludwig-go/internal/highlight"
 	"math/big"
 	"os"
 )
@@ -400,6 +401,8 @@ type FrameObject struct {
 	RepPatternPtr *DFATableObject
 	Rep2Tpar      TParObject
 	VerifyTpar    TParObject
+	Highlighter   *highlight.Highlighter
+	DirtyLine     int
 }
 
 // GroupObject represents a group of lines

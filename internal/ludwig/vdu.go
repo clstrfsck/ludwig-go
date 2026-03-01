@@ -682,6 +682,10 @@ func convertColorSchemeToPairs(scheme map[string]string) (*map[string]int, *map[
 	colorMap := make(map[string]int)
 	oldColorMap := make(map[int]ncursesColor)
 	colourIndexes := make(map[ncursesColor]int)
+	// FIXME: Not really sure how this works with xterm class terminals.
+	// If this number is too small, then other things such as powerline-go
+	// will have their colors messed up.  I expect that there is a way to
+	// reliably reset the colors on exit, but it needs more investigation.
 	pairIndex := 33 // Start after the basic pairs
 	for name, hex := range scheme {
 		var newColor ncursesColor

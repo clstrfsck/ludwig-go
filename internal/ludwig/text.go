@@ -133,6 +133,7 @@ func TextInsert(
 		} else {
 			dstLine.Used += insertLen
 		}
+		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 
 		// Update screen if necessary
 		if updateScreen && dstLine.ScrRowNr != 0 {
@@ -204,6 +205,7 @@ func TextOvertype(
 		if newCol > dstLine.Used {
 			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len())
 		}
+		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 
 		// Update screen if necessary
 		if updateScreen && dstLine.ScrRowNr != 0 {
@@ -338,11 +340,12 @@ func textIntraRemove(markOne *MarkObject, size int) bool {
 		}
 	} else {
 		// Fill with spaces
-		for i := 0; i < dstLen; i++ {
+		for i := range dstLen {
 			ln.Str.Set(colOne+i, ' ')
 		}
 	}
 	ln.Used = ln.Str.Length(' ', oldUsed)
+	SyntaxMarkLineDirty(ln.Group.Frame, ln)
 
 	// Update screen if necessary
 	if ln.ScrRowNr == 0 {
@@ -793,12 +796,14 @@ func textInterMove(
 		}
 		ChFillCopy(textStr, 1, textLen, dstLine.Str, dstCol, dstLine.Len()+1-dstCol, ' ')
 		dstLine.Used = dstCol + textLen - 1
+		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
 			ScreenDrawLine(dstLine)
 		}
 	} else if dstCol <= dstLine.Used {
 		dstLine.Str.Fill(' ', dstCol, dstLine.Used)
 		dstLine.Used = dstLine.Str.Length(' ', dstCol)
+		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
 			ScreenDrawLine(dstLine)
 		}
@@ -925,6 +930,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 			newLine.Str.Copy(beforeMark.Line.Str, beforeMark.Col, length, newCol)
 			beforeMark.Line.Str.Fill(' ', beforeMark.Col, beforeMark.Col+length-1)
 			beforeMark.Line.Used = beforeMark.Line.Str.Length(' ', beforeMark.Line.Used)
+			SyntaxMarkLineDirty(beforeMark.Line.Group.Frame, beforeMark.Line)
 			newLine.Used = newCol + length - 1
 			if beforeMark.Line.ScrRowNr != 0 {
 				if beforeMark.Line.Used <= beforeMark.Line.Group.Frame.ScrOffset {
@@ -963,6 +969,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 			goto cleanup
 		}
 		discard = false
+		SyntaxMarkLineDirty(newLine.Group.Frame, newLine)
 		if beforeMark.Col > 1 {
 			if !MarksShift(beforeMark.Line, 1, beforeMark.Col-1, newLine, 1) {
 				goto cleanup
