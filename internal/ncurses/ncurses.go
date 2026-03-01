@@ -268,17 +268,19 @@ func ColorPairs() int { return int(C.COLOR_PAIRS) }
 
 func CanChangeColor() bool { return bool(C.can_change_color()) }
 
-// InitPair initializes a color pair (pair, fg, bg); use -1 for default color
+// InitPair initializes a color pair (pair, fg, bg); use -1 for default color.
+// Returns true on success, false on failure.
 func InitPair(pair, fg, bg int) bool {
 	return C.init_pair(C.short(pair), C.short(fg), C.short(bg)) != ERR
 }
 
-// InitColor initializes a color definition (color, r, g, b) with RGB values 0-1000
+// InitColor initializes a color definition (color, r, g, b) with RGB values 0-1000.
+// Returns true on success, false on failure.
 func InitColor(color, r, g, b int) bool {
 	return C.init_color(C.short(color), C.short(r), C.short(g), C.short(b)) != ERR
 }
 
-// Retrieve current color
+// Retrieve current color. Returns true on success, false on failure.
 func ColorContent(color int, r, g, b *int) bool {
 	var cr, cg, cb C.short
 	result := C.color_content(C.short(color), &cr, &cg, &cb)

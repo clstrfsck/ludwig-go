@@ -149,7 +149,7 @@ func (s *StrObject) Erase(n, from int) {
 	}
 	dstIdx := s.adjustIndex(from, 0)
 	copy(s.array[dstIdx:], s.array[dstIdx+n:])
-	s.Fill(' ', len(s.array)-n+dstIdx, len(s.array))
+	s.Fill(' ', len(s.array)-n+1, len(s.array))
 }
 
 // Fill fills the range [start, end] with value

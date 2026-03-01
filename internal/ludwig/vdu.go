@@ -71,7 +71,6 @@ const (
 
 // Global variables
 var (
-	// controlChars  map[int]bool FIXME
 	terminators   map[int]bool
 	vduSetup      bool
 	inInsertMode  bool
@@ -83,19 +82,6 @@ var (
 )
 
 func init() {
-	// Initialize control chars set
-	// FIXME
-	// controlChars = map[int]bool{
-	// 	0x00: true, 0x01: true, 0x02: true, 0x03: true,
-	// 	0x04: true, 0x05: true, 0x06: true, 0x07: true,
-	// 	0x08: true, 0x09: true, 0x0A: true, 0x0B: true,
-	// 	0x0C: true, 0x0D: true, 0x0E: true, 0x0F: true,
-	// 	0x10: true, 0x11: true, 0x12: true, 0x13: true,
-	// 	0x14: true, 0x15: true, 0x16: true, 0x17: true,
-	// 	0x18: true, 0x19: true, 0x1A: true, 0x1B: true,
-	// 	0x1C: true, 0x1D: true, 0x1E: true, 0x1F: true,
-	// 	0x7F: true,
-	// }
 	terminators = make(map[int]bool)
 	value := os.Getenv("LUD_REFRESH_DELAY")
 	if value == "" {
