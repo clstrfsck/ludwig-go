@@ -139,3 +139,15 @@ man ./ludwig.1
 Once in the editor, typing `\h` will bring up the help information, assuming
 you have installed the help file in the appropriate spot.  Use `\q` to quit
 the editor.
+
+## Divergence from the original
+
+For the most part, this is a fairly direct translation of the original Pascal
+version into Go.  There are a couple of noteworthy differences:
+
+- The help files for both the old and new command sets are embedded into the
+  executable using the Go `embed` package.
+- The Go version includes basic syntax highlighting.  Syntax highlighting is
+  disabled by default and can be enabled with the `-h` option.  There are two
+  hardcoded colour schemes at present.  One is used when the terminal supports
+  the basic 8 ANSI colours, and another that is used for 256+ colour terminals.
