@@ -844,16 +844,14 @@ cleanup:
 
 // WordAdvanceWord advances cursor to start of a word
 func WordAdvanceWord(rept LeadParam, count int) bool {
-	var thisLine *LineHdrObject
-	var pos int
+	thisLine := CurrentFrame.Dot.Line
+	pos := CurrentFrame.Dot.Col
 
 	result := false
 	if rept == LeadParamMarker {
 		ScreenMessage(MsgSyntaxError)
 		goto cleanup
 	}
-	pos = CurrentFrame.Dot.Col
-	thisLine = CurrentFrame.Dot.Line
 	if rept == LeadParamNone || rept == LeadParamPlus || rept == LeadParamPIndef ||
 		((rept == LeadParamPInt) && (count != 0)) {
 		// Handle PINDEF case
@@ -945,7 +943,7 @@ func WordAdvanceWord(rept LeadParam, count int) bool {
 					}
 					thisLine = thisLine.BLink
 					pos = thisLine.Used
-					if !(pos <= 0) {
+					if pos > 0 {
 						break
 					}
 				}
