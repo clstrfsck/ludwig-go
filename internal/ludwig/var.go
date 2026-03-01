@@ -41,7 +41,6 @@ type LookupExpType struct {
 // Global variables
 
 // Version and configuration
-var LudwigVersion string = "X5.0-006"
 var ProgramDirectory string
 var TtControlC bool
 var TtWinChanged bool
@@ -112,7 +111,7 @@ var InitialTabStops TabArray
 var InitialOptions FrameOptions
 
 // Useful constants
-var BlankString *StrObject = NewBlankStrObject(MaxStrLen)
+var BlankString = NewBlankStrObject(MaxStrLen)
 var InitialVerify VerifyArray
 var DefaultTabStops TabArray
 

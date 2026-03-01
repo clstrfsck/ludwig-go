@@ -6,10 +6,10 @@ import (
 )
 
 func sliceStart(slc []byte, index int) []byte {
-	len := len(slc)
+	slcLen := len(slc)
 	i := 0
 	totalSize := 0
-	for totalSize < len {
+	for totalSize < slcLen {
 		if i >= index {
 			return slc[totalSize:]
 		}
@@ -23,10 +23,10 @@ func sliceStart(slc []byte, index int) []byte {
 }
 
 func sliceEnd(slc []byte, index int) []byte {
-	len := len(slc)
+	slcLen := len(slc)
 	i := 0
 	totalSize := 0
-	for totalSize < len {
+	for totalSize < slcLen {
 		if i >= index {
 			return slc[:totalSize]
 		}

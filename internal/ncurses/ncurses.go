@@ -27,6 +27,7 @@ static void get_maxyx(WINDOW *win, int *y, int *x) {
 */
 import "C"
 import (
+	"errors"
 	"unsafe"
 )
 
@@ -58,6 +59,11 @@ const (
 	COLOR_MAGENTA = 5
 	COLOR_CYAN    = 6
 	COLOR_WHITE   = 7
+)
+
+// Error constants
+const (
+	ERR = (-1)
 )
 
 // Key constants
@@ -144,14 +150,7 @@ func UnGetChar(ch Char) {
 	C.ungetch(C.int(ch))
 }
 
-// ErrInitFailed is returned when ncurses initialization fails
-type InitError struct{}
-
-func (e *InitError) Error() string {
-	return "ncurses initialization failed"
-}
-
-var ErrInitFailed = &InitError{}
+var ErrInitFailed = errors.New("ncurses initialization failed")
 
 // Window methods
 
@@ -194,11 +193,7 @@ func (w *Window) ClearToBottom() {
 
 // ScrollOk sets scrolling mode
 func (w *Window) ScrollOk(enable bool) {
-	if enable {
-		C.scrollok(w.win, C.bool(true))
-	} else {
-		C.scrollok(w.win, C.bool(false))
-	}
+	C.scrollok(w.win, C.bool(enable))
 }
 
 // Scroll scrolls the window by n lines
@@ -243,11 +238,7 @@ func (w *Window) GetChar() Key {
 
 // Keypad enables or disables keypad mode
 func (w *Window) Keypad(enable bool) {
-	if enable {
-		C.keypad(w.win, C.bool(true))
-	} else {
-		C.keypad(w.win, C.bool(false))
-	}
+	C.keypad(w.win, C.bool(enable))
 }
 
 // AttrOn turns on the specified attributes
@@ -277,27 +268,32 @@ func ColorPairs() int { return int(C.COLOR_PAIRS) }
 
 func CanChangeColor() bool { return bool(C.can_change_color()) }
 
-// InitPair initializes a color pair (pair, fg, bg); use -1 for default color
-func InitPair(pair, fg, bg int) {
-	C.init_pair(C.short(pair), C.short(fg), C.short(bg))
+// InitPair initializes a color pair (pair, fg, bg); use -1 for default color.
+// Returns true on success, false on failure.
+func InitPair(pair, fg, bg int) bool {
+	return C.init_pair(C.short(pair), C.short(fg), C.short(bg)) != ERR
 }
 
-// InitColor initializes a color definition (color, r, g, b) with RGB values 0-1000
-func InitColor(color, r, g, b int) {
-	C.init_color(C.short(color), C.short(r), C.short(g), C.short(b))
+// InitColor initializes a color definition (color, r, g, b) with RGB values 0-1000.
+// Returns true on success, false on failure.
+func InitColor(color, r, g, b int) bool {
+	return C.init_color(C.short(color), C.short(r), C.short(g), C.short(b)) != ERR
 }
 
-// Retrieve current color
-func ColorContent(color int, r, g, b *int) {
+// Retrieve current color. Returns true on success, false on failure.
+func ColorContent(color int, r, g, b *int) bool {
 	var cr, cg, cb C.short
-	C.color_content(C.short(color), &cr, &cg, &cb)
+	result := C.color_content(C.short(color), &cr, &cg, &cb)
 	*r = int(cr)
 	*g = int(cg)
 	*b = int(cb)
+	return result != ERR
 }
 
 // ColorPair returns the attribute value for a color pair
-func ColorPair(pair int) int { return int(C.color_pair_attr(C.int(pair))) }
+func ColorPair(pair int) int {
+	return int(C.color_pair_attr(C.int(pair)))
+}
 
 // ColorOn turns on the specified color pair
 func (w *Window) ColorOn(pair int) {
@@ -311,27 +307,15 @@ func (w *Window) ColorOff(pair int) {
 
 // IntrFlush controls interrupt flush
 func (w *Window) IntrFlush(enable bool) {
-	if enable {
-		C.intrflush(w.win, C.bool(true))
-	} else {
-		C.intrflush(w.win, C.bool(false))
-	}
+	C.intrflush(w.win, C.bool(enable))
 }
 
 // Idlok enables or disables use of hardware insert/delete line feature
 func (w *Window) Idlok(enable bool) {
-	if enable {
-		C.idlok(w.win, C.bool(true))
-	} else {
-		C.idlok(w.win, C.bool(false))
-	}
+	C.idlok(w.win, C.bool(enable))
 }
 
 // Idcok enables or disables use of hardware insert/delete character feature
 func (w *Window) Idcok(enable bool) {
-	if enable {
-		C.idcok(w.win, C.bool(true))
-	} else {
-		C.idcok(w.win, C.bool(false))
-	}
+	C.idcok(w.win, C.bool(enable))
 }

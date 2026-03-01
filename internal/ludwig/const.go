@@ -18,6 +18,11 @@ import (
 )
 
 const (
+	// Version of Ludwig
+	LudwigVersion = "X5.0-006"
+)
+
+const (
 	// MaxInt is the maximum integer value
 	MaxInt = math.MaxInt32
 

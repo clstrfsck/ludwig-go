@@ -232,6 +232,24 @@ func TestErase(t *testing.T) {
 	assert.True(t, s.Equal(before), "Erase with n=0 modified object")
 }
 
+// TestEraseFills tests that Erase fills the vacated space with blanks
+func TestEraseFills(t *testing.T) {
+	s := NewStrObjectFrom("ABCDEFGHIJ")
+	s.Erase(3, 4)
+
+	assert.Equal(t, byte('A'), s.Get(1), "Erase affected preceding character")
+	assert.Equal(t, byte('B'), s.Get(2), "Erase affected preceding character")
+	assert.Equal(t, byte('C'), s.Get(3), "Erase affected preceding character")
+	assert.Equal(t, byte('G'), s.Get(4), "Erase did not shift correctly")
+	assert.Equal(t, byte('H'), s.Get(5), "Erase did not shift correctly")
+	assert.Equal(t, byte('I'), s.Get(6), "Erase did not shift correctly")
+	assert.Equal(t, byte('J'), s.Get(7), "Erase did not shift correctly")
+	assert.Equal(t, byte(' '), s.Get(8), "Erase did not fill vacated space with blank")
+	assert.Equal(t, byte(' '), s.Get(9), "Erase did not fill vacated space with blank")
+	assert.Equal(t, byte(' '), s.Get(10), "Erase did not fill vacated space with blank")
+	assert.Equal(t, 10, s.Len(), "Length mismatch after Erase")
+}
+
 // TestFill tests the Fill method
 func TestFill(t *testing.T) {
 	s := NewBlankStrObject(MaxStrLen)

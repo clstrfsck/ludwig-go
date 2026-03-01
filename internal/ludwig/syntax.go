@@ -11,9 +11,9 @@ import (
 var syntaxColorLookup map[highlight.Group]int
 
 // buildColorTable maps highlight group names to ncurses color pairs
-func buildColorTable(groupColours *map[string]int) {
+func buildColorTable(groupColours map[string]int) {
 	syntaxColorLookup = make(map[highlight.Group]int)
-	for name, pair := range *groupColours {
+	for name, pair := range groupColours {
 		if g, ok := highlight.Groups[name]; ok {
 			syntaxColorLookup[g] = pair
 		}
@@ -50,7 +50,7 @@ var (
 )
 
 // SyntaxInit loads all embedded syntax definitions
-func SyntaxInit(groupColours *map[string]int) {
+func SyntaxInit(groupColours map[string]int) {
 	if !colorsEnabled {
 		return
 	}
@@ -204,14 +204,14 @@ func (b *LudwigBuffer) Unlock() {}
 func SyntaxHighlightFrame(frame *FrameObject, h *highlight.Highlighter) {
 	buf := newLudwigBuffer(frame)
 	h.HighlightStates(buf)
-	h.HighlightMatches(buf, 0, buf.LinesNum())
+	h.HighlightMatches(buf, 0, buf.LinesNum()-1)
 }
 
 // SyntaxRehighlightFrom re-highlights incrementally from a changed line
 func SyntaxRehighlightFrom(frame *FrameObject, h *highlight.Highlighter, fromLine int) {
 	buf := newLudwigBuffer(frame)
 	end := h.ReHighlightStates(buf, fromLine)
-	h.HighlightMatches(buf, fromLine, end+1)
+	h.HighlightMatches(buf, fromLine, end)
 }
 
 // SyntaxAttach attaches a highlighter to a frame
@@ -252,7 +252,7 @@ func SyntaxApplyDirty(frame *FrameObject) {
 		if ScrFrame == frame && ScrTopLine != nil {
 			scrTopLineNum := ScrTopLine.Group.FirstLineNr + ScrTopLine.OffsetNr
 			line := ScrTopLine
-			for idx+1 > scrTopLineNum {
+			for idx+1 > scrTopLineNum && line.FLink != nil {
 				line = line.FLink
 				scrTopLineNum += 1
 			}

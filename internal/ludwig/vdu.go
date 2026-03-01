@@ -54,7 +54,7 @@ var (
 	NumNcursesKeys  int
 	NcursesSubtract int
 	MassagedMax     int
-	OriginalColors  *map[int]ncursesColor
+	OriginalColors  map[int]ncursesColor
 )
 
 // Color pair assignments (indices into ncurses color table)
@@ -71,7 +71,6 @@ const (
 
 // Global variables
 var (
-	controlChars  map[int]bool
 	terminators   map[int]bool
 	vduSetup      bool
 	inInsertMode  bool
@@ -83,18 +82,6 @@ var (
 )
 
 func init() {
-	// Initialize control chars set
-	controlChars = map[int]bool{
-		0x00: true, 0x01: true, 0x02: true, 0x03: true,
-		0x04: true, 0x05: true, 0x06: true, 0x07: true,
-		0x08: true, 0x09: true, 0x0A: true, 0x0B: true,
-		0x0C: true, 0x0D: true, 0x0E: true, 0x0F: true,
-		0x10: true, 0x11: true, 0x12: true, 0x13: true,
-		0x14: true, 0x15: true, 0x16: true, 0x17: true,
-		0x18: true, 0x19: true, 0x1A: true, 0x1B: true,
-		0x1C: true, 0x1D: true, 0x1E: true, 0x1F: true,
-		0x7F: true,
-	}
 	terminators = make(map[int]bool)
 	value := os.Getenv("LUD_REFRESH_DELAY")
 	if value == "" {
@@ -107,6 +94,10 @@ func init() {
 			refreshDelay = parsed
 		}
 	}
+}
+
+func isControlChar(key int) bool {
+	return (key >= 0 && key <= 31) || key == 127
 }
 
 // massageKey converts ncurses key codes to Ludwig key codes
@@ -244,9 +235,10 @@ func VduTakeBackKey(key int) {
 // VduNewIntroducer sets up terminators for input
 func VduNewIntroducer(key int) {
 	terminators = make(map[int]bool)
-	for k := range controlChars {
+	for k := range 32 {
 		terminators[k] = true
 	}
+	terminators[127] = true
 	if key > 0 {
 		terminators[key] = true
 	}
@@ -281,7 +273,7 @@ func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 	*get = NewBlankStrObject(MaxStrLen)
 
 	_, curX := stdscr.CursorYX()
-	maxY, maxX := stdscr.MaxYX()
+	_, maxX := stdscr.MaxYX()
 	maxlen := min(MaxStrLen, maxX-curX)
 
 	if getLen > maxlen {
@@ -299,7 +291,7 @@ func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 			stdscr.AddChar(nc.Char(SPC))
 			stdscr.AddChar(nc.Char(BS))
 		} else {
-			if key < 0 || key > OrdMaxChar || controlChars[key] {
+			if key < 0 || key > OrdMaxChar || isControlChar(key) {
 				VduBeep()
 			} else {
 				getLen--
@@ -310,7 +302,6 @@ func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 		}
 		key = VduGetKey()
 	}
-	_ = maxY // Avoid unused variable warning
 }
 
 // VduInsertMode sets insert mode on or off
@@ -325,7 +316,7 @@ func VduGetText(strLen int, str *StrObject, outlen *int) {
 
 	*outlen = 0
 	_, curX := stdscr.CursorYX()
-	maxY, maxX := stdscr.MaxYX()
+	_, maxX := stdscr.MaxYX()
 	maxlen := maxX - curX
 
 	if strLen > maxlen {
@@ -348,7 +339,6 @@ func VduGetText(strLen int, str *StrObject, outlen *int) {
 			strLen--
 		}
 	}
-	_ = maxY // Avoid unused variable warning
 }
 
 // VduKeyboardInit initializes keyboard mappings
@@ -574,7 +564,7 @@ func VduInit(
 	terminalInfo *TerminalInfoType,
 	ctrlCFlag *bool,
 	winchangeFlag *bool,
-) (*map[string]int, bool) {
+) (map[string]int, bool) {
 	gCtrlC = ctrlCFlag
 	gWinChange = winchangeFlag
 	terminalInfo.Name = ""
@@ -608,7 +598,7 @@ func VduInit(
 			terminalInfo.Height = maxY
 			terminalInfo.Name = os.Getenv("TERM")
 
-			var colors *map[string]int
+			var colors map[string]int
 			if FileData.Highlighting {
 				colorsEnabled, colors = vduInitColors()
 			} else {
@@ -630,7 +620,6 @@ func VduFree() {
 		VduMoveCurs(1, maxY)
 		VduFlush()
 		if colorsEnabled {
-			nc.UseDefaultColors()
 			vduResetColors()
 		}
 		nc.EndWin()
@@ -684,7 +673,7 @@ func hexToInt(s string) int {
 }
 
 // convertColorSchemeToPairs converts a color scheme to color pair indices
-func convertColorSchemeToPairs(scheme map[string]string) (*map[string]int, *map[int]ncursesColor) {
+func convertColorSchemeToPairs(scheme map[string]string) (map[string]int, map[int]ncursesColor) {
 	colorMap := make(map[string]int)
 	oldColorMap := make(map[int]ncursesColor)
 	colourIndexes := make(map[ncursesColor]int)
@@ -707,14 +696,18 @@ func convertColorSchemeToPairs(scheme map[string]string) (*map[string]int, *map[
 			nc.InitColor(index, newColor.r, newColor.g, newColor.b)
 			nc.InitPair(index, index, -1)
 			pairIndex++
+			if pairIndex >= nc.Colors() || pairIndex >= nc.ColorPairs() {
+				// No more colors available, break out of the loop
+				break
+			}
 		}
 		colorMap[name] = index
 	}
-	return &colorMap, &oldColorMap
+	return colorMap, oldColorMap
 }
 
 // vduInitColors initializes color pairs; returns true if colors are available
-func vduInitColors() (bool, *map[string]int) {
+func vduInitColors() (bool, map[string]int) {
 	if !nc.HasColors() {
 		return false, nil
 	}
@@ -747,7 +740,7 @@ func vduInitColors() (bool, *map[string]int) {
 			"todo":       ColorPairSpecial,
 			"error":      ColorPairError,
 		}
-		return true, &colorMap
+		return true, colorMap
 	}
 
 	colorScheme := map[string]string{
@@ -797,10 +790,8 @@ func vduInitColors() (bool, *map[string]int) {
 
 // vduResetColors resets all color pairs to default
 func vduResetColors() {
-	if OriginalColors != nil {
-		for index, color := range *OriginalColors {
-			nc.InitColor(index, color.r, color.g, color.b)
-		}
+	for index, color := range OriginalColors {
+		nc.InitColor(index, color.r, color.g, color.b)
 	}
 }
 
