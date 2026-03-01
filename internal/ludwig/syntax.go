@@ -135,10 +135,7 @@ func (b *LudwigBuffer) State(n int) highlight.State {
 	if n >= len(b.lines) {
 		return nil
 	}
-	if s, ok := b.lines[n].HlState.(highlight.State); ok {
-		return s
-	}
-	return nil
+	return b.lines[n].HlState
 }
 
 func (b *LudwigBuffer) SetState(n int, s highlight.State) {
@@ -226,8 +223,8 @@ func SyntaxApplyDirty(frame *FrameObject) {
 // syntaxDrawLine renders line content with syntax highlighting.
 // offset and strlen are already computed by ScreenDrawLine.
 func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
-	match, ok := line.HlMatch.(highlight.LineMatch)
-	if !ok || len(match) == 0 {
+	match := line.HlMatch
+	if len(match) == 0 {
 		VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
 		return
 	}

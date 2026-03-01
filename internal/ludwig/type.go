@@ -426,8 +426,8 @@ type LineHdrObject struct {
 	Str      *StrObject
 	Used     int
 	ScrRowNr int
-	HlState  any // holds highlight.State (*highlight.region); nil = unset
-	HlMatch  any // holds highlight.LineMatch (map[int]uint8); nil = unset
+	HlState  highlight.State     // nil = unset
+	HlMatch  highlight.LineMatch // nil = unset
 }
 
 func (l *LineHdrObject) Len() int {
