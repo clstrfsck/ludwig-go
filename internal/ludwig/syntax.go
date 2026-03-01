@@ -8,15 +8,39 @@ import (
 )
 
 // syntaxColorTable maps highlight Group IDs to ncurses color pair numbers
-var syntaxColorTable [256]int
+var syntaxColorLookup map[highlight.Group]int
 
-// buildColorTable maps micro highlight group names to ncurses color pairs
+// buildColorTable maps highlight group names to ncurses color pairs
 func buildColorTable(groupColours *map[string]int) {
+	syntaxColorLookup = make(map[highlight.Group]int)
 	for name, pair := range *groupColours {
 		if g, ok := highlight.Groups[name]; ok {
-			syntaxColorTable[g] = pair
+			syntaxColorLookup[g] = pair
 		}
 	}
+
+	// Pre-compute hierarchical lookups for all groups
+	for name, groupID := range highlight.Groups {
+		if syntaxColorLookup[groupID] == 0 {
+			syntaxColorLookup[groupID] = findColorForGroup(name)
+		}
+	}
+}
+
+func findColorForGroup(name string) int {
+	for name != "" {
+		if g, ok := highlight.Groups[name]; ok {
+			if id := syntaxColorLookup[g]; id != 0 {
+				return id
+			}
+		}
+		if idx := strings.LastIndex(name, "."); idx != -1 {
+			name = name[:idx]
+		} else {
+			break
+		}
+	}
+	return 0
 }
 
 var (
@@ -224,7 +248,7 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		if pos >= end {
 			break
 		}
-		newPair := findHighlightPair(match[pos])
+		newPair := syntaxColorLookup[match[pos]]
 
 		// Render any gap before this position
 		if pos > col {
@@ -253,29 +277,4 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 	if currentPair != 0 {
 		VduColorOff(currentPair)
 	}
-}
-
-func findHighlightPair(groupID highlight.Group) int {
-	id := syntaxColorTable[groupID]
-	if id != 0 {
-		return id
-	}
-	name := groupID.String()
-	for {
-		// Strip the last component (e.g., "a.b.c.d" -> "a.b.c")
-		idx := strings.LastIndex(name, ".")
-		if idx == -1 {
-			break
-		}
-		name = name[:idx]
-
-		// Check if this shorter name has a color mapping
-		if g, ok := highlight.Groups[name]; ok {
-			id = syntaxColorTable[g]
-			if id != 0 {
-				return id
-			}
-		}
-	}
-	return 0
 }
