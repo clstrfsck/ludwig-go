@@ -12,6 +12,10 @@ var syntaxColorLookup map[highlight.Group]int
 
 // buildColorTable maps highlight group names to ncurses color pairs
 func buildColorTable(groupColours map[string]int) {
+	if possibleDefault, ok := groupColours["default"]; ok {
+		defaultPair = possibleDefault
+	}
+
 	syntaxColorLookup = make(map[highlight.Group]int)
 	for name, pair := range groupColours {
 		if g, ok := highlight.Groups[name]; ok {
@@ -47,6 +51,7 @@ var (
 	syntaxDefs    []*highlight.Def
 	syntaxHeaders []*highlight.Header
 	syntaxEnabled bool
+	defaultPair   int = 0
 )
 
 // SyntaxInit loads all embedded syntax definitions
@@ -237,7 +242,7 @@ func SyntaxMarkLineDirty(frame *FrameObject, line *LineHdrObject) {
 }
 
 // SyntaxApplyDirty applies any pending incremental re-highlighting for the frame
-// and redraws all currently visible lines so the updated colours take effect.
+// and redraws all currently visible lines so the updated colors take effect.
 // screenExpand only draws lines not yet on screen, so we must do this ourselves.
 func SyntaxApplyDirty(frame *FrameObject) {
 	h := SyntaxGet(frame)
@@ -271,6 +276,16 @@ func SyntaxApplyDirty(frame *FrameObject) {
 // offset and strlen are already computed by ScreenDrawLine.
 func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 	match := line.HlMatch
+
+	currentPair := defaultPair
+	if currentPair != 0 {
+		ColorOn(currentPair)
+	}
+	defer func() {
+		if currentPair != 0 {
+			ColorOff(currentPair)
+		}
+	}()
 	if len(match) == 0 {
 		VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
 		return
@@ -286,13 +301,15 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 	// Walk the line segment by segment, switching colors
 	col := offset // current rune column (0-based)
 	end := offset + strlen
-	currentPair := 0
 
 	for _, pos := range positions {
 		if pos >= end {
 			break
 		}
-		newPair := syntaxColorLookup[match[pos]]
+		newPair, found := syntaxColorLookup[match[pos]]
+		if !found {
+			newPair = defaultPair
+		}
 
 		// Render any gap before this position
 		if pos > col {
@@ -305,20 +322,19 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		}
 
 		// Switch color
-		if currentPair != 0 {
-			VduColorOff(currentPair)
-		}
-		currentPair = newPair
-		if currentPair != 0 {
-			VduColorOn(currentPair)
+		if currentPair != newPair {
+			if currentPair != 0 {
+				ColorOff(currentPair)
+			}
+			currentPair = newPair
+			if currentPair != 0 {
+				ColorOn(currentPair)
+			}
 		}
 	}
 
 	// Render the remaining tail
 	if col < end {
 		VduDisplayStr(line.Str.Slice(col+1, end-col), 0)
-	}
-	if currentPair != 0 {
-		VduColorOff(currentPair)
 	}
 }
