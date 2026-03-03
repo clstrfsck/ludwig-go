@@ -741,7 +741,7 @@ func ScreenPosition(newLine *LineHdrObject, newCol int) {
 	// Check if position is already on screen between margins
 	if newLine.ScrRowNr == 0 ||
 		(newLine.ScrRowNr-ScrTopLine.ScrRowNr < topMargin && ScrTopLine.BLink != nil) ||
-		(ScrBotLine.ScrRowNr-newLine.ScrRowNr < botMargin && ScrBotLine.FLink != nil) ||
+		(ScrBotLine.ScrRowNr-newLine.ScrRowNr+1 < botMargin && ScrBotLine.FLink != nil) ||
 		newCol <= offset || newCol > offset+width {
 
 		height := ScrFrame.ScrHeight

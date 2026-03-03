@@ -87,7 +87,7 @@ func convertColorSchemeToPairs(scheme map[string]string) map[string]int {
 	colorMap := make(map[string]int)
 	colorIndexes := make(map[ncursesColor]int)
 	colorIndex := 17 // Start after the basic ANSI colors + bright variants
-	pairIndex := 2   // Color pair 1 is reserved for default color
+	pairIndex := 1
 	for name, hex := range scheme {
 		var newColor ncursesColor
 		newColor.r, newColor.g, newColor.b = hexToRGB(hex)

@@ -307,7 +307,7 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 			break
 		}
 		newPair, found := syntaxColorLookup[match[pos]]
-		if !found {
+		if !found || newPair == 0 {
 			newPair = defaultPair
 		}
 
