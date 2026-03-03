@@ -11,9 +11,6 @@
 !   Copyright (C) 1983   C.J.Barter                                    }
 !   Copyright (C) 1987                                                 }
 !   Department of Computer Science, University of Adelaide, Australia  }
-!   All rights reserved.                                               }
-!   Reproduction of the work or any substantial part thereof in any    }
-!   material form whatsoever is prohibited.                            }
 !                                                                      }
 !**********************************************************************}
 
@@ -23,23 +20,6 @@
 ! Description:  This file is the source for the Ludwig help file.
 !               Run the program LUDWIGHLP to convert it to an indexed
 !               sequential file suitable for Ludwig to interpret.
-!
-! $Header: /home/medusa/user1/projects/ludwig/current/RCS/ludwighlp.t,v 4.4 90/02/28 14:11:15 ludwig Exp $
-! $Log:         ludwighlp.t,v $
-! Revision 4.4  90/02/28  14:11:15  ludwig
-! Add the FS command and correct the FO command.
-!
-!
-! Revision History:
-! 4-001 Ludwig V4.0 release.                                  7-Apr-1987
-! 4-002 Kelvin B. Nicolle                                     6-May-1987
-!       One line in section 4 contained a "\" in column 1. There was an
-!       index entry in the .IDX file for "Gcat".
-!       The text has been moved to columns 2..78 and column 1 now
-!       contains only flag characters. HELPFILE.PAS and .C have been
-!       modified accordingly.
-! 4-003 Kelvin B. Nicolle                                    26-May-1987
-!       Remove one line from the US section.
 !
 ! To set up the required margins, tabs and file format, execute the
 ! Ludwig command "ex/ludwig/"

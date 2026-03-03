@@ -282,9 +282,7 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		ColorOn(currentPair)
 	}
 	defer func() {
-		if currentPair != 0 {
-			ColorOff(currentPair)
-		}
+		ColorOn(defaultPair)
 	}()
 	if len(match) == 0 {
 		VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
