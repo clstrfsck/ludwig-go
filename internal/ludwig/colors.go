@@ -43,6 +43,7 @@ const (
 // Global variable to track if colors are enabled
 var (
 	colorsEnabled = false
+	changedColors = false
 )
 
 func ColorInit() map[string]int {
@@ -55,11 +56,12 @@ func ColorInit() map[string]int {
 }
 
 func ColorReset() {
-	if colorsEnabled {
+	if changedColors {
 		// Reset xterm colors to default: OSC 104 BEL
 		// A mystery why ncurses does not do this.
 		os.Stdout.WriteString("\033]104\007")
 		os.Stdout.Sync()
+		changedColors = false
 	}
 }
 
@@ -105,6 +107,7 @@ func convertColorSchemeToPairs(scheme map[string]string) map[string]int {
 			colorIndexes[newColor] = index
 			nc.InitColor(thisColorIndex, newColor.r, newColor.g, newColor.b)
 			nc.InitPair(index, thisColorIndex, -1)
+			changedColors = true
 		}
 		colorMap[name] = index
 	}
