@@ -741,7 +741,7 @@ func ScreenPosition(newLine *LineHdrObject, newCol int) {
 	// Check if position is already on screen between margins
 	if newLine.ScrRowNr == 0 ||
 		(newLine.ScrRowNr-ScrTopLine.ScrRowNr < topMargin && ScrTopLine.BLink != nil) ||
-		(ScrBotLine.ScrRowNr-newLine.ScrRowNr < botMargin && ScrBotLine.FLink != nil) ||
+		(ScrBotLine.ScrRowNr-newLine.ScrRowNr+1 < botMargin && ScrBotLine.FLink != nil) ||
 		newCol <= offset || newCol > offset+width {
 
 		height := ScrFrame.ScrHeight
@@ -983,7 +983,7 @@ func ScreenFixup() {
 			needsReposition := CurrentFrame.Dot.Line.ScrRowNr == 0 ||
 				(CurrentFrame.Dot.Line.ScrRowNr-ScrTopLine.ScrRowNr < CurrentFrame.MarginTop &&
 					ScrTopLine.BLink != nil) ||
-				(ScrBotLine.ScrRowNr-CurrentFrame.Dot.Line.ScrRowNr < CurrentFrame.MarginBottom &&
+				(ScrBotLine.ScrRowNr-CurrentFrame.Dot.Line.ScrRowNr+1 < CurrentFrame.MarginBottom &&
 					ScrBotLine.FLink != nil) ||
 				CurrentFrame.Dot.Col <= CurrentFrame.ScrOffset ||
 				CurrentFrame.Dot.Col > CurrentFrame.ScrOffset+CurrentFrame.ScrWidth
