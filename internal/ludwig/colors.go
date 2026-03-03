@@ -140,6 +140,9 @@ func convertColorSchemeToPairs(scheme map[string]string) map[string]int {
 		pairIndex += 1
 	}
 	for name, colorString := range scheme {
+		if name == "default" {
+			continue
+		}
 		newFg, newBg := createColors(colorIndexes, colorString, &colorIndex, defaultFg, defaultBg)
 		if pairIndex >= nc.ColorPairs() {
 			panic("Pairs exhausted")
