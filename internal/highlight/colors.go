@@ -46,11 +46,11 @@ func ColorInit(enabled bool) map[string]int {
 
 // ColorReset shuts down the color system
 func ColorReset() {
-	// Nothing do do here
+	// Nothing to do here
 	colorsEnabled = false
 }
 
-// sqDist returns the square of the euclidian distance between r1,g1,b1
+// sqDist returns the square of the euclidean distance between r1,g1,b1
 // and r2,g2,b2
 func sqDist(r1, g1, b1, r2, g2, b2 int) int {
 	return (r1-r2)*(r1-r2) + (g1-g2)*(g1-g2) + (b1-b2)*(b1-b2)
