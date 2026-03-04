@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"time"
 
+	"ludwig-go/internal/highlight"
 	nc "ludwig-go/internal/ncurses"
 )
 
@@ -578,7 +579,7 @@ func VduInit(
 			terminalInfo.Height = maxY
 			terminalInfo.Name = os.Getenv("TERM")
 
-			colors := ColorInit()
+			colors := highlight.ColorInit(FileData.Highlighting)
 			VduClearScr()
 			return colors, true
 		}
@@ -595,7 +596,7 @@ func VduFree() {
 		VduMoveCurs(1, maxY)
 		VduFlush()
 		nc.EndWin()
-		ColorReset()
+		highlight.ColorReset()
 	}
 }
 
