@@ -396,7 +396,7 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 	}
 
 	// copy lines from the input file to the output file
-	for i := 0; i < copyLines; i++ {
+	for range copyLines {
 		if !FilesysRead(iFyle, line, &lineLen) {
 			return false
 		}

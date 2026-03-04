@@ -271,23 +271,9 @@ func bitsetRemove(set1 *big.Int, set2 *big.Int) {
 	set1.AndNot(set1, set2)
 }
 
-func bitsetRemoveNFA(set1 *[MaxNFAStateRange + 1]bool, set2 [MaxNFAStateRange + 1]bool) {
-	for i := range *set1 {
-		if set2[i] {
-			set1[i] = false
-		}
-	}
-}
-
 func bitsetSetRange(set *big.Int, start int, end int) {
 	for i := start; i <= end && i <= MaxSetRange; i++ {
 		set.SetBit(set, i, 1)
-	}
-}
-
-func bitsetSetRangeNFA(set *[MaxNFAStateRange + 1]bool, start int, end int) {
-	for i := start; i <= end && i <= MaxNFAStateRange; i++ {
-		set[i] = true
 	}
 }
 

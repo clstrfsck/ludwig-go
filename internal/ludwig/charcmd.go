@@ -19,7 +19,7 @@ import (
 )
 
 // CharcmdInsert handles character insertion commands
-func CharcmdInsert(cmd Commands, rept LeadParam, count int, fromSpan bool) bool {
+func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
 	cmdStatus := false
 	if rept == LeadParamMinus {
 		rept = LeadParamNInt
@@ -68,6 +68,7 @@ func CharcmdInsert(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 		}
 		rept = LeadParamNone
 		count = 1
+		var cmd Commands
 		if ChIsPrintable(rune(key)) {
 			cmd = CmdNoop
 		} else {
@@ -122,7 +123,7 @@ func joinLines() bool {
 }
 
 // CharcmdDelete handles character deletion commands
-func CharcmdDelete(cmd Commands, rept LeadParam, count int, fromSpan bool) bool {
+func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 	cmdStatus := false
 	oldDotCol := CurrentFrame.Dot.Col
 	oldStr := NewStrObjectCopy(
@@ -219,6 +220,7 @@ func CharcmdDelete(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 		}
 		rept = LeadParamNone
 		count = 1
+		var cmd Commands
 		if ChIsPrintable(rune(key)) {
 			cmd = CmdNoop
 		} else {
@@ -267,7 +269,7 @@ l9:
 }
 
 // CharcmdRubout handles rubout commands
-func CharcmdRubout(cmd Commands, rept LeadParam, count int, fromSpan bool) bool {
+func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
 	var cmdStatus bool
 	if EditMode == ModeInsert {
 		if rept == LeadParamPIndef {
@@ -275,7 +277,7 @@ func CharcmdRubout(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 		} else {
 			rept = LeadParamNInt
 		}
-		cmdStatus = CharcmdDelete(CmdDeleteChar, rept, -count, fromSpan)
+		cmdStatus = CharcmdDelete(rept, -count, fromSpan)
 	} else {
 		cmdStatus = false
 		oldDotCol := CurrentFrame.Dot.Col
@@ -312,6 +314,7 @@ func CharcmdRubout(cmd Commands, rept LeadParam, count int, fromSpan bool) bool 
 			}
 			rept = LeadParamNone
 			count = 1
+			var cmd Commands
 			if ChIsPrintable(rune(key)) {
 				cmd = CmdNoop
 			} else {

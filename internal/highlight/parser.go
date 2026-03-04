@@ -54,7 +54,7 @@ type HeaderYaml struct {
 
 type File struct {
 	FileType string
-	yamlSrc  map[string]interface{}
+	yamlSrc  map[string]any
 }
 
 // A Pattern is one simple syntax rule
@@ -197,7 +197,7 @@ func ParseFile(input []byte) (f *File, err error) {
 		}
 	}()
 
-	var rules map[string]interface{}
+	var rules map[string]any
 	if err = yaml.Unmarshal(input, &rules); err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func ParseDef(f *File, header *Header) (s *Def, err error) {
 
 	for k, v := range src {
 		if k == "rules" {
-			inputRules := v.([]interface{})
+			inputRules := v.([]any)
 
 			rules, err := parseRules(inputRules, nil)
 			if err != nil {
@@ -336,7 +336,7 @@ func resolveIncludesInRegion(files []*File, region *region) {
 	}
 }
 
-func parseRules(input []interface{}, curRegion *region) (ru *rules, err error) {
+func parseRules(input []any, curRegion *region) (ru *rules, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -349,14 +349,14 @@ func parseRules(input []interface{}, curRegion *region) (ru *rules, err error) {
 	ru = new(rules)
 
 	for _, v := range input {
-		rule := v.(map[string]interface{})
+		rule := v.(map[string]any)
 		for k, val := range rule {
 			group := k
 
 			switch object := val.(type) {
 			case string:
 				if object == "" {
-					return nil, fmt.Errorf("Empty rule %s", k)
+					return nil, fmt.Errorf("empty rule %s", k)
 				}
 
 				if k == "include" {
@@ -376,7 +376,7 @@ func parseRules(input []interface{}, curRegion *region) (ru *rules, err error) {
 					groupNum := Groups[groupStr]
 					ru.patterns = append(ru.patterns, &pattern{groupNum, r})
 				}
-			case map[string]interface{}:
+			case map[string]any:
 				// region
 				region, err := parseRegion(group, object, curRegion)
 				if err != nil {
@@ -384,7 +384,7 @@ func parseRules(input []interface{}, curRegion *region) (ru *rules, err error) {
 				}
 				ru.regions = append(ru.regions, region)
 			default:
-				return nil, fmt.Errorf("Bad type %T", object)
+				return nil, fmt.Errorf("bad type %T", object)
 			}
 		}
 	}
@@ -392,7 +392,7 @@ func parseRules(input []interface{}, curRegion *region) (ru *rules, err error) {
 	return ru, nil
 }
 
-func parseRegion(group string, regionInfo map[string]interface{}, prevRegion *region) (r *region, err error) {
+func parseRegion(group string, regionInfo map[string]any, prevRegion *region) (r *region, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -416,7 +416,7 @@ func parseRegion(group string, regionInfo map[string]interface{}, prevRegion *re
 	if start, ok := regionInfo["start"]; ok {
 		start := start.(string)
 		if start == "" {
-			return nil, fmt.Errorf("Empty start in %s", group)
+			return nil, fmt.Errorf("empty start in %s", group)
 		}
 
 		r.start, err = regexp.Compile(start)
@@ -424,14 +424,14 @@ func parseRegion(group string, regionInfo map[string]interface{}, prevRegion *re
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("Missing start in %s", group)
+		return nil, fmt.Errorf("missing start in %s", group)
 	}
 
 	// end is mandatory
 	if end, ok := regionInfo["end"]; ok {
 		end := end.(string)
 		if end == "" {
-			return nil, fmt.Errorf("Empty end in %s", group)
+			return nil, fmt.Errorf("empty end in %s", group)
 		}
 
 		r.end, err = regexp.Compile(end)
@@ -439,14 +439,14 @@ func parseRegion(group string, regionInfo map[string]interface{}, prevRegion *re
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("Missing end in %s", group)
+		return nil, fmt.Errorf("missing end in %s", group)
 	}
 
 	// skip is optional
 	if skip, ok := regionInfo["skip"]; ok {
 		skip := skip.(string)
 		if skip == "" {
-			return nil, fmt.Errorf("Empty skip in %s", group)
+			return nil, fmt.Errorf("empty skip in %s", group)
 		}
 
 		r.skip, err = regexp.Compile(skip)
@@ -459,7 +459,7 @@ func parseRegion(group string, regionInfo map[string]interface{}, prevRegion *re
 	if groupStr, ok := regionInfo["limit-group"]; ok {
 		groupStr := groupStr.(string)
 		if groupStr == "" {
-			return nil, fmt.Errorf("Empty limit-group in %s", group)
+			return nil, fmt.Errorf("empty limit-group in %s", group)
 		}
 
 		if _, ok := Groups[groupStr]; !ok {
@@ -478,7 +478,7 @@ func parseRegion(group string, regionInfo map[string]interface{}, prevRegion *re
 
 	// rules are optional
 	if rules, ok := regionInfo["rules"]; ok {
-		r.rules, err = parseRules(rules.([]interface{}), r)
+		r.rules, err = parseRules(rules.([]any), r)
 		if err != nil {
 			return nil, err
 		}

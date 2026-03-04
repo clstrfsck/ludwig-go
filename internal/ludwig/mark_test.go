@@ -28,7 +28,7 @@ func createLinkedLines(count int) []*LineHdrObject {
 	}
 
 	lines := make([]*LineHdrObject, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		lines[i] = &LineHdrObject{
 			Used:  MaxStrLen,
 			Marks: make([]*MarkObject, 0),
@@ -36,7 +36,7 @@ func createLinkedLines(count int) []*LineHdrObject {
 	}
 
 	// Link them together
-	for i := 0; i < count; i++ {
+	for i := range count {
 		if i == 0 {
 			lines[i].BLink = lines[count-1]
 		} else {

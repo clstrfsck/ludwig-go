@@ -21,7 +21,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -362,9 +362,7 @@ func SysListBackups(backupName string) []int64 {
 		versions = append(versions, v)
 	}
 
-	sort.Slice(versions, func(i, j int) bool {
-		return versions[i] < versions[j]
-	})
+	slices.Sort(versions)
 
 	return versions
 }

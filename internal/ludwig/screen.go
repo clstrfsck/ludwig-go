@@ -65,10 +65,7 @@ func ScreenMessage(message string) {
 		for i := 0; i < len(message); {
 			ScreenFreeBottomLine()
 			VduMoveCurs(1, TerminalInfo.Height)
-			j := len(message) - i
-			if j > TerminalInfo.Width-1 {
-				j = TerminalInfo.Width - 1
-			}
+			j := min(len(message)-i, TerminalInfo.Width-1)
 			VduBold()
 			VduDisplayStr(message[i:i+j], 3)
 			VduNormal()
@@ -241,10 +238,7 @@ func ScreenScroll(count int, expand bool) {
 				count = remainingLines
 			}
 			botLineRow := botLine.ScrRowNr
-			freeLines := TerminalInfo.Height - botLineRow
-			if freeLines > count {
-				freeLines = count
-			}
+			freeLines := min(TerminalInfo.Height-botLineRow, count)
 			if count-freeLines <= botLineRow {
 				for rowNr := botLineRow + 1; rowNr <= botLineRow+freeLines; rowNr++ {
 					botLine = botLine.FLink
@@ -312,10 +306,7 @@ func ScreenScroll(count int, expand bool) {
 				count = remainingLines
 			}
 			topLineRow := topLine.ScrRowNr
-			freeLines := topLineRow - 1
-			if freeLines >= count {
-				freeLines = count
-			}
+			freeLines := min(topLineRow-1, count)
 
 			if topLineRow+count-freeLines <= TerminalInfo.Height+1 {
 				for rowNr := topLineRow - 1; rowNr >= topLineRow-freeLines; rowNr-- {
@@ -1368,7 +1359,7 @@ func ScreenWriteFileNameStr(indent int, str string, width int) {
 		}
 	} else {
 		fmt.Print(spc(indent))
-		for i := 0; i < width; i++ {
+		for i := range width {
 			if i < len(str) {
 				fmt.Print(string(str[i]))
 			} else {

@@ -23,10 +23,6 @@ const (
 	newValues = "  New Values: "
 )
 
-func isNPunct(ch byte) bool {
-	return !ChIsPunctuation(rune(ch))
-}
-
 // FrameEdit creates or edits a frame with the specified name.
 // This is the \ED command. If frame_name doesn't exist, then it is created.
 func FrameEdit(frameName string) bool {
@@ -278,10 +274,7 @@ func setmemory(sz int, setInitial bool) bool {
 	}
 
 	usedStorage := CurrentFrame.SpaceLimit - CurrentFrame.SpaceLeft
-	minSize := usedStorage + 800
-	if minSize > CurrentFrame.SpaceLimit {
-		minSize = CurrentFrame.SpaceLimit
-	}
+	minSize := min(usedStorage+800, CurrentFrame.SpaceLimit)
 	if sz < minSize {
 		sz = minSize
 	}

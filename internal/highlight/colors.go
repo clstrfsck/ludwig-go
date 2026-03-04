@@ -23,23 +23,12 @@ import (
 	"strings"
 )
 
-type ncursesColor struct {
-	r int
-	g int
-	b int
-}
-
-// Global variable to track if colors are enabled
-var (
-	colorsEnabled = false
-)
-
 // ColorInit initialises the color system.
 func ColorInit(enabled bool) map[string]int {
 	// Check if colors are enabled in the config file
 	var colors map[string]int = nil
 	if enabled {
-		colors, colorsEnabled = initColors()
+		colors = initColors()
 	}
 	return colors
 }
@@ -47,7 +36,6 @@ func ColorInit(enabled bool) map[string]int {
 // ColorReset shuts down the color system
 func ColorReset() {
 	// Nothing to do here
-	colorsEnabled = false
 }
 
 // sqDist returns the square of the euclidean distance between r1,g1,b1
@@ -241,7 +229,7 @@ var twilightScheme = map[string]string{
 	"trailingws":           "#D75F5F",
 }
 
-func basicScheme() (map[string]int, bool) {
+func basicScheme() map[string]int {
 	// Basic color scheme
 	nc.InitPair(1, nc.COLOR_YELLOW, -1)
 	nc.InitPair(2, nc.COLOR_GREEN, -1)
@@ -265,17 +253,17 @@ func basicScheme() (map[string]int, bool) {
 		"todo":       7,
 		"error":      8,
 	}
-	return colorMap, true
+	return colorMap
 }
 
 // initColors initializes color pairs; returns true if colors are available
-func initColors() (map[string]int, bool) {
+func initColors() map[string]int {
 	if !nc.HasColors() {
-		return nil, false
+		return nil
 	}
 	nc.StartColor()
 	if nc.Colors() < 8 {
-		return nil, false
+		return nil
 	}
 	nc.UseDefaultColors()
 	// We just wildly guess how many color pairs we need here
@@ -284,5 +272,5 @@ func initColors() (map[string]int, bool) {
 	}
 	// Here we will assume standard 6x6x6 color cube with 24 gray ramp
 	colorMap := convertColorSchemeToPairs(twilightScheme)
-	return colorMap, true
+	return colorMap
 }

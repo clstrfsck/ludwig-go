@@ -153,7 +153,7 @@ func (h *Highlighter) highlightRegion(highlights LineMatch, start int, canMatchE
 
 	if !statesOnly {
 		fullHighlights := make([]Group, lineLen)
-		for i := 0; i < len(fullHighlights); i++ {
+		for i := range fullHighlights {
 			fullHighlights[i] = curRegion.group
 		}
 
@@ -273,7 +273,7 @@ func (h *Highlighter) HighlightString(input string) []LineMatch {
 	lines := strings.Split(input, "\n")
 	var lineMatches []LineMatch
 
-	for i := 0; i < len(lines); i++ {
+	for i := range lines {
 		line := []byte(lines[i])
 		highlights := make(LineMatch)
 

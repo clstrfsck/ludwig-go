@@ -223,10 +223,7 @@ func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *
 	endGroupLastLine := endGroup.LastLine
 
 	for nrLinesToAdjust > 0 {
-		nrLinesToAdjustHere := MaxGroupLines - adjustGroup.NrLines
-		if nrLinesToAdjustHere > nrLinesToAdjust {
-			nrLinesToAdjustHere = nrLinesToAdjust
-		}
+		nrLinesToAdjustHere := min(MaxGroupLines-adjustGroup.NrLines, nrLinesToAdjust)
 
 		if adjustGroup.NrLines == 0 {
 			adjustGroup.FirstLine = adjustLine

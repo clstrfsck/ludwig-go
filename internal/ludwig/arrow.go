@@ -130,10 +130,7 @@ func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) boo
 	case LeadParamPIndef:
 		dotLine = CurrentFrame.LastGroup.LastLine
 	}
-	if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
-		return false
-	}
-	return true
+	return MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 }
 
 func doCmdHome(newEql *MarkObject) bool {
@@ -226,10 +223,7 @@ func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 	case LeadParamPIndef:
 		dotLine = CurrentFrame.FirstGroup.FirstLine
 	}
-	if !MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
-		return false
-	}
-	return true
+	return MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 }
 
 func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
@@ -253,8 +247,5 @@ func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
 		dotCol = TextReturnCol(dotLine, dotCol, false)
 		dotLine = dotLine.FLink
 	}
-	if !MarkCreate(dotLine, dotCol, &CurrentFrame.Dot) {
-		return false
-	}
-	return true
+	return MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
 }
