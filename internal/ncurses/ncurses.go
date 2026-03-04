@@ -305,6 +305,11 @@ func (w *Window) ColorOff(pair int) {
 	C.wattroff(w.win, C.int(C.color_pair_attr(C.int(pair))))
 }
 
+// BkColor sets the background color pair
+func (w *Window) BkColor(pair int) {
+	C.wbkgdset(w.win, C.chtype(C.color_pair_attr(C.int(pair)))|C.chtype(' '))
+}
+
 // IntrFlush controls interrupt flush
 func (w *Window) IntrFlush(enable bool) {
 	C.intrflush(w.win, C.bool(enable))

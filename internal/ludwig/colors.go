@@ -20,6 +20,7 @@ import (
 	nc "ludwig-go/internal/ncurses"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type ncursesColor struct {
@@ -84,32 +85,71 @@ func hexToInt(s string) int {
 	return int(value * 1000 / 255)
 }
 
+func createColor(indexes map[ncursesColor]int, color string, colorIndex *int) int {
+	r, g, b := hexToRGB(color)
+	nColor := ncursesColor{
+		r,
+		g,
+		b,
+	}
+	if index, ok := indexes[nColor]; ok {
+		return index
+	}
+	index := *colorIndex
+	if index >= nc.Colors() {
+		panic("Colors exhausted")
+	}
+	*colorIndex += 1
+	changedColors = true
+	nc.InitColor(index, r, g, b)
+	indexes[nColor] = index
+	return index
+}
+
+func createColors(
+	indexes map[ncursesColor]int,
+	colors string,
+	colorIndex *int,
+	defaultFg, defaultBg int,
+) (int, int) {
+	cs := strings.Split(colors, ",")
+	var fg = defaultFg
+	var bg = defaultBg
+	if len(cs) > 0 {
+		fg = createColor(indexes, cs[0], colorIndex)
+	}
+	if len(cs) > 1 {
+		bg = createColor(indexes, cs[1], colorIndex)
+	}
+	return fg, bg
+}
+
 // convertColorSchemeToPairs converts a color scheme to color pair indices
 func convertColorSchemeToPairs(scheme map[string]string) map[string]int {
 	colorMap := make(map[string]int)
 	colorIndexes := make(map[ncursesColor]int)
 	colorIndex := 17 // Start after the basic ANSI colors + bright variants
 	pairIndex := 1
-	for name, hex := range scheme {
-		var newColor ncursesColor
-		newColor.r, newColor.g, newColor.b = hexToRGB(hex)
-		index, exists := colorIndexes[newColor]
-		if !exists {
-			if colorIndex >= nc.Colors() || pairIndex >= nc.ColorPairs() {
-				// No more colors/pairs available, break out of the loop
-				break
-			}
-			// Create a new color and color pair for this color
-			thisColorIndex := colorIndex
-			colorIndex += 1
-			index = pairIndex
-			pairIndex += 1
-			colorIndexes[newColor] = index
-			nc.InitColor(thisColorIndex, newColor.r, newColor.g, newColor.b)
-			nc.InitPair(index, thisColorIndex, -1)
-			changedColors = true
+	defaultFg := -1
+	defaultBg := -1
+	if defaultColors, ok := scheme["default"]; ok {
+		defaultFg, defaultBg = createColors(colorIndexes, defaultColors, &colorIndex, -1, -1)
+		nc.InitPair(pairIndex, defaultFg, defaultBg)
+		stdscr.BkColor(pairIndex)
+		colorMap["default"] = pairIndex
+		pairIndex += 1
+	}
+	for name, colorString := range scheme {
+		if name == "default" {
+			continue
 		}
-		colorMap[name] = index
+		newFg, newBg := createColors(colorIndexes, colorString, &colorIndex, defaultFg, defaultBg)
+		if pairIndex >= nc.ColorPairs() {
+			panic("Pairs exhausted")
+		}
+		nc.InitPair(pairIndex, newFg, newBg)
+		colorMap[name] = pairIndex
+		pairIndex += 1
 	}
 	return colorMap
 }
@@ -152,7 +192,7 @@ func initColors() (map[string]int, bool) {
 	}
 
 	colorScheme := map[string]string{
-		"default":              "#F8F8F8",
+		"default":              "#F8F8F8,#141414",
 		"color-column":         "#1B1B1B",
 		"comment":              "#5F5A60",
 		"constant":             "#CF6A4C",
