@@ -16,7 +16,7 @@ func TestNewBlankStrObject(t *testing.T) {
 	t.Run("Blank object contains blanks", func(t *testing.T) {
 		s := NewBlankStrObject(MaxStrLen)
 		assert.NotNil(t, s, "NewBlankStrObject returned nil")
-		for i := 0; i < MaxStrLen; i++ {
+		for i := range MaxStrLen {
 			assert.Equal(t, byte(' '), s.array[i], "NewBlankStrObject(): array[%d] mismatch", i)
 		}
 	})

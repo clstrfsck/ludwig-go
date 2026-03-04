@@ -30,7 +30,7 @@ func createTestSpanStructure() (*FrameObject, *GroupObject, *LineHdrObject) {
 
 	// Link lines to group
 	line := firstLine
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		line.Group = group
 		line.OffsetNr = i
 		LineChangeLength(line, 50)

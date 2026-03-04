@@ -122,7 +122,7 @@ func TextInsert(
 			}
 		}
 		newCol := dstCol
-		for i := 0; i < count; i++ {
+		for range count {
 			dstLine.Str.Copy(buf, 1, bufLen, newCol)
 			newCol += bufLen
 		}
@@ -196,7 +196,7 @@ func TextOvertype(
 			}
 		}
 		newCol := dst.Col
-		for i := 0; i < count; i++ {
+		for range count {
 			dstLine.Str.Copy(buf, 1, bufLen, newCol)
 			newCol += bufLen
 		}

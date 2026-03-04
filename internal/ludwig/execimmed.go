@@ -175,9 +175,7 @@ func ExecuteImmed() {
 									VduTakeBackKey(key)
 								}
 								CurrentFrame.Dot.Col++
-								cmdSuccess = TextSplitLine(
-									CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals],
-								)
+								TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals])
 								CurrentFrame.Dot.Col += CurrentFrame.MarginRight - col1
 								goto l2 // Simulate break of inner loop
 							}

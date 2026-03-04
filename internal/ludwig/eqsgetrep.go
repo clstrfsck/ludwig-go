@@ -194,10 +194,7 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 		ChReverseStr(tpar.Str, newstr, newlen)
 		backwards = true
 		startCol = 1
-		length = CurrentFrame.Dot.Col - 1
-		if length > line.Used {
-			length = line.Used
-		}
+		length = min(CurrentFrame.Dot.Col-1, line.Used)
 	} else {
 		newstr = tpar.Str
 		backwards = false
@@ -522,12 +519,12 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 					delta = CurrentFrame.Dot.Line.Used + 1 - CurrentFrame.Dot.Col
 				}
 				if delta > 0 {
-					if !CharcmdDelete(CmdDeleteChar, LeadParamPInt, delta, true) {
+					if !CharcmdDelete(LeadParamPInt, delta, true) {
 						goto l99
 					}
 				}
 			} else if delta < 0 {
-				if !CharcmdInsert(CmdInsertChar, LeadParamPInt, -delta, true) {
+				if !CharcmdInsert(LeadParamPInt, -delta, true) {
 					goto l99
 				}
 				CurrentFrame.Dot.Col = startCol
@@ -552,7 +549,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				CurrentFrame.Dot.Col = startCol
 			}
 		} else {
-			if !CharcmdDelete(CmdDeleteChar, LeadParamPInt, length, true) {
+			if !CharcmdDelete(LeadParamPInt, length, true) {
 				goto l99
 			}
 			if !TextInsertTpar(&tpar2, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {

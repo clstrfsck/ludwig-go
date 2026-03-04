@@ -102,7 +102,7 @@ func setupLinkedLines(count int) (*FrameObject, []*LineHdrObject) {
 	}
 
 	lines := make([]*LineHdrObject, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		lines[i] = &LineHdrObject{
 			Group:    group,
 			OffsetNr: i,

@@ -170,10 +170,7 @@ func SpanIndex() bool {
 			if p.MarkOne.Col <= p.MarkOne.Line.Used {
 				if !continu {
 					continu = p.MarkTwo.Col-p.MarkOne.Col > NameLen
-					toCopy := NameLen
-					if p.MarkTwo.Col-p.MarkOne.Col < toCopy {
-						toCopy = p.MarkTwo.Col - p.MarkOne.Col
-					}
+					toCopy := min(p.MarkTwo.Col-p.MarkOne.Col, NameLen)
 					spanStart = p.MarkOne.Line.Str.Slice(p.MarkOne.Col, p.MarkOne.Col+toCopy)
 				} else {
 					toCopy := min(p.MarkOne.Line.Used+1-p.MarkOne.Col, NameLen)

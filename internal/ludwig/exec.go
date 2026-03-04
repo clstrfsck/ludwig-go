@@ -288,7 +288,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdDeleteChar:
 		if rept != LeadParamMarker {
-			cmdSuccess = CharcmdDelete(command, rept, count, fromSpan)
+			cmdSuccess = CharcmdDelete(rept, count, fromSpan)
 		} else {
 			theOtherMark = CurrentFrame.Dot
 			if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
@@ -367,7 +367,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		if command == CmdReturn && EditMode == ModeInsert &&
 			CurrentFrame.Options.Has(OptNewLine) {
 			if CurrentFrame.Dot.Line.FLink == nil {
-				cmdSuccess = TextRealizeNull(CurrentFrame.Dot.Line)
+				TextRealizeNull(CurrentFrame.Dot.Line)
 				cmdSuccess = ArrowCommand(command, rept, count, fromSpan)
 			} else {
 				cmdSuccess = Execute(CmdSplitLine, rept, count, tparam, fromSpan)
@@ -611,7 +611,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdInsertChar:
-		cmdSuccess = CharcmdInsert(command, rept, count, fromSpan)
+		cmdSuccess = CharcmdInsert(rept, count, fromSpan)
 
 	case CmdInsertLine:
 		if count != 0 {
@@ -621,8 +621,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 			if cmdSuccess {
 				if count > 0 {
-					cmdSuccess = MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col,
-						&CurrentFrame.Marks[MarkEquals])
+					MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 					cmdSuccess = MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 				} else {
 					cmdSuccess = MarkCreate(firstLine, CurrentFrame.Dot.Col,
@@ -808,7 +807,9 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					ScreenMessage(MsgScreenModeOnly)
 					goto l99
 				}
-				cmdSuccess = UserCommandIntroducer()
+				if !UserCommandIntroducer() {
+					goto l99
+				}
 			}
 		}
 		cmdSuccess = true
@@ -914,7 +915,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdRubout:
-		cmdSuccess = CharcmdRubout(command, rept, count, fromSpan)
+		cmdSuccess = CharcmdRubout(rept, count, fromSpan)
 
 	case CmdSetMarginLeft:
 		if rept == LeadParamMinus {

@@ -38,7 +38,7 @@ func createTestGroup(frame *FrameObject, firstLineNr int, nrLines int) *GroupObj
 	}
 
 	var prevLine *LineHdrObject
-	for i := 0; i < nrLines; i++ {
+	for i := range nrLines {
 		line := &LineHdrObject{
 			Group:    group,
 			OffsetNr: i,
@@ -164,7 +164,7 @@ func TestLineToNumber(t *testing.T) {
 
 		// Get the middle line (offset 5, which is line 105)
 		line := group.FirstLine
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			line = line.FLink
 		}
 
@@ -673,7 +673,7 @@ func TestLinesInject_Basic(t *testing.T) {
 
 		// Set some content on lines for space tracking
 		line := firstLine
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			LineChangeLength(line, 10)
 			line.Used = 10
 			line = line.FLink
@@ -727,7 +727,7 @@ func TestLinesInject_Basic(t *testing.T) {
 
 		// Get a line in the middle to inject before
 		beforeLine := group.FirstLine
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			beforeLine = beforeLine.FLink
 		}
 
@@ -870,7 +870,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 
 		// Extract the middle line (offset 5)
 		extractLine := group.FirstLine
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			extractLine = extractLine.FLink
 		}
 
@@ -903,7 +903,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 
 		// Extract lines 3-5 (offsets 2-4)
 		firstLine := group.FirstLine
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			firstLine = firstLine.FLink
 		}
 		lastLine := firstLine.FLink.FLink
@@ -1042,11 +1042,11 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 
 		// Extract from line 15 to line 25 (spans both groups)
 		firstLine := group1.FirstLine
-		for i := 0; i < 14; i++ {
+		for range 14 {
 			firstLine = firstLine.FLink
 		}
 		lastLine := group2.FirstLine
-		for i := 0; i < 4; i++ {
+		for range 4 {
 			lastLine = lastLine.FLink
 		}
 
@@ -1185,7 +1185,7 @@ func TestLinesInjectExtractIntegration(t *testing.T) {
 		// Operation 3: Extract middle 5 lines
 		extractFirst := first1
 		extractLast := first1
-		for i := 0; i < 4; i++ {
+		for range 4 {
 			extractLast = extractLast.FLink
 		}
 		LinesExtract(extractFirst, extractLast)

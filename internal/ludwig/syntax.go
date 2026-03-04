@@ -177,7 +177,7 @@ func (b *LudwigBuffer) lineAt(n int) *LineHdrObject {
 		if oneBasedN >= g.FirstLineNr && oneBasedN < g.FirstLineNr+g.NrLines {
 			offset := oneBasedN - g.FirstLineNr
 			line := g.FirstLine
-			for i := 0; i < offset; i++ {
+			for range offset {
 				if line = line.FLink; line == nil {
 					return nil
 				}
