@@ -295,19 +295,19 @@ func ColorPair(pair int) int {
 	return int(C.color_pair_attr(C.int(pair)))
 }
 
+// BkColor sets the background color pair
+func BkColor(pair int) {
+	C.bkgdset(C.chtype(C.color_pair_attr(C.int(pair))) | C.chtype(' '))
+}
+
 // ColorOn turns on the specified color pair
-func (w *Window) ColorOn(pair int) {
-	C.wattron(w.win, C.int(C.color_pair_attr(C.int(pair))))
+func ColorOn(pair int) {
+	C.attron(C.int(C.color_pair_attr(C.int(pair))))
 }
 
 // ColorOff turns off the specified color pair
-func (w *Window) ColorOff(pair int) {
-	C.wattroff(w.win, C.int(C.color_pair_attr(C.int(pair))))
-}
-
-// BkColor sets the background color pair
-func (w *Window) BkColor(pair int) {
-	C.wbkgdset(w.win, C.chtype(C.color_pair_attr(C.int(pair)))|C.chtype(' '))
+func ColorOff(pair int) {
+	C.attroff(C.int(C.color_pair_attr(C.int(pair))))
 }
 
 // IntrFlush controls interrupt flush

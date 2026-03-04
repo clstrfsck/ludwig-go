@@ -1,3 +1,17 @@
+/**********************************************************************}
+{                                                                      }
+{            L      U   U   DDDD   W      W  IIIII   GGGG              }
+{            L      U   U   D   D   W    W     I    G                  }
+{            L      U   U   D   D   W ww W     I    G   GG             }
+{            L      U   U   D   D    W  W      I    G    G             }
+{            LLLLL   UUU    DDDD     W  W    IIIII   GGGG              }
+{                                                                      }
+{**********************************************************************/
+
+// Name:         SYNTAX
+//
+// Description:  This module handles syntax highlighting using ncurses.
+
 package ludwig
 
 import (
@@ -5,6 +19,7 @@ import (
 	"strings"
 
 	"ludwig-go/internal/highlight"
+	nc "ludwig-go/internal/ncurses"
 )
 
 // syntaxColorTable maps highlight Group IDs to ncurses color pair numbers
@@ -55,8 +70,8 @@ var (
 )
 
 // SyntaxInit loads all embedded syntax definitions
-func SyntaxInit(groupColours map[string]int) {
-	if !colorsEnabled {
+func SyntaxInit(groupColors map[string]int) {
+	if groupColors == nil {
 		return
 	}
 	entries, err := highlight.SyntaxFiles.ReadDir("syntax")
@@ -91,7 +106,7 @@ func SyntaxInit(groupColours map[string]int) {
 			highlight.ResolveIncludes(syntaxDefs[i], files)
 		}
 	}
-	buildColorTable(groupColours)
+	buildColorTable(groupColors)
 	syntaxEnabled = len(syntaxDefs) > 0
 }
 
@@ -141,12 +156,13 @@ func (b *LudwigBuffer) lineAt(n int) *LineHdrObject {
 	}
 	// Common cases: one step forward or backward from the cursor.
 	if b.curIdx >= 0 && b.curLine != nil {
-		if n == b.curIdx+1 {
+		switch n {
+		case b.curIdx + 1:
 			if line := b.curLine.FLink; line != nil {
 				b.curIdx, b.curLine = n, line
 				return line
 			}
-		} else if n == b.curIdx-1 {
+		case b.curIdx - 1:
 			if line := b.curLine.BLink; line != nil {
 				b.curIdx, b.curLine = n, line
 				return line
@@ -279,11 +295,11 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 
 	currentPair := defaultPair
 	if currentPair != 0 {
-		ColorOn(currentPair)
+		nc.ColorOn(currentPair)
 	}
 	defer func() {
 		if currentPair != 0 {
-			ColorOff(currentPair)
+			nc.ColorOff(currentPair)
 		}
 	}()
 	if len(match) == 0 {
@@ -324,11 +340,11 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		// Switch color
 		if currentPair != newPair {
 			if currentPair != 0 {
-				ColorOff(currentPair)
+				nc.ColorOff(currentPair)
 			}
 			currentPair = newPair
 			if currentPair != 0 {
-				ColorOn(currentPair)
+				nc.ColorOn(currentPair)
 			}
 		}
 	}
