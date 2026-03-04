@@ -807,7 +807,9 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					ScreenMessage(MsgScreenModeOnly)
 					goto l99
 				}
-				UserCommandIntroducer()
+				if !UserCommandIntroducer() {
+					goto l99
+				}
 			}
 		}
 		cmdSuccess = true
