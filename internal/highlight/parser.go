@@ -165,7 +165,7 @@ func (header *Header) MatchFileName(filename string) bool {
 
 func (header *Header) MatchFileHeader(firstLine []byte) bool {
 	if header.HeaderRegex != nil {
-		return header.HeaderRegex.Match(firstLine)
+		return header.HeaderRegex.Match([]byte(firstLine))
 	}
 
 	return false

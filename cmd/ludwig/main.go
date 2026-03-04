@@ -61,117 +61,67 @@ func addLookupExp(index int, ch byte, cmd Commands) {
 }
 
 func loadCommandTable(oldVersion bool) {
-	var keyCode int
+	// Initialize all entries to CmdNoop
+	for i := 0; i <= OrdMaxChar; i++ {
+		Lookup[i].Command = CmdNoop
+	}
 
-	// for keyCode = -MaxSpecialKeys; keyCode <= -1; keyCode++ {
-	// 	Lookup[keyCode].Command = CmdNoop
-	// }
+	// Common key bindings shared by both versions
+	Lookup[2].Command = CmdWindowBackward
+	Lookup[4].Command = CmdDeleteChar
+	Lookup[5].Command = CmdWindowEnd
+	Lookup[6].Command = CmdWindowForward
+	Lookup[7].Command = CmdDoLastCommand
+	Lookup[9].Command = CmdTab
+	Lookup[10].Command = CmdDown
+	Lookup[11].Command = CmdDeleteLine
+	Lookup[12].Command = CmdInsertLine
+	Lookup[13].Command = CmdReturn
+	Lookup[14].Command = CmdWindowNew
+	Lookup[16].Command = CmdUserCommandIntroducer
+	Lookup[18].Command = CmdRight
+	Lookup[20].Command = CmdWindowTop
+	Lookup[21].Command = CmdUp
+	Lookup[23].Command = CmdWordAdvance
+	Lookup[26].Command = CmdUserParent
+	Lookup[30].Command = CmdInsertChar
+	Lookup['"'].Command = CmdDittoUp
+	Lookup['\''].Command = CmdDittoDown
+	Lookup['B'].Command = CmdPrefixB
+	Lookup['E'].Command = CmdPrefixE
+	Lookup['F'].Command = CmdPrefixF
+	Lookup['G'].Command = CmdGet
+	Lookup['H'].Command = CmdHelp
+	Lookup['M'].Command = CmdMark
+	Lookup['Q'].Command = CmdQuit
+	Lookup['R'].Command = CmdReplace
+	Lookup['S'].Command = CmdPrefixS
+	Lookup['U'].Command = CmdPrefixU
+	Lookup['V'].Command = CmdVerify
+	Lookup['W'].Command = CmdPrefixW
+	Lookup['X'].Command = CmdPrefixX
+	Lookup['\\'].Command = CmdCommand
+	Lookup['{'].Command = CmdSetMarginLeft
+	Lookup['}'].Command = CmdSetMarginRight
+	Lookup['~'].Command = CmdPrefixTilde
+	Lookup[127].Command = CmdRubout
+
 	if oldVersion {
-		Lookup[0].Command = CmdNoop
-		Lookup[1].Command = CmdNoop
-		Lookup[2].Command = CmdWindowBackward
-		Lookup[3].Command = CmdNoop
-		Lookup[4].Command = CmdDeleteChar
-		Lookup[5].Command = CmdWindowEnd
-		Lookup[6].Command = CmdWindowForward
-		Lookup[7].Command = CmdDoLastCommand
 		Lookup[8].Command = CmdRubout
-		Lookup[9].Command = CmdTab
-		Lookup[10].Command = CmdDown
-		Lookup[11].Command = CmdDeleteLine
-		Lookup[12].Command = CmdInsertLine
-		Lookup[13].Command = CmdReturn
-		Lookup[14].Command = CmdWindowNew
-		Lookup[15].Command = CmdNoop
-		Lookup[16].Command = CmdUserCommandIntroducer
-		Lookup[17].Command = CmdNoop
-		Lookup[18].Command = CmdRight
-		Lookup[19].Command = CmdNoop
-		Lookup[20].Command = CmdWindowTop
-		Lookup[21].Command = CmdUp
-		Lookup[22].Command = CmdNoop
-		Lookup[23].Command = CmdWordAdvance
-		Lookup[24].Command = CmdNoop
-		Lookup[25].Command = CmdNoop
-		Lookup[26].Command = CmdUserParent
-		Lookup[27].Command = CmdNoop
-		Lookup[28].Command = CmdNoop
-		Lookup[29].Command = CmdNoop
-		Lookup[30].Command = CmdInsertChar
-		Lookup[31].Command = CmdNoop
-		Lookup[' '].Command = CmdNoop
-		Lookup['!'].Command = CmdNoop
-		Lookup['"'].Command = CmdDittoUp
-		Lookup['#'].Command = CmdNoop
-		Lookup['$'].Command = CmdNoop
-		Lookup['%'].Command = CmdNoop
-		Lookup['&'].Command = CmdNoop
-		Lookup['\''].Command = CmdDittoDown
-		Lookup['('].Command = CmdNoop
-		Lookup[')'].Command = CmdNoop
 		Lookup['*'].Command = CmdPrefixAst
-		Lookup['+'].Command = CmdNoop
-		Lookup[';'].Command = CmdNoop
-		Lookup['-'].Command = CmdNoop
-		Lookup['.'].Command = CmdNoop
-		Lookup['/'].Command = CmdNoop
-		for keyCode = '0'; keyCode <= '9'; keyCode++ {
-			Lookup[keyCode].Command = CmdNoop
-		}
-		Lookup[':'].Command = CmdNoop
-		Lookup[';'].Command = CmdNoop
-		Lookup['<'].Command = CmdNoop
-		Lookup['='].Command = CmdNoop
-		Lookup['>'].Command = CmdNoop
 		Lookup['?'].Command = CmdInsertInvisible
-		Lookup['@'].Command = CmdNoop
 		Lookup['A'].Command = CmdAdvance
-		Lookup['B'].Command = CmdPrefixB
 		Lookup['C'].Command = CmdInsertChar
 		Lookup['D'].Command = CmdDeleteChar
-		Lookup['E'].Command = CmdPrefixE
-		Lookup['F'].Command = CmdPrefixF
-		Lookup['G'].Command = CmdGet
-		Lookup['H'].Command = CmdHelp
 		Lookup['I'].Command = CmdInsertText
 		Lookup['J'].Command = CmdJump
 		Lookup['K'].Command = CmdDeleteLine
 		Lookup['L'].Command = CmdInsertLine
-		Lookup['M'].Command = CmdMark
 		Lookup['N'].Command = CmdNext
 		Lookup['O'].Command = CmdOvertypeText
-		Lookup['P'].Command = CmdNoop
-		Lookup['Q'].Command = CmdQuit
-		Lookup['R'].Command = CmdReplace
-		Lookup['S'].Command = CmdPrefixS
-		Lookup['T'].Command = CmdNoop
-		Lookup['U'].Command = CmdPrefixU
-		Lookup['V'].Command = CmdVerify
-		Lookup['W'].Command = CmdPrefixW
-		Lookup['X'].Command = CmdPrefixX
 		Lookup['Y'].Command = CmdPrefixY
 		Lookup['Z'].Command = CmdPrefixZ
-		Lookup['['].Command = CmdNoop
-		Lookup['\\'].Command = CmdCommand
-		Lookup[']'].Command = CmdNoop
 		Lookup['^'].Command = CmdExecuteString
-		Lookup['_'].Command = CmdNoop
-		Lookup['`'].Command = CmdNoop
-		for keyCode = 'a'; keyCode <= 'z'; keyCode++ {
-			Lookup[keyCode].Command = CmdNoop
-		}
-		Lookup['{'].Command = CmdSetMarginLeft
-		Lookup['|'].Command = CmdNoop
-		Lookup['}'].Command = CmdSetMarginRight
-		Lookup['~'].Command = CmdPrefixTilde
-		Lookup[127].Command = CmdRubout
-		for keyCode = 128; keyCode <= OrdMaxChar; keyCode++ {
-			Lookup[keyCode].Command = CmdNoop
-		}
-		// for keyCode = -MaxSpecialKeys; keyCode <= OrdMaxChar; keyCode++ {
-		// 	Lookup[keyCode].Code = nil
-		// 	Lookup[keyCode].Tpar = nil
-		// }
 
 		// initialize lookupexp
 		// case change command ; command =  * prefix }      {start at 1}
@@ -347,111 +297,15 @@ func loadCommandTable(oldVersion bool) {
 		LookupExpPtr[CmdPrefixTilde] = 79
 		LookupExpPtr[CmdNoSuch] = 81
 	} else {
-		Lookup[0].Command = CmdNoop
-		Lookup[1].Command = CmdNoop
-		Lookup[2].Command = CmdWindowBackward
-		Lookup[3].Command = CmdNoop
-		Lookup[4].Command = CmdDeleteChar
-		Lookup[5].Command = CmdWindowEnd
-		Lookup[6].Command = CmdWindowForward
-		Lookup[7].Command = CmdDoLastCommand
 		Lookup[8].Command = CmdLeft
-		Lookup[9].Command = CmdTab
-		Lookup[10].Command = CmdDown
-		Lookup[11].Command = CmdDeleteLine
-		Lookup[12].Command = CmdInsertLine
-		Lookup[13].Command = CmdReturn
-		Lookup[14].Command = CmdWindowNew
-		Lookup[15].Command = CmdNoop
-		Lookup[16].Command = CmdUserCommandIntroducer
-		Lookup[17].Command = CmdNoop
-		Lookup[18].Command = CmdRight
-		Lookup[19].Command = CmdNoop
-		Lookup[20].Command = CmdWindowTop
-		Lookup[21].Command = CmdUp
-		Lookup[22].Command = CmdNoop
-		Lookup[23].Command = CmdWordAdvance
-		Lookup[24].Command = CmdNoop
-		Lookup[25].Command = CmdNoop
-		Lookup[26].Command = CmdUserParent
-		Lookup[27].Command = CmdNoop
-		Lookup[28].Command = CmdNoop
-		Lookup[29].Command = CmdNoop
-		Lookup[30].Command = CmdInsertChar
-		Lookup[31].Command = CmdNoop
-		Lookup[' '].Command = CmdNoop
-		Lookup['!'].Command = CmdNoop
-		Lookup['"'].Command = CmdDittoUp
-		Lookup['#'].Command = CmdNoop
-		Lookup['$'].Command = CmdNoop
-		Lookup['%'].Command = CmdNoop
-		Lookup['&'].Command = CmdNoop
-		Lookup['\''].Command = CmdDittoDown
-		Lookup['('].Command = CmdNoop
-		Lookup[')'].Command = CmdNoop
-		Lookup['*'].Command = CmdNoop
-		Lookup['+'].Command = CmdNoop
-		Lookup[';'].Command = CmdNoop
-		Lookup['-'].Command = CmdNoop
-		Lookup['.'].Command = CmdNoop
-		Lookup['/'].Command = CmdNoop
-		for keyCode = '0'; keyCode <= '9'; keyCode++ {
-			Lookup[keyCode].Command = CmdNoop
-		}
-		Lookup[':'].Command = CmdNoop
-		Lookup[';'].Command = CmdNoop
-		Lookup['<'].Command = CmdNoop
-		Lookup['='].Command = CmdNoop
-		Lookup['>'].Command = CmdNoop
-		Lookup['?'].Command = CmdNoop
-		Lookup['@'].Command = CmdNoop
 		Lookup['A'].Command = CmdPrefixA
-		Lookup['B'].Command = CmdPrefixB
 		Lookup['C'].Command = CmdPrefixC
 		Lookup['D'].Command = CmdPrefixD
-		Lookup['E'].Command = CmdPrefixE
-		Lookup['F'].Command = CmdPrefixF
-		Lookup['G'].Command = CmdGet
-		Lookup['H'].Command = CmdHelp
-		Lookup['I'].Command = CmdNoop
-		Lookup['J'].Command = CmdNoop
 		Lookup['K'].Command = CmdPrefixK
 		Lookup['L'].Command = CmdPrefixL
-		Lookup['M'].Command = CmdMark
-		Lookup['N'].Command = CmdNoop
 		Lookup['O'].Command = CmdPrefixO
 		Lookup['P'].Command = CmdPrefixP
-		Lookup['Q'].Command = CmdQuit
-		Lookup['R'].Command = CmdReplace
-		Lookup['S'].Command = CmdPrefixS
 		Lookup['T'].Command = CmdPrefixT
-		Lookup['U'].Command = CmdPrefixU
-		Lookup['V'].Command = CmdVerify
-		Lookup['W'].Command = CmdPrefixW
-		Lookup['X'].Command = CmdPrefixX
-		Lookup['Y'].Command = CmdNoop
-		Lookup['Z'].Command = CmdNoop
-		Lookup['['].Command = CmdNoop
-		Lookup['\\'].Command = CmdCommand
-		Lookup[']'].Command = CmdNoop
-		Lookup['^'].Command = CmdNoop
-		Lookup['_'].Command = CmdNoop
-		Lookup['`'].Command = CmdNoop
-		for keyCode = 'a'; keyCode <= 'z'; keyCode++ {
-			Lookup[keyCode].Command = CmdNoop
-		}
-		Lookup['{'].Command = CmdSetMarginLeft
-		Lookup['|'].Command = CmdNoop
-		Lookup['}'].Command = CmdSetMarginRight
-		Lookup['~'].Command = CmdPrefixTilde
-		Lookup[127].Command = CmdRubout
-		for keyCode = 128; keyCode <= OrdMaxChar; keyCode++ {
-			Lookup[keyCode].Command = CmdNoop
-		}
-		// for keyCode = -MaxSpecialKeys; keyCode <= OrdMaxChar; keyCode++ {
-		// 	Lookup[keyCode].Code = nil
-		// 	Lookup[keyCode].Tpar = nil
-		// }
 
 		// initialize lookupexp
 		// Ast ( * ) prefix } {start at 1}
@@ -777,7 +631,15 @@ func startUp(argc int, argv []string) bool {
 	}
 	if CurrentFrame.InputFile > 0 && Files[CurrentFrame.InputFile] != nil {
 		if filename := Files[CurrentFrame.InputFile].Filename; filename != "" {
-			if h := SyntaxDetect(filename); h != nil {
+			if h := SyntaxDetectFilename(filename); h != nil {
+				SyntaxAttach(CurrentFrame, h)
+				SyntaxHighlightFrame(CurrentFrame, h)
+			}
+		}
+		firstLine := CurrentFrame.FirstGroup.FirstLine
+		if firstLine != nil && firstLine.FLink != nil {
+			lineContents := firstLine.Str.Slice(1, firstLine.Used)
+			if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
 				SyntaxAttach(CurrentFrame, h)
 				SyntaxHighlightFrame(CurrentFrame, h)
 			}

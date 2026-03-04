@@ -336,38 +336,15 @@ func VduKeyboardInit(
 	for i := 1; i < NumControlChars; i++ {
 		kl[i].KeyCode = i - 1
 	}
-	kl[1].KeyName = "CONTROL-@"
-	kl[2].KeyName = "CONTROL-A"
-	kl[3].KeyName = "CONTROL-B"
-	kl[4].KeyName = "CONTROL-C"
-	kl[5].KeyName = "CONTROL-D"
-	kl[6].KeyName = "CONTROL-E"
-	kl[7].KeyName = "CONTROL-F"
-	kl[8].KeyName = "CONTROL-G"
-	kl[9].KeyName = "BACKSPACE"
-	kl[10].KeyName = "TAB"
-	kl[11].KeyName = "LINE-FEED"
-	kl[12].KeyName = "CONTROL-K"
-	kl[13].KeyName = "CONTROL-L"
-	kl[14].KeyName = "RETURN"
-	kl[15].KeyName = "CONTROL-N"
-	kl[16].KeyName = "CONTROL-O"
-	kl[17].KeyName = "CONTROL-P"
-	kl[18].KeyName = "CONTROL-Q"
-	kl[19].KeyName = "CONTROL-R"
-	kl[20].KeyName = "CONTROL-S"
-	kl[21].KeyName = "CONTROL-T"
-	kl[22].KeyName = "CONTROL-U"
-	kl[23].KeyName = "CONTROL-V"
-	kl[24].KeyName = "CONTROL-W"
-	kl[25].KeyName = "CONTROL-X"
-	kl[26].KeyName = "CONTROL-Y"
-	kl[27].KeyName = "CONTROL-Z"
-	kl[28].KeyName = "CONTROL-["
-	kl[29].KeyName = "CONTROL-\\"
-	kl[30].KeyName = "CONTROL-]"
-	kl[31].KeyName = "CONTROL-^"
-	kl[32].KeyName = "CONTROL-_"
+	// Control character names: "CONTROL-X" with exceptions for special keys
+	ctrlOverrides := map[int]string{9: "BACKSPACE", 10: "TAB", 11: "LINE-FEED", 14: "RETURN"}
+	for i := 1; i <= 32; i++ {
+		if name, ok := ctrlOverrides[i]; ok {
+			kl[i].KeyName = name
+		} else {
+			kl[i].KeyName = "CONTROL-" + string(rune('@'+i-1))
+		}
+	}
 	kl[33].KeyCode = DEL
 	kl[33].KeyName = "DELETE"
 
@@ -376,161 +353,46 @@ func VduKeyboardInit(
 		kl[NumControlChars+1+i-MinCursesKey].KeyCode = massageKey(i)
 	}
 
-	kl[NumControlChars+1].KeyName = "BREAK"
-	kl[NumControlChars+2].KeyName = "DOWN-ARROW"
-	kl[NumControlChars+3].KeyName = "UP-ARROW"
-	kl[NumControlChars+4].KeyName = "LEFT-ARROW"
-	kl[NumControlChars+5].KeyName = "RIGHT-ARROW"
-	kl[NumControlChars+6].KeyName = "HOME"
-	kl[NumControlChars+7].KeyName = "BACKSPACE"
-	kl[NumControlChars+8].KeyName = "FUNCTION-0"
-	kl[NumControlChars+9].KeyName = "FUNCTION-1"
-	kl[NumControlChars+10].KeyName = "FUNCTION-2"
-	kl[NumControlChars+11].KeyName = "FUNCTION-3"
-	kl[NumControlChars+12].KeyName = "FUNCTION-4"
-	kl[NumControlChars+13].KeyName = "FUNCTION-5"
-	kl[NumControlChars+14].KeyName = "FUNCTION-6"
-	kl[NumControlChars+15].KeyName = "FUNCTION-7"
-	kl[NumControlChars+16].KeyName = "FUNCTION-8"
-	kl[NumControlChars+17].KeyName = "FUNCTION-9"
-	kl[NumControlChars+18].KeyName = "FUNCTION-10"
-	kl[NumControlChars+19].KeyName = "FUNCTION-11"
-	kl[NumControlChars+20].KeyName = "FUNCTION-12"
-	kl[NumControlChars+21].KeyName = "SHIFT-FUNCTION-1"
-	kl[NumControlChars+22].KeyName = "SHIFT-FUNCTION-2"
-	kl[NumControlChars+23].KeyName = "SHIFT-FUNCTION-3"
-	kl[NumControlChars+24].KeyName = "SHIFT-FUNCTION-4"
-	kl[NumControlChars+25].KeyName = "SHIFT-FUNCTION-5"
-	kl[NumControlChars+26].KeyName = "SHIFT-FUNCTION-6"
-	kl[NumControlChars+27].KeyName = "SHIFT-FUNCTION-7"
-	kl[NumControlChars+28].KeyName = "SHIFT-FUNCTION-8"
-	kl[NumControlChars+29].KeyName = "SHIFT-FUNCTION-9"
-	kl[NumControlChars+30].KeyName = "SHIFT-FUNCTION-10"
-	kl[NumControlChars+31].KeyName = "SHIFT-FUNCTION-11"
-	kl[NumControlChars+32].KeyName = "SHIFT-FUNCTION-12"
-	kl[NumControlChars+33].KeyName = "FUNCTION-25"
-	kl[NumControlChars+34].KeyName = "FUNCTION-26"
-	kl[NumControlChars+35].KeyName = "FUNCTION-27"
-	kl[NumControlChars+36].KeyName = "FUNCTION-28"
-	kl[NumControlChars+37].KeyName = "FUNCTION-29"
-	kl[NumControlChars+38].KeyName = "FUNCTION-30"
-	kl[NumControlChars+39].KeyName = "FUNCTION-31"
-	kl[NumControlChars+40].KeyName = "FUNCTION-32"
-	kl[NumControlChars+41].KeyName = "FUNCTION-33"
-	kl[NumControlChars+42].KeyName = "FUNCTION-34"
-	kl[NumControlChars+43].KeyName = "FUNCTION-35"
-	kl[NumControlChars+44].KeyName = "FUNCTION-36"
-	kl[NumControlChars+45].KeyName = "FUNCTION-37"
-	kl[NumControlChars+46].KeyName = "FUNCTION-38"
-	kl[NumControlChars+47].KeyName = "FUNCTION-39"
-	kl[NumControlChars+48].KeyName = "FUNCTION-40"
-	kl[NumControlChars+49].KeyName = "FUNCTION-41"
-	kl[NumControlChars+50].KeyName = "FUNCTION-42"
-	kl[NumControlChars+51].KeyName = "FUNCTION-43"
-	kl[NumControlChars+52].KeyName = "FUNCTION-44"
-	kl[NumControlChars+53].KeyName = "FUNCTION-45"
-	kl[NumControlChars+54].KeyName = "FUNCTION-46"
-	kl[NumControlChars+55].KeyName = "FUNCTION-47"
-	kl[NumControlChars+56].KeyName = "FUNCTION-48"
-	kl[NumControlChars+57].KeyName = "FUNCTION-49"
-	kl[NumControlChars+58].KeyName = "FUNCTION-50"
-	kl[NumControlChars+59].KeyName = "FUNCTION-51"
-	kl[NumControlChars+60].KeyName = "FUNCTION-52"
-	kl[NumControlChars+61].KeyName = "FUNCTION-53"
-	kl[NumControlChars+62].KeyName = "FUNCTION-54"
-	kl[NumControlChars+63].KeyName = "FUNCTION-55"
-	kl[NumControlChars+64].KeyName = "FUNCTION-56"
-	kl[NumControlChars+65].KeyName = "FUNCTION-57"
-	kl[NumControlChars+66].KeyName = "FUNCTION-58"
-	kl[NumControlChars+67].KeyName = "FUNCTION-59"
-	kl[NumControlChars+68].KeyName = "FUNCTION-60"
-	kl[NumControlChars+69].KeyName = "FUNCTION-61"
-	kl[NumControlChars+70].KeyName = "FUNCTION-62"
-	kl[NumControlChars+71].KeyName = "FUNCTION-63"
-	kl[NumControlChars+72].KeyName = "DELETE-LINE"
-	kl[NumControlChars+73].KeyName = "INSERT-LINE"
-	kl[NumControlChars+74].KeyName = "DELETE-CHAR"
-	kl[NumControlChars+75].KeyName = "INSERT-CHAR"
-	kl[NumControlChars+76].KeyName = "EIC"
-	kl[NumControlChars+77].KeyName = "CLEAR"
-	kl[NumControlChars+78].KeyName = "CLEAR-EOS"
-	kl[NumControlChars+79].KeyName = "CLEAR-EOL"
-	kl[NumControlChars+80].KeyName = "SCROLL-FORWARD"
-	kl[NumControlChars+81].KeyName = "SCROLL-REVERSE"
-	kl[NumControlChars+82].KeyName = "PAGE-DOWN"
-	kl[NumControlChars+83].KeyName = "PAGE-UP"
-	kl[NumControlChars+84].KeyName = "SET-TAB"
-	kl[NumControlChars+85].KeyName = "CLEAR-TAB"
-	kl[NumControlChars+86].KeyName = "CLEAR-ALL-TABS"
-	kl[NumControlChars+87].KeyName = "SEND"
-	kl[NumControlChars+88].KeyName = "SOFT-RESET"
-	kl[NumControlChars+89].KeyName = "RESET"
-	kl[NumControlChars+90].KeyName = "PRINT"
-	kl[NumControlChars+91].KeyName = "LOWER-LEFT"
-	kl[NumControlChars+92].KeyName = "KEY-A1"
-	kl[NumControlChars+93].KeyName = "KEY-A3"
-	kl[NumControlChars+94].KeyName = "KEY-B2"
-	kl[NumControlChars+95].KeyName = "KEY-C1"
-	kl[NumControlChars+96].KeyName = "KEY-C3"
-	kl[NumControlChars+97].KeyName = "BACK-TAB"
-	kl[NumControlChars+98].KeyName = "BEGIN"
-	kl[NumControlChars+99].KeyName = "CANCEL"
-	kl[NumControlChars+100].KeyName = "CLOSE"
-	kl[NumControlChars+101].KeyName = "COMMAND"
-	kl[NumControlChars+102].KeyName = "COPY"
-	kl[NumControlChars+103].KeyName = "CREATE"
-	kl[NumControlChars+104].KeyName = "END"
-	kl[NumControlChars+105].KeyName = "EXIT"
-	kl[NumControlChars+106].KeyName = "FIND"
-	kl[NumControlChars+107].KeyName = "HELP"
-	kl[NumControlChars+108].KeyName = "MARK"
-	kl[NumControlChars+109].KeyName = "MESSAGE"
-	kl[NumControlChars+110].KeyName = "MOVE"
-	kl[NumControlChars+111].KeyName = "NEXT"
-	kl[NumControlChars+112].KeyName = "OPEN"
-	kl[NumControlChars+113].KeyName = "OPTIONS"
-	kl[NumControlChars+114].KeyName = "PREVIOUS"
-	kl[NumControlChars+115].KeyName = "REDO"
-	kl[NumControlChars+116].KeyName = "REFERENCE"
-	kl[NumControlChars+117].KeyName = "REFRESH"
-	kl[NumControlChars+118].KeyName = "REPLACE"
-	kl[NumControlChars+119].KeyName = "RESTART"
-	kl[NumControlChars+120].KeyName = "RESUME"
-	kl[NumControlChars+121].KeyName = "SAVE"
-	kl[NumControlChars+122].KeyName = "SHIFT-BEGIN"
-	kl[NumControlChars+123].KeyName = "SHIFT-CANCEL"
-	kl[NumControlChars+124].KeyName = "SHIFT-COMMAND"
-	kl[NumControlChars+125].KeyName = "SHIFT-COPY"
-	kl[NumControlChars+126].KeyName = "SHIFT-CREATE"
-	kl[NumControlChars+127].KeyName = "SHIFT-DELETE-CHAR"
-	kl[NumControlChars+128].KeyName = "SHIFT-DELETE-LINE"
-	kl[NumControlChars+129].KeyName = "SELECT"
-	kl[NumControlChars+130].KeyName = "SEND"
-	kl[NumControlChars+131].KeyName = "SHIFT-CLEAR-EOL"
-	kl[NumControlChars+132].KeyName = "SHIFT-EXIT"
-	kl[NumControlChars+133].KeyName = "SHIFT-FIND"
-	kl[NumControlChars+134].KeyName = "SHIFT-HELP"
-	kl[NumControlChars+135].KeyName = "SHIFT-HOME"
-	kl[NumControlChars+136].KeyName = "SHIFT-INSERT-CHAR"
-	kl[NumControlChars+137].KeyName = "SHIFT-LEFT"
-	kl[NumControlChars+138].KeyName = "SHIFT-MESSAGE"
-	kl[NumControlChars+139].KeyName = "SHIFT-MOVE"
-	kl[NumControlChars+140].KeyName = "SHIFT-NEXT"
-	kl[NumControlChars+141].KeyName = "SHIFT-OPTIONS"
-	kl[NumControlChars+142].KeyName = "SHIFT-PREVIOUS"
-	kl[NumControlChars+143].KeyName = "SHIFT-PRINT"
-	kl[NumControlChars+144].KeyName = "SHIFT-REDO"
-	kl[NumControlChars+145].KeyName = "SHIFT-REPLACE"
-	kl[NumControlChars+146].KeyName = "SHIFT-RIGHT"
-	kl[NumControlChars+147].KeyName = "SHIFT-RESUME"
-	kl[NumControlChars+148].KeyName = "SHIFT-SAVE"
-	kl[NumControlChars+149].KeyName = "SHIFT-SUSPEND"
-	kl[NumControlChars+150].KeyName = "SHIFT-UNDO"
-	kl[NumControlChars+151].KeyName = "SUSPEND"
-	kl[NumControlChars+152].KeyName = "UNDO"
-	kl[NumControlChars+153].KeyName = "MOUSE"
-	kl[NumControlChars+154].KeyName = "WINDOW-RESIZE-EVENT"
-	kl[NumControlChars+155].KeyName = "SOME-OTHER-EVENT"
+	for i, name := range []string{"BREAK", "DOWN-ARROW", "UP-ARROW", "LEFT-ARROW", "RIGHT-ARROW", "HOME", "BACKSPACE"} {
+		kl[NumControlChars+1+i].KeyName = name
+	}
+	// FUNCTION-0 through FUNCTION-12 (indices NumControlChars+8 to NumControlChars+20)
+	for n := 0; n <= 12; n++ {
+		kl[NumControlChars+8+n].KeyName = "FUNCTION-" + strconv.Itoa(n)
+	}
+	// SHIFT-FUNCTION-1 through SHIFT-FUNCTION-12 (indices NumControlChars+21 to NumControlChars+32)
+	for n := 1; n <= 12; n++ {
+		kl[NumControlChars+20+n].KeyName = "SHIFT-FUNCTION-" + strconv.Itoa(n)
+	}
+	// FUNCTION-25 through FUNCTION-63 (indices NumControlChars+33 to NumControlChars+71)
+	for n := 25; n <= 63; n++ {
+		kl[NumControlChars+8+n].KeyName = "FUNCTION-" + strconv.Itoa(n)
+	}
+	// Terminal-specific key names (indices NumControlChars+72 onward)
+	for i, name := range []string{
+		"DELETE-LINE", "INSERT-LINE", "DELETE-CHAR", "INSERT-CHAR",
+		"EIC", "CLEAR", "CLEAR-EOS", "CLEAR-EOL",
+		"SCROLL-FORWARD", "SCROLL-REVERSE", "PAGE-DOWN", "PAGE-UP",
+		"SET-TAB", "CLEAR-TAB", "CLEAR-ALL-TABS", "SEND",
+		"SOFT-RESET", "RESET", "PRINT", "LOWER-LEFT",
+		"KEY-A1", "KEY-A3", "KEY-B2", "KEY-C1", "KEY-C3",
+		"BACK-TAB", "BEGIN", "CANCEL", "CLOSE", "COMMAND",
+		"COPY", "CREATE", "END", "EXIT", "FIND", "HELP",
+		"MARK", "MESSAGE", "MOVE", "NEXT", "OPEN", "OPTIONS",
+		"PREVIOUS", "REDO", "REFERENCE", "REFRESH", "REPLACE",
+		"RESTART", "RESUME", "SAVE",
+		"SHIFT-BEGIN", "SHIFT-CANCEL", "SHIFT-COMMAND", "SHIFT-COPY",
+		"SHIFT-CREATE", "SHIFT-DELETE-CHAR", "SHIFT-DELETE-LINE",
+		"SELECT", "SEND", "SHIFT-CLEAR-EOL", "SHIFT-EXIT",
+		"SHIFT-FIND", "SHIFT-HELP", "SHIFT-HOME", "SHIFT-INSERT-CHAR",
+		"SHIFT-LEFT", "SHIFT-MESSAGE", "SHIFT-MOVE", "SHIFT-NEXT",
+		"SHIFT-OPTIONS", "SHIFT-PREVIOUS", "SHIFT-PRINT", "SHIFT-REDO",
+		"SHIFT-REPLACE", "SHIFT-RIGHT", "SHIFT-RESUME", "SHIFT-SAVE",
+		"SHIFT-SUSPEND", "SHIFT-UNDO", "SUSPEND", "UNDO",
+		"MOUSE", "WINDOW-RESIZE-EVENT", "SOME-OTHER-EVENT",
+	} {
+		kl[NumControlChars+72+i].KeyName = name
+	}
 
 	// Clear key introducers
 	for i := range keyIntroducers {

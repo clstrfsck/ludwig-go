@@ -110,13 +110,26 @@ func SyntaxInit(groupColors map[string]int) {
 	syntaxEnabled = len(syntaxDefs) > 0
 }
 
-// SyntaxDetect returns a Highlighter for the given filename, or nil if none matches
-func SyntaxDetect(filename string) *highlight.Highlighter {
+// SyntaxDetectFilename returns a Highlighter for the given filename, or nil if none matches
+func SyntaxDetectFilename(filename string) *highlight.Highlighter {
 	if !syntaxEnabled {
 		return nil
 	}
 	for i, hdr := range syntaxHeaders {
 		if hdr.MatchFileName(filename) {
+			return highlight.NewHighlighter(syntaxDefs[i])
+		}
+	}
+	return nil
+}
+
+// SyntaxDetectHeader returns a Highlighter for the given header, or nil if none matches
+func SyntaxDetectHeader(header []byte) *highlight.Highlighter {
+	if !syntaxEnabled {
+		return nil
+	}
+	for i, hdr := range syntaxHeaders {
+		if hdr.MatchFileHeader(header) {
 			return highlight.NewHighlighter(syntaxDefs[i])
 		}
 	}
