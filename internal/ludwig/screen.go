@@ -971,10 +971,12 @@ func ScreenFixup() {
 			}
 			ScreenLoad(CurrentFrame.Dot.Line)
 		} else {
+			freeLines := TerminalInfo.Height - ScrBotLine.ScrRowNr
+
 			needsReposition := CurrentFrame.Dot.Line.ScrRowNr == 0 ||
 				(CurrentFrame.Dot.Line.ScrRowNr-ScrTopLine.ScrRowNr < CurrentFrame.MarginTop &&
 					ScrTopLine.BLink != nil) ||
-				(ScrBotLine.ScrRowNr-CurrentFrame.Dot.Line.ScrRowNr < CurrentFrame.MarginBottom &&
+				(ScrBotLine.ScrRowNr+freeLines-CurrentFrame.Dot.Line.ScrRowNr < CurrentFrame.MarginBottom &&
 					ScrBotLine.FLink != nil) ||
 				CurrentFrame.Dot.Col <= CurrentFrame.ScrOffset ||
 				CurrentFrame.Dot.Col > CurrentFrame.ScrOffset+CurrentFrame.ScrWidth
