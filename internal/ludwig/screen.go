@@ -960,6 +960,14 @@ func ScreenResize() {
 	)
 }
 
+func advance(line *LineHdrObject, count int) *LineHdrObject {
+	for count > 0 && line != nil {
+		line = line.FLink
+		count--
+	}
+	return line
+}
+
 // ScreenFixup makes sure the screen is correct
 func ScreenFixup() {
 	if TtWinChanged {
@@ -971,13 +979,11 @@ func ScreenFixup() {
 			}
 			ScreenLoad(CurrentFrame.Dot.Line)
 		} else {
-			freeLines := TerminalInfo.Height - ScrBotLine.ScrRowNr
-
 			needsReposition := CurrentFrame.Dot.Line.ScrRowNr == 0 ||
 				(CurrentFrame.Dot.Line.ScrRowNr-ScrTopLine.ScrRowNr < CurrentFrame.MarginTop &&
 					ScrTopLine.BLink != nil) ||
-				(ScrBotLine.ScrRowNr+freeLines-CurrentFrame.Dot.Line.ScrRowNr < CurrentFrame.MarginBottom &&
-					ScrBotLine.FLink != nil) ||
+				(TerminalInfo.Height-CurrentFrame.Dot.Line.ScrRowNr < CurrentFrame.MarginBottom &&
+					advance(ScrBotLine.FLink, TerminalInfo.Height-ScrBotLine.ScrRowNr) != nil) ||
 				CurrentFrame.Dot.Col <= CurrentFrame.ScrOffset ||
 				CurrentFrame.Dot.Col > CurrentFrame.ScrOffset+CurrentFrame.ScrWidth
 
@@ -1009,6 +1015,69 @@ func ScreenFixup() {
 	}
 }
 
+// computePromptPosition sets PromptRegion[thisTp].LineNr and .Redraw to
+// determine where to display the prompt on screen. When the screen is not
+// yet initialised (ScrTopLine == nil) or the content fits entirely above or
+// below the prompt band, only LineNr is set. When the prompt must overwrite
+// an existing screen line, Redraw records that line so it can be restored
+// after input is complete.
+func computePromptPosition(thisTp, maxTp int) {
+	PromptRegion[thisTp].LineNr = 0
+	PromptRegion[thisTp].Redraw = nil
+
+	if ScrTopLine == nil {
+		return
+	}
+
+	ScreenFixup()
+	PromptRegion[thisTp].LineNr = thisTp
+
+	if ScrTopLine.ScrRowNr > maxTp {
+		return
+	}
+
+	if ScrBotLine.ScrRowNr < ScrMsgRow-maxTp {
+		PromptRegion[thisTp].LineNr = ScrMsgRow - maxTp + thisTp - 1
+		return
+	}
+
+	// Find the screen line that will be overwritten by this prompt row.
+	tmpLine := ScrTopLine
+	for index := ScrTopLine.ScrRowNr; index <= thisTp-1; index++ {
+		tmpLine = tmpLine.FLink
+	}
+	PromptRegion[thisTp].Redraw = tmpLine
+
+	if ScrFrame.Dot.Line.ScrRowNr > 2 {
+		return
+	}
+
+	// Dot is near the top of the screen; reposition the prompt to the bottom
+	// to avoid obscuring it.
+	tmpLine = ScrBotLine
+	for index := TerminalInfo.Height - ScrBotLine.ScrRowNr; index <= maxTp-thisTp-1; index++ {
+		tmpLine = tmpLine.BLink
+	}
+	if TerminalInfo.Height-ScrBotLine.ScrRowNr > maxTp-thisTp {
+		tmpLine = nil
+	}
+	PromptRegion[thisTp].Redraw = tmpLine
+	PromptRegion[thisTp].LineNr = TerminalInfo.Height - maxTp + thisTp
+}
+
+// restorePromptLines redraws or clears any screen lines that were displaced
+// by prompt regions during multi-line input.
+func restorePromptLines(maxTp int) {
+	for index := 1; index <= maxTp; index++ {
+		if PromptRegion[index].Redraw != nil {
+			ScreenDrawLine(PromptRegion[index].Redraw)
+		} else if PromptRegion[index].LineNr != 0 {
+			VduMoveCurs(1, PromptRegion[index].LineNr)
+			VduClearEOL()
+		}
+	}
+}
+
 // ScreenGetLineP gets a line from the user
 func ScreenGetLineP(
 	prompt string,
@@ -1018,78 +1087,37 @@ func ScreenGetLineP(
 	thisTp int,
 ) {
 	*outlen = 0
-	var tmpLine *LineHdrObject
 	maxTp = abs(maxTp)
 
-	if !TtControlC {
-		if LudwigMode == LudwigScreen {
-			PromptRegion[thisTp].LineNr = 0
-			PromptRegion[thisTp].Redraw = nil
-
-			if ScrTopLine == nil {
-				goto l1
-			}
-			ScreenFixup()
-			PromptRegion[thisTp].LineNr = thisTp
-			if ScrTopLine.ScrRowNr > maxTp {
-				goto l1
-			}
-			if ScrBotLine.ScrRowNr < ScrMsgRow-maxTp {
-				PromptRegion[thisTp].LineNr = ScrMsgRow - maxTp + thisTp - 1
-				goto l1
-			}
-			tmpLine = ScrTopLine
-			for index := ScrTopLine.ScrRowNr; index <= thisTp-1; index++ {
-				tmpLine = tmpLine.FLink
-			}
-			PromptRegion[thisTp].Redraw = tmpLine
-			if ScrFrame.Dot.Line.ScrRowNr > 2 {
-				goto l1
-			}
-
-			tmpLine = ScrBotLine
-			for index := TerminalInfo.Height - ScrBotLine.ScrRowNr; index <= maxTp-thisTp-1; index++ {
-				tmpLine = tmpLine.BLink
-			}
-			if TerminalInfo.Height-ScrBotLine.ScrRowNr > maxTp-thisTp {
-				tmpLine = nil
-			}
-			PromptRegion[thisTp].Redraw = tmpLine
-			PromptRegion[thisTp].LineNr = TerminalInfo.Height - maxTp + thisTp
-
-		l1:
-			if PromptRegion[thisTp].LineNr != 0 {
-				VduMoveCurs(1, PromptRegion[thisTp].LineNr)
-			}
-			VduGetInput(prompt, outbuf, MaxStrLen, outlen)
-			if TtControlC {
-				goto l2
-			}
-			if *outlen == 0 {
-				for index := thisTp + 1; index <= maxTp; index++ {
-					PromptRegion[index].LineNr = 0
-					PromptRegion[index].Redraw = nil
-				}
-			}
-			if thisTp == maxTp || *outlen == 0 {
-				for index := 1; index <= maxTp; index++ {
-					if PromptRegion[index].Redraw != nil {
-						ScreenDrawLine(PromptRegion[index].Redraw)
-					} else if PromptRegion[index].LineNr != 0 {
-						VduMoveCurs(1, PromptRegion[index].LineNr)
-						VduClearEOL()
-					}
-				}
-			}
-		} else {
-			fmt.Print(prompt)
-			// Read from stdin (simplified version)
-			*outlen = 0
-		}
+	if TtControlC {
+		return
 	}
-l2:
+
+	if LudwigMode != LudwigScreen {
+		fmt.Print(prompt)
+		// Read from stdin (simplified version)
+		return
+	}
+
+	computePromptPosition(thisTp, maxTp)
+	if PromptRegion[thisTp].LineNr != 0 {
+		VduMoveCurs(1, PromptRegion[thisTp].LineNr)
+	}
+	VduGetInput(prompt, outbuf, MaxStrLen, outlen)
+
 	if TtControlC {
 		*outlen = 0
+		return
+	}
+
+	if *outlen == 0 {
+		for index := thisTp + 1; index <= maxTp; index++ {
+			PromptRegion[index].LineNr = 0
+			PromptRegion[index].Redraw = nil
+		}
+	}
+	if thisTp == maxTp || *outlen == 0 {
+		restorePromptLines(maxTp)
 	}
 }
 

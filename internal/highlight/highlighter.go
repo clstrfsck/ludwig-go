@@ -252,9 +252,7 @@ func (h *Highlighter) highlightEmptyRegion(highlights LineMatch, start int, canM
 	}
 	for i, h := range fullHighlights {
 		if i == 0 || h != fullHighlights[i-1] {
-			// if _, ok := highlights[start+i]; !ok {
 			highlights[start+i] = h
-			// }
 		}
 	}
 
@@ -297,7 +295,6 @@ func (h *Highlighter) HighlightStates(input LineStates) {
 		}
 
 		line := input.LineBytes(i)
-		// highlights := make(LineMatch)
 
 		if i == 0 || h.lastRegion == nil {
 			h.highlightEmptyRegion(nil, 0, true, i, line, true)
@@ -342,8 +339,6 @@ func (h *Highlighter) HighlightMatches(input LineStates, startline, endline int)
 // for each line until it comes across a line whose state does not change
 // returns the number of the final line
 func (h *Highlighter) ReHighlightStates(input LineStates, startline int) int {
-	// lines := input.LineData()
-
 	h.lastRegion = nil
 	if startline > 0 {
 		input.Lock()
@@ -360,7 +355,6 @@ func (h *Highlighter) ReHighlightStates(input LineStates, startline int) int {
 		}
 
 		line := input.LineBytes(i)
-		// highlights := make(LineMatch)
 
 		// var match LineMatch
 		if i == 0 || h.lastRegion == nil {
