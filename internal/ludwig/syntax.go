@@ -290,7 +290,7 @@ func SyntaxApplyDirty(frame *FrameObject) {
 				line = line.FLink
 				scrTopLineNum += 1
 			}
-			for {
+			for line != nil {
 				ScreenDrawLine(line)
 				if line == ScrBotLine {
 					break
