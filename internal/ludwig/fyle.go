@@ -122,7 +122,7 @@ func FileFixEOP(eof bool, eopLine *LineHdrObject) {
 	}
 }
 
-// FileCreateOpen parses fn and creates I/O streams to files.
+// FileCreateOpen parses argv and creates I/O streams to files.
 func FileCreateOpen(argv []string, parse ParseType, inputfp **FileObject, outputfp **FileObject) bool {
 	switch parse {
 	case ParseCommand, ParseInput, ParseEdit, ParseStdin, ParseExecute:
