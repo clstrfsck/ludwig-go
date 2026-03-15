@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: actions/checkout@v6
+        with:
+          repository: clstrfsck/ludwig-system-test
+          path: system-test
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -22,6 +27,14 @@ jobs:
 
       - name: Install ncurses
         run: sudo apt-get install -y libncurses-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Python dependencies
+        run: pip install -r system-test/requirements.txt
 
       - name: Run checks
         run: task check
