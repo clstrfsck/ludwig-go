@@ -1,0 +1,27 @@
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Task
+        uses: go-task/setup-task@v2
+
+      - name: Install ncurses
+        run: sudo apt-get install -y libncurses-dev
+
+      - name: Run checks
+        run: task check
