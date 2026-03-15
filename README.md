@@ -12,6 +12,8 @@
 {**********************************************************************}
 ```
 
+[![Check](https://github.com/clstrfsck/ludwig-go/actions/workflows/check.yml/badge.svg)](https://github.com/clstrfsck/ludwig-go/actions/workflows/check.yml)
+
 ## About
 
 Ludwig is a text editor developed at the University of Adelaide.
