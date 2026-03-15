@@ -256,7 +256,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 	*outlen = 0
 	for {
-		r, size, err := fyle.Reader.ReadRune()
+		r, _, err := fyle.Reader.ReadRune()
 		if err != nil {
 			fyle.Eof = true
 			if *outlen > 0 {
@@ -278,7 +278,10 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 			}
 		} else if unicode.IsPrint(r) {
 			runeBytes := []byte(string(r)) // encodes r back to UTF-8
-			if *outlen+size > MaxStrLen {
+			runeLen := len(runeBytes)
+			if *outlen+runeLen > MaxStrLen {
+				// Rune does not fit: unread so it can be processed on the next call.
+				_ = fyle.Reader.UnreadRune()
 				break
 			}
 			for _, b := range runeBytes {
