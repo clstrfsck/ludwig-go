@@ -5,6 +5,13 @@ package ncurses
 #cgo LDFLAGS: -lncurses
 #include <ncurses.h>
 #include <stdlib.h>
+#include <locale.h>
+
+// Helper to setup locale
+static WINDOW* init_ncurses() {
+    setlocale(LC_ALL, "");
+    return initscr();
+}
 
 // Helper function to get KEY_MAX
 static int get_key_max() {
@@ -94,7 +101,7 @@ var (
 
 // Init initializes ncurses and returns the standard screen window
 func Init() (*Window, error) {
-	cwin := C.initscr()
+	cwin := C.init_ncurses()
 	if cwin == nil {
 		return nil, ErrInitFailed
 	}

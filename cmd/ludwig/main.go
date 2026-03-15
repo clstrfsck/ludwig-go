@@ -17,7 +17,6 @@ package main
 
 import (
 	"os"
-	"strings"
 
 	. "ludwig-go/internal/ludwig"
 )
@@ -512,26 +511,22 @@ func loadCommandTable(oldVersion bool) {
 	}
 }
 
-func startUp(argc int, argv []string) bool {
+func startUp(argv []string) bool {
 	const frameNameCmd = "COMMAND"
 	const frameNameOops = "OOPS"
 	const frameNameHeap = "HEAP"
 
 	result := false
 
-	// Get the command line.
-	var commandLine string
-	if argc > 1 {
-		commandLine = strings.Join(argv[1:], " ")
-	}
-
-	if len(commandLine) > FileNameLen {
-		ScreenMessage(MsgParameterTooLong)
-		goto l99
+	for _, arg := range argv {
+		if len(arg) > FileNameLen {
+			ScreenMessage(MsgParameterTooLong)
+			goto l99
+		}
 	}
 
 	// Open the files.
-	if !FileCreateOpen(&commandLine, ParseCommand, &Files[1], &Files[2]) {
+	if !FileCreateOpen(argv[1:], ParseCommand, &Files[1], &Files[2]) {
 		goto l99
 	}
 
@@ -690,8 +685,8 @@ func main() {
 	}()
 	SysInitSig()
 	ValueInitializations()
-	initialize()                        // Stuff VALUE can't do, like creating frames etc.
-	if startUp(len(os.Args), os.Args) { // Parse command line, get files attached, etc.
+	initialize()          // Stuff VALUE can't do, like creating frames etc.
+	if startUp(os.Args) { // Parse command line, get files attached, etc.
 		ExecuteImmed()
 		SysExitSuccess()
 	}

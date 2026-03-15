@@ -248,10 +248,9 @@ func ExecuteImmed() {
 		}
 
 		// Open standard input as Ludwig command input file.
-		var cmdFnm string
 		var cmdFile *FileObject
 		var dummyFptr *FileObject
-		if FileCreateOpen(&cmdFnm, ParseStdin, &cmdFile, &dummyFptr) {
+		if FileCreateOpen(nil, ParseStdin, &cmdFile, &dummyFptr) {
 			for {
 				// Destroy all of cmd_span's contents.
 				if cmdSpan.MarkOne.Line != nil {
