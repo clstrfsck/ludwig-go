@@ -238,7 +238,9 @@ func (b *LudwigBuffer) Unlock() {}
 func SyntaxHighlightFrame(frame *FrameObject, h *highlight.Highlighter) {
 	buf := newLudwigBuffer(frame)
 	h.HighlightStates(buf)
-	h.HighlightMatches(buf, 0, buf.LinesNum()-1)
+	if buf.LinesNum() > 0 {
+		h.HighlightMatches(buf, 0, buf.LinesNum()-1)
+	}
 }
 
 // SyntaxRehighlightFrom re-highlights incrementally from a changed line
