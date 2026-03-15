@@ -123,7 +123,7 @@ func FileFixEOP(eof bool, eopLine *LineHdrObject) {
 }
 
 // FileCreateOpen parses fn and creates I/O streams to files.
-func FileCreateOpen(fn *string, parse ParseType, inputfp **FileObject, outputfp **FileObject) bool {
+func FileCreateOpen(argv []string, parse ParseType, inputfp **FileObject, outputfp **FileObject) bool {
 	switch parse {
 	case ParseCommand, ParseInput, ParseEdit, ParseStdin, ParseExecute:
 		if *inputfp != nil {
@@ -137,8 +137,6 @@ func FileCreateOpen(fn *string, parse ParseType, inputfp **FileObject, outputfp 
 		(*inputfp).LineCount = 0
 		(*inputfp).OutputFlag = false
 		(*inputfp).Eof = false
-		(*inputfp).Idx = MaxStrLen
-		(*inputfp).Len = 0
 	}
 
 	switch parse {
@@ -155,7 +153,7 @@ func FileCreateOpen(fn *string, parse ParseType, inputfp **FileObject, outputfp 
 		(*outputfp).OutputFlag = true
 	}
 
-	result := FilesysParse(*fn, parse, &FileData, *inputfp, *outputfp)
+	result := FilesysParse(argv, parse, &FileData, *inputfp, *outputfp)
 	if *inputfp != nil && !(*inputfp).Valid {
 		*inputfp = nil
 	}
@@ -529,7 +527,6 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	var status string
 	fileSlot := 0
-	var fnm string
 	result := false
 
 	switch command {
@@ -540,11 +537,12 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !getFreeSlot(&fileSlot, fileSlot, &status) {
 			goto l99
 		}
+		var fnm string
 		if !getFileName(tparam, &fnm, command) {
 			goto l99
 		}
 		var dummyFptr *FileObject
-		if !FileCreateOpen(&fnm, ParseInput, &Files[fileSlot], &dummyFptr) {
+		if !FileCreateOpen([]string{fnm}, ParseInput, &Files[fileSlot], &dummyFptr) {
 			goto l99
 		}
 		CurrentFrame.InputFile = fileSlot
@@ -568,11 +566,12 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			goto l99
 		}
 		if Files[fileSlot] == nil {
+			var fnm string
 			if !getFileName(tparam, &fnm, command) {
 				goto l99
 			}
 			var dummyFptr *FileObject
-			if !FileCreateOpen(&fnm, ParseInput, &Files[fileSlot], &dummyFptr) {
+			if !FileCreateOpen([]string{fnm}, ParseInput, &Files[fileSlot], &dummyFptr) {
 				goto l99
 			}
 		}
@@ -592,10 +591,11 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !getFreeSlot(&fileSlot2, fileSlot, &status) {
 			goto l99
 		}
+		var fnm string
 		if !getFileName(tparam, &fnm, command) {
 			goto l99
 		}
-		if !FileCreateOpen(&fnm, ParseEdit, &Files[fileSlot], &Files[fileSlot2]) {
+		if !FileCreateOpen([]string{fnm}, ParseEdit, &Files[fileSlot], &Files[fileSlot2]) {
 			goto l99
 		}
 		CurrentFrame.InputFile = fileSlot
@@ -620,11 +620,12 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !getFreeSlot(&fileSlot, fileSlot, &status) {
 			goto l99
 		}
+		var fnm string
 		if !getFileName(tparam, &fnm, command) {
 			goto l99
 		}
 		var dummyFptr *FileObject
-		if !FileCreateOpen(&fnm, ParseExecute, &Files[fileSlot], &dummyFptr) {
+		if !FileCreateOpen([]string{fnm}, ParseExecute, &Files[fileSlot], &dummyFptr) {
 			goto l99
 		}
 		CurrentFrame.InputFile = fileSlot
@@ -707,16 +708,17 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !getFreeSlot(&fileSlot, fileSlot, &status) {
 			goto l99
 		}
+		var fnm string
 		if !getFileName(tparam, &fnm, command) {
 			goto l99
 		}
 		if CurrentFrame.InputFile != 0 {
-			if !FileCreateOpen(&fnm, ParseOutput, &Files[CurrentFrame.InputFile], &Files[fileSlot]) {
+			if !FileCreateOpen([]string{fnm}, ParseOutput, &Files[CurrentFrame.InputFile], &Files[fileSlot]) {
 				goto l99
 			}
 		} else {
 			var dummyFptr *FileObject
-			if !FileCreateOpen(&fnm, ParseOutput, &dummyFptr, &Files[fileSlot]) {
+			if !FileCreateOpen([]string{fnm}, ParseOutput, &dummyFptr, &Files[fileSlot]) {
 				goto l99
 			}
 		}
@@ -731,11 +733,12 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			goto l99
 		}
 		if Files[fileSlot] == nil {
+			var fnm string
 			if !getFileName(tparam, &fnm, command) {
 				goto l99
 			}
 			var dummyFptr *FileObject
-			if !FileCreateOpen(&fnm, ParseOutput, &dummyFptr, &Files[fileSlot]) {
+			if !FileCreateOpen([]string{fnm}, ParseOutput, &dummyFptr, &Files[fileSlot]) {
 				goto l99
 			}
 		}

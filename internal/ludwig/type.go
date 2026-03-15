@@ -13,6 +13,7 @@
 package ludwig
 
 import (
+	"bufio"
 	"ludwig-go/internal/highlight"
 	"math/big"
 	"os"
@@ -343,10 +344,8 @@ type FileObject struct {
 	Entab          bool
 	Create         bool
 	OsFile         *os.File
+	Reader         *bufio.Reader
 	Mode           int
-	Idx            int
-	Len            int
-	Buf            []byte
 	PreviousFileId int64
 
 	// Fields for controlling version backup

@@ -15,6 +15,7 @@
 package ludwig
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
@@ -54,6 +55,7 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 				return false
 			}
 			fyle.OsFile = osFile
+			fyle.Reader = bufio.NewReader(fyle.OsFile)
 		} else {
 			if !SysExpandFilename(&fyle.Filename) {
 				ScreenMessage(fmt.Sprintf("Error in filename (%s)", fyle.Filename))
@@ -67,11 +69,10 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 			if fyle.OsFile == nil {
 				return false
 			}
+			fyle.Reader = bufio.NewReader(fyle.OsFile)
 			fyle.Mode = fs.Mode
 			fyle.PreviousFileId = fs.Mtime
 		}
-		fyle.Idx = 0
-		fyle.Len = 0
 		fyle.Eof = false
 	} else { // otherwise open new file for output
 		var related string
@@ -255,26 +256,18 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 	*outlen = 0
 	for {
-		if fyle.Idx >= fyle.Len {
-			fyle.Buf = make([]byte, MaxStrLen)
-			fyle.Len = int(SysRead(fyle.OsFile, fyle.Buf))
-			fyle.Idx = 0
-		}
-		if fyle.Len <= 0 {
+		r, size, err := fyle.Reader.ReadRune()
+		if err != nil {
 			fyle.Eof = true
-			// If the last line is not terminated properly,
-			// the buffer is not empty and we must return the buffer
 			if *outlen > 0 {
 				break
 			}
 			return false
 		}
-		ch := int(fyle.Buf[fyle.Idx]) & 0x7F // toascii
-		fyle.Idx++
-		if unicode.IsPrint(rune(ch)) {
-			*outlen++
-			outputBuffer.Set(*outlen, byte(ch))
-		} else if ch == '\t' { // expand the tab
+		if r == '\n' || r == '\r' || r == '\v' || r == '\f' {
+			break
+		}
+		if r == '\t' {
 			exp := 8 - (*outlen % 8)
 			if *outlen+exp > MaxStrLen {
 				exp = MaxStrLen - *outlen
@@ -283,14 +276,22 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				*outlen++
 				outputBuffer.Set(*outlen, ' ')
 			}
-		} else if ch == '\n' || ch == '\r' || ch == '\v' || ch == '\f' {
-			break // finished if newline or carriage return
-		} // forget other control characters
+		} else if unicode.IsPrint(r) {
+			runeBytes := []byte(string(r)) // encodes r back to UTF-8
+			if *outlen+size > MaxStrLen {
+				break
+			}
+			for _, b := range runeBytes {
+				*outlen++
+				outputBuffer.Set(*outlen, b)
+			}
+		}
+		// other control characters are ignored
 		if *outlen >= MaxStrLen {
 			break
 		}
 	}
-	fyle.LCounter++
+	fyle.LCounter += 1
 	return true
 }
 
@@ -299,8 +300,7 @@ func FilesysRewind(fyle *FileObject) bool {
 	if !SysSeek(fyle.OsFile, 0) {
 		return false
 	}
-	fyle.Idx = 0
-	fyle.Len = 0
+	fyle.Reader = bufio.NewReader(fyle.OsFile)
 	fyle.Eof = false
 	fyle.LCounter = 0
 	return true
@@ -411,15 +411,14 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 	} else {
 		iFyle.Eof = inputEof
 		SysSeek(iFyle.OsFile, inputPosition)
-		iFyle.Idx = 0
-		iFyle.Len = 0
+		iFyle.Reader = bufio.NewReader(iFyle.OsFile)
 	}
 	return true
 }
 
 // FilesysParse parses command line arguments for file operations
 func FilesysParse(
-	commandLine string,
+	argv []string,
 	parseType ParseType,
 	fileData *FileDataType,
 	input *FileObject,
@@ -435,15 +434,11 @@ func FilesysParse(
 	if parseType == ParseStdin {
 		input.Valid = true
 		input.OsFile = os.Stdin
+		input.Reader = bufio.NewReader(input.OsFile)
 		input.Eof = false
 		input.LCounter = 0
 		return true
 	}
-
-	// create an argc and argv from the "command_line"
-	argv := []string{"Ludwig"}
-	cl := toArgv(commandLine)
-	argv = append(argv, cl...)
 
 	entab := fileData.Entab
 	highlighting := fileData.Highlighting
@@ -476,7 +471,7 @@ func FilesysParse(
 	}
 
 	// Parse command line options using a simple parser
-	optind := 1
+	optind := 0
 	for optind < len(argv) {
 		arg := argv[optind]
 		if !strings.HasPrefix(arg, "-") {
