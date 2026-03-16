@@ -439,7 +439,6 @@ func PatternParser(
 			panic(localException{})
 		}
 
-		endOfInput = false
 		currentState = first
 		endOfInput = false
 

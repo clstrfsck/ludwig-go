@@ -164,24 +164,6 @@ func SysOpenCommand(cmd string) *os.File {
 	return nil
 }
 
-// SysOpenFile opens a file for reading
-func SysOpenFile(filename string) *os.File {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
-	return f
-}
-
-// SysCreateFile creates a file for reading and writing
-func SysCreateFile(filename string) *os.File {
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0600)
-	if err != nil {
-		return nil
-	}
-	return f
-}
-
 // SysFileMask returns the current file creation mask
 func SysFileMask() int {
 	oldMask := syscall.Umask(0)
@@ -246,43 +228,6 @@ func SysReapChildren() {
 			break
 		}
 	}
-}
-
-// SysRead reads from a file descriptor
-func SysRead(osFile *os.File, buf []byte) int64 {
-	n, err := osFile.Read(buf)
-	if err != nil {
-		return -1
-	}
-	return int64(n)
-}
-
-// SysWrite writes to a file descriptor
-func SysWrite(osFile *os.File, buf []byte) int64 {
-	n, err := osFile.Write(buf)
-	if err != nil {
-		return -1
-	}
-	return int64(n)
-}
-
-// SysClose closes a file descriptor
-func SysClose(osFile *os.File) int {
-	err := osFile.Close()
-	if err != nil {
-		return -1
-	}
-	return 0
-}
-
-// SysUnlink deletes a file
-func SysUnlink(filename string) bool {
-	return os.Remove(filename) == nil
-}
-
-// SysRename renames a file
-func SysRename(oldname string, newname string) bool {
-	return os.Rename(oldname, newname) == nil
 }
 
 // SysChmod changes file permissions

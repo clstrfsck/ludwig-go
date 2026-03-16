@@ -124,9 +124,15 @@ func processFiles(in io.Reader, out io.Writer) error {
 	}
 
 	fmt.Fprintf(out, "%d %d\n", indexLines, contentsLines)
-	io.Copy(out, &index)
-	io.Copy(out, &contents)
-	io.Copy(out, &body)
+	if _, err := io.Copy(out, &index); err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, &contents); err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, &body); err != nil {
+		return err
+	}
 
 	return nil
 }

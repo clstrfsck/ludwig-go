@@ -32,13 +32,8 @@ const (
 func removeBackupFiles(backupFile string, versions []int64, start, end int) {
 	for i := start; i < end; i++ {
 		fileName := backupFile + strconv.FormatInt(versions[i], 10)
-		SysUnlink(fileName)
+		_ = os.Remove(fileName)
 	}
-}
-
-// toArgv converts a command line string to an argv-style slice
-func toArgv(cmdline string) []string {
-	return strings.Fields(cmdline)
 }
 
 // FilesysCreateOpen opens a file for input or creates a file for output
@@ -65,10 +60,11 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 			if !fs.Valid || fs.IsDir {
 				return false
 			}
-			fyle.OsFile = SysOpenFile(fyle.Filename)
-			if fyle.OsFile == nil {
+			f, err := os.Open(fyle.Filename)
+			if err != nil || f == nil {
 				return false
 			}
+			fyle.OsFile = f
 			fyle.Reader = bufio.NewReader(fyle.OsFile)
 			fyle.Mode = fs.Mode
 			fyle.PreviousFileId = fs.Mtime
@@ -125,11 +121,12 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 			uniq++
 			fyle.Tnm = fyle.Filename + "-lw" + strconv.Itoa(uniq)
 		}
-		fyle.OsFile = SysCreateFile(fyle.Tnm)
-		if fyle.OsFile == nil {
+		f, err := os.OpenFile(fyle.Tnm, os.O_RDWR|os.O_CREATE, 0600)
+		if err != nil || f == nil {
 			ScreenMessage(fmt.Sprintf("Error opening (%s) as output", fyle.Tnm))
 			return false
 		}
+		fyle.OsFile = f
 	}
 	return true
 }
@@ -147,7 +144,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 		// reap any children
 		SysReapChildren()
 		// an ordinary input file, just close
-		if SysClose(fyle.OsFile) < 0 {
+		if fyle.OsFile.Close() != nil {
 			return false
 		}
 		if msgs {
@@ -162,12 +159,12 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 	}
 
 	// an output file to close
-	if action != 2 && SysClose(fyle.OsFile) < 0 {
+	if action != 2 && fyle.OsFile.Close() != nil {
 		return false
 	}
 	if action == 1 {
 		// remove the file
-		if SysUnlink(fyle.Tnm) {
+		if os.Remove(fyle.Tnm) == nil {
 			if msgs {
 				ScreenMessage(fmt.Sprintf("Output file %s deleted.", fyle.Tnm))
 			}
@@ -221,13 +218,13 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 		if SysFileExists(fyle.Filename) {
 			// try to rename current file to backup
 			temp := tname + strconv.FormatInt(maxVnum+1, 10)
-			SysRename(fyle.Filename, temp)
+			_ = os.Rename(fyle.Filename, temp)
 		}
 	}
 
 	// now rename the temp file to the real thing
 	SysChmod(fyle.Tnm, fyle.Mode&0777)
-	if !SysRename(fyle.Tnm, fyle.Filename) {
+	if os.Rename(fyle.Tnm, fyle.Filename) != nil {
 		ScreenMessage(fmt.Sprintf("Cannot rename %s to %s", fyle.Tnm, fyle.Filename))
 		return false
 	} else {
@@ -330,19 +327,27 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				buffer.Set(offset+i, '\t')
 			}
 		}
-		count := SysWrite(fyle.OsFile, []byte(buffer.Slice(offset+1, bufsiz-offset)))
+
+		count, err := fyle.OsFile.Write([]byte(buffer.Slice(offset+1, bufsiz-offset)))
+		if err != nil {
+			return false
+		}
+
 		if tabs > 0 {
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, ' ')
 			}
 		}
-		if count != int64(bufsiz-offset) {
+		if count != bufsiz-offset {
 			return false
 		}
 	}
-	ok := SysWrite(fyle.OsFile, []byte(filesysNL)) == filesysNLSize
-	fyle.LCounter++
-	return ok
+	count, err := fyle.OsFile.Write([]byte(filesysNL))
+	if err != nil || count != len(filesysNL) {
+		return false
+	}
+	fyle.LCounter += 1
+	return true
 }
 
 // FilesysSave implements part of the File Save command
@@ -410,7 +415,7 @@ func FilesysSave(iFyle *FileObject, oFyle *FileObject, copyLines int) bool {
 
 	// reposition or close the input file
 	if iFyle == &fyle {
-		SysClose(iFyle.OsFile)
+		_ = iFyle.OsFile.Close()
 	} else {
 		iFyle.Eof = inputEof
 		SysSeek(iFyle.OsFile, inputPosition)

@@ -56,8 +56,6 @@ var (
 	terminators  map[int]bool
 	vduSetup     bool
 	inInsertMode bool
-	gCtrlC       *bool
-	gWinChange   *bool
 	stdscr       *nc.Window
 	refreshDelay int
 )
@@ -237,8 +235,8 @@ func VduGetKey() int {
 		}
 	}
 
-	if rawKey == nc.KEY_RESIZE && gWinChange != nil {
-		*gWinChange = true
+	if rawKey == nc.KEY_RESIZE {
+		TtWinChanged = true
 	}
 	nc.CursSet(0)
 	return massageKey(int(rawKey))
@@ -403,13 +401,7 @@ func VduKeyboardInit(
 }
 
 // VduInit initializes the VDU system
-func VduInit(
-	terminalInfo *TerminalInfoType,
-	ctrlCFlag *bool,
-	winchangeFlag *bool,
-) (map[string]int, bool) {
-	gCtrlC = ctrlCFlag
-	gWinChange = winchangeFlag
+func VduInit(terminalInfo *TerminalInfoType) (map[string]int, bool) {
 	terminalInfo.Name = ""
 	terminalInfo.Width = 80
 	terminalInfo.Height = 4
