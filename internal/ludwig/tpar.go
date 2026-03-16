@@ -277,7 +277,7 @@ func findEnquiry(name string, result **StrObject, reslen *int) bool {
 			variableType = varTypeLudwig
 		}
 		item.Reset()
-		for i, r = range name[i:] {
+		for _, r = range name[i:] {
 			if variableType == varTypeOpsys {
 				item.WriteRune(r)
 			} else {

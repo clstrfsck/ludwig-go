@@ -285,7 +285,7 @@ func (s *StrObject) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 's', 'v':
 		length := s.Length(' ', len(s.array))
-		f.Write(s.array[:length])
+		_, _ = f.Write(s.array[:length])
 	case 'q':
 		fmt.Fprintf(f, "%q", s.array[:])
 	default:

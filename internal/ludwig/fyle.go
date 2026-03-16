@@ -213,7 +213,7 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 				fp.FirstLine = line
 			}
 			fp.LastLine = line
-			fp.LineCount++
+			fp.LineCount += 1
 		} else if !fp.Eof {
 			// Something drastically wrong with the input!
 			// As a TEMPORARY measure, ignore.

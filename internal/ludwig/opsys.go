@@ -37,7 +37,10 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 		return false
 	}
 
-	opsysResult := false
+	defer func() {
+		FilesysClose(&mbx, 0, false)
+	}()
+
 	for !mbx.Eof {
 		result := NewBlankStrObject(MaxStrLen)
 		var outlen int
@@ -45,11 +48,11 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 			var line *LineHdrObject
 			var line2 *LineHdrObject
 			if !LinesCreate(1, &line, &line2) {
-				goto l98
+				return false
 			}
 			if !LineChangeLength(line, outlen) {
 				LinesDestroy(&line, &line2)
-				goto l98
+				return false
 			}
 			ChFillCopy(result, 1, outlen, line.Str, 1, line.Len(), ' ')
 			line.Used = outlen
@@ -62,11 +65,8 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 			*last = line
 			*actualCnt += 1
 		} else if !mbx.Eof { // Something terrible has happened!
-			goto l98
+			return false
 		}
 	}
-	opsysResult = true
-l98:
-	FilesysClose(&mbx, 0, false)
-	return opsysResult
+	return true
 }

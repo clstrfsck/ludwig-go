@@ -535,7 +535,7 @@ func startUp(argv []string) bool {
 	// Try to get started on the terminal.  If this fails assume carry on
 	// in BATCH mode.
 	LudwigMode = LudwigBatch
-	if colors, ok := VduInit(&TerminalInfo, &TtControlC, &TtWinChanged); ok {
+	if colors, ok := VduInit(&TerminalInfo); ok {
 		InitialScrWidth = TerminalInfo.Width
 		InitialScrHeight = TerminalInfo.Height
 		InitialMarginRight = TerminalInfo.Width
