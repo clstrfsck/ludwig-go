@@ -142,11 +142,11 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			CurrentFrame.Dot.Col = firstCol
 			if insert {
 				if !TextInsert(true, 1, newStr, count, CurrentFrame.Dot) {
-					goto l9
+					break
 				}
 			} else {
 				if !TextOvertype(true, 1, newStr, count, CurrentFrame.Dot) {
-					goto l9
+					break
 				}
 			}
 			// Reposition dot
@@ -155,7 +155,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		}
 
 		if fromSpan {
-			goto l9
+			break
 		}
 		if cmdValid {
 			ScreenFixup()
@@ -164,7 +164,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		}
 		key = VduGetKey()
 		if TtControlC {
-			goto l9
+			break
 		}
 
 		keyUp := ChKeyToUpper(key)
@@ -191,12 +191,11 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		}
 
 		if commandSet.Bit(int(command)) == 0 {
+			VduTakeBackKey(key)
 			break
 		}
 	}
-	VduTakeBackKey(key)
 
-l9:
 	if TtControlC {
 		cmdStatus = false
 		CurrentFrame.Dot.Col = 1

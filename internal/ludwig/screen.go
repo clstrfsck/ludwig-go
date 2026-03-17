@@ -414,7 +414,7 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 			if curRow > 1 {
 				if topLine.BLink != nil {
 					upwards = true
-					linesOnScr++
+					linesOnScr += 1
 					topLine = topLine.BLink
 					topLine.ScrRowNr = curRow - 1
 					ScreenDrawLine(topLine)
@@ -1243,7 +1243,7 @@ func ScreenVerify(prompt string) VerifyResponse {
 		}
 
 		if TtControlC {
-			goto l99
+			break
 		}
 
 		more = false
@@ -1289,7 +1289,6 @@ func ScreenVerify(prompt string) VerifyResponse {
 		}
 	}
 
-l99:
 	CurrentFrame.ScrHeight = oldHeight
 	CurrentFrame.MarginTop = oldTopM
 	CurrentFrame.MarginBottom = oldBotM

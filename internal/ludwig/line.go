@@ -300,30 +300,20 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) bool {
 	if thisFrame == ScrFrame {
 		var firstScrLine *LineHdrObject
 		var lastScrLine *LineHdrObject
-		needsExtract := false
 
 		if firstLine.ScrRowNr != 0 {
 			firstScrLine = firstLine
-		} else {
-			if firstLineNr < ScrTopLine.Group.FirstLineNr+ScrTopLine.OffsetNr {
-				firstScrLine = ScrTopLine
-			} else {
-				goto done1
-			}
+		} else if firstLineNr < ScrTopLine.Group.FirstLineNr+ScrTopLine.OffsetNr {
+			firstScrLine = ScrTopLine
 		}
 
 		if lastLine.ScrRowNr != 0 {
 			lastScrLine = lastLine
-		} else {
-			if lastLine.Group.FirstLineNr+lastLine.OffsetNr > ScrBotLine.Group.FirstLineNr+ScrBotLine.OffsetNr {
-				lastScrLine = ScrBotLine
-			} else {
-				goto done1
-			}
+		} else if lastLine.Group.FirstLineNr+lastLine.OffsetNr > ScrBotLine.Group.FirstLineNr+ScrBotLine.OffsetNr {
+			lastScrLine = ScrBotLine
 		}
-		needsExtract = true
-	done1:
-		if needsExtract {
+
+		if firstScrLine != nil && lastScrLine != nil {
 			ScreenLinesExtract(firstScrLine, lastScrLine)
 		}
 	}

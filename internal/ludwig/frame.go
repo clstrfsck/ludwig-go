@@ -937,16 +937,18 @@ func printMargins(m1 int, m2 int) {
 
 // FrameParameter handles the frame parameters command
 func FrameParameter(tpar *TParObject) bool {
-	result := false
-	tpar.Nxt = nil
-	tpar.Con = nil
-	var request TParObject
+	request := TParObject{
+		Nxt: nil,
+		Con: nil,
+	}
+	defer func() {
+		TparCleanObject(&request)
+	}()
 	if !TparGet1(tpar, CmdFrameParameters, &request) {
-		goto l99
+		return false
 	}
 	if request.Len > 0 {
-		result = setparam(&request)
-		goto l99
+		return setparam(&request)
 	}
 
 	// Display parameters and stats
@@ -1068,8 +1070,5 @@ func FrameParameter(tpar *TParObject) bool {
 			break
 		}
 	}
-	result = true
-l99:
-	TparCleanObject(&request)
-	return result
+	return true
 }

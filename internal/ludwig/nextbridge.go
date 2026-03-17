@@ -14,6 +14,54 @@
 
 package ludwig
 
+// searchForward finds the first character in chars at or after (line, col), scanning forward.
+// Returns the matching (line, col), or (nil, 0) if not found.
+func searchForward(chars [256]bool, line *LineHdrObject, col int) (*LineHdrObject, int) {
+	for line != nil {
+		i := col
+		for i <= line.Used {
+			if chars[line.Str.Get(i)] {
+				return line, i
+			}
+			i += 1
+		}
+		// Match a space at EOL
+		if chars[' '] && i == line.Used+1 {
+			return line, i
+		}
+		line = line.FLink
+		col = 1
+	}
+	return nil, 0
+}
+
+// searchBackward finds the first character in chars at or before (line, col), scanning backward.
+// Returns the matching (line, col) and true, or (nil, 0, false) if not found.
+func searchBackward(chars [256]bool, line *LineHdrObject, col int, bridge bool) (*LineHdrObject, int) {
+	for line != nil {
+		if line.Used < col {
+			if chars[' '] {
+				return line, col
+			}
+			col = line.Used
+		}
+		for j := col; j >= 1; j -= 1 {
+			if chars[line.Str.Get(j)] {
+				return line, j
+			}
+		}
+		if line.BLink != nil {
+			line = line.BLink
+			col = line.Used + 1
+		} else if bridge {
+			return line, col // This is safe since only -1BR is allowed
+		} else {
+			return nil, 0
+		}
+	}
+	return nil, 0
+}
+
 // NextbridgeCommand implements the NEXT and BRIDGE commands
 // NEXT searches for characters in the set, BRIDGE searches for characters NOT in the set
 func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
@@ -23,7 +71,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	for i <= tpar.Len {
 		ch1 := tpar.Str.Get(i)
 		ch2 := ch1
-		i++
+		i += 1
 		if i+2 <= tpar.Len {
 			if (tpar.Str.Get(i) == '.') && (tpar.Str.Get(i+1) == '.') {
 				ch2 = tpar.Str.Get(i + 2)
@@ -31,7 +79,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		// Add range ch1..ch2 to set
-		for ch := ch1; ch <= ch2; ch++ {
+		for ch := ch1; ch <= ch2; ch += 1 {
 			chars[ch] = true
 		}
 	}
@@ -52,34 +100,20 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	if count > 0 {
 		newCol = CurrentFrame.Dot.Col
 		if !bridge {
-			newCol++
+			newCol += 1
 		}
 		for {
-			for newLine != nil {
-				i = newCol
-				for i <= newLine.Used {
-					if chars[newLine.Str.Get(i)] {
-						newCol = i
-						goto l1
-					}
-					i++
-				}
-				if chars[' '] && (i == newLine.Used+1) { // Match a space at EOL
-					newCol = i
-					goto l1
-				}
-				newLine = newLine.FLink
-				newCol = 1
+			newLine, newCol = searchForward(chars, newLine, newCol)
+			if newLine == nil {
+				return false
 			}
-			return false
-		l1:
-			newCol++
-			count--
+			newCol += 1
+			count -= 1
 			if count == 0 {
 				break
 			}
 		}
-		newCol--
+		newCol -= 1
 		if !MarkCreate(
 			CurrentFrame.Dot.Line,
 			CurrentFrame.Dot.Col,
@@ -90,34 +124,15 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	} else if count < 0 {
 		newCol = CurrentFrame.Dot.Col - 1
 		if !bridge {
-			newCol--
+			newCol -= 1
 		}
 		for {
-			for newLine != nil {
-				if newLine.Used < newCol {
-					if chars[' '] {
-						goto l2
-					}
-					newCol = newLine.Used
-				}
-				for j := newCol; j >= 1; j-- {
-					if chars[newLine.Str.Get(j)] {
-						newCol = j
-						goto l2
-					}
-				}
-				if newLine.BLink != nil {
-					newLine = newLine.BLink
-					newCol = newLine.Used + 1
-				} else if bridge {
-					goto l2 // This is safe since only -1BR is allowed
-				} else {
-					return false
-				}
+			newLine, newCol = searchBackward(chars, newLine, newCol, bridge)
+			if newLine == nil {
+				return false
 			}
-		l2:
-			newCol--
-			count++
+			newCol -= 1
+			count += 1
 			if count == 0 {
 				break
 			}

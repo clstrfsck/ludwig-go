@@ -16,10 +16,6 @@ package ludwig
 // SwapLine swaps the current line with another line
 func SwapLine(rept LeadParam, count int) bool {
 	// SW is implemented as a ST of the dot line to before the other line.
-	result := false
-	var topMark *MarkObject
-	var endMark *MarkObject
-	var destMark *MarkObject
 
 	thisLine := CurrentFrame.Dot.Line
 	dotCol := CurrentFrame.Dot.Col
@@ -27,8 +23,24 @@ func SwapLine(rept LeadParam, count int) bool {
 	var destLine *LineHdrObject
 
 	if nextLine == nil {
-		goto l99
+		return false
 	}
+
+	var topMark *MarkObject
+	var endMark *MarkObject
+	var destMark *MarkObject
+
+	defer func() {
+		if topMark != nil {
+			MarkDestroy(&topMark)
+		}
+		if endMark != nil {
+			MarkDestroy(&endMark)
+		}
+		if destMark != nil {
+			MarkDestroy(&destMark)
+		}
+	}()
 
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
@@ -36,7 +48,7 @@ func SwapLine(rept LeadParam, count int) bool {
 		for i := 1; i <= count; i++ {
 			destLine = destLine.FLink
 			if destLine == nil {
-				goto l99
+				return false
 			}
 		}
 	case LeadParamMinus, LeadParamNInt:
@@ -44,7 +56,7 @@ func SwapLine(rept LeadParam, count int) bool {
 		for i := -1; i >= count; i-- {
 			destLine = destLine.BLink
 			if destLine == nil {
-				goto l99
+				return false
 			}
 		}
 	case LeadParamPIndef:
@@ -56,34 +68,20 @@ func SwapLine(rept LeadParam, count int) bool {
 	}
 
 	if !MarkCreate(thisLine, 1, &topMark) {
-		goto l99
+		return false
 	}
 	if !MarkCreate(nextLine, 1, &endMark) {
-		goto l99
+		return false
 	}
 	if !MarkCreate(destLine, 1, &destMark) {
-		goto l99
+		return false
 	}
 	if !TextMove(false, 1, topMark, endMark, destMark, &CurrentFrame.Dot, &topMark) {
-		goto l99
+		return false
 	}
 	CurrentFrame.TextModified = true
 	CurrentFrame.Dot.Col = dotCol
-	if !MarkCreate(
+	return MarkCreate(
 		CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified],
-	) {
-		goto l99
-	}
-	result = true
-l99:
-	if topMark != nil {
-		MarkDestroy(&topMark)
-	}
-	if endMark != nil {
-		MarkDestroy(&endMark)
-	}
-	if destMark != nil {
-		MarkDestroy(&destMark)
-	}
-	return result
+	)
 }
