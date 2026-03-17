@@ -14,7 +14,7 @@
 
 package ludwig
 
-// Predicate checks to see if a rune is
+// Predicate checks whether a rune satisfies a membership test used by NEXT and BRIDGE.
 type Predicate func(ch rune) bool
 
 func (p Predicate) not() Predicate {
@@ -23,7 +23,8 @@ func (p Predicate) not() Predicate {
 	}
 }
 
-// searchForward finds the first character in chars at or after (line, col), scanning forward.
+// searchForward finds the first character for which contained returns true,
+// at or after (line, col), scanning forward.
 // Returns the matching (line, col), or (nil, 0) if not found.
 func searchForward(contained Predicate, line *LineHdrObject, col int) (*LineHdrObject, int) {
 	for line != nil {
@@ -45,7 +46,8 @@ func searchForward(contained Predicate, line *LineHdrObject, col int) (*LineHdrO
 	return nil, 0
 }
 
-// searchBackward finds the first character in chars at or before (line, col), scanning backward.
+// searchBackward finds the first character for which contained returns true,
+// at or before (line, col), scanning backward.
 // Returns the matching (line, col), or (nil, 0) if not found.
 func searchBackward(contained Predicate, line *LineHdrObject, col int, bridge bool) (*LineHdrObject, int) {
 	for line != nil {
@@ -78,16 +80,15 @@ func searchBackward(contained Predicate, line *LineHdrObject, col int, bridge bo
 func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	// Form the character set
 	chars := make(map[rune]struct{})
-	i := 1
-	for i <= tpar.Len {
-		ch1 := tpar.Str.Get(i)
+	runes := []rune(tpar.Str.Slice(1, tpar.Len))
+	i := 0
+	for i < len(runes) {
+		ch1 := runes[i]
 		ch2 := ch1
 		i += 1
-		if i+2 <= tpar.Len {
-			if (tpar.Str.Get(i) == '.') && (tpar.Str.Get(i+1) == '.') {
-				ch2 = tpar.Str.Get(i + 2)
-				i += 3
-			}
+		if i+2 < len(runes) && runes[i] == '.' && runes[i+1] == '.' {
+			ch2 = runes[i+2]
+			i += 3
 		}
 		// Add range ch1..ch2 to set
 		for ch := ch1; ch <= ch2; ch += 1 {
