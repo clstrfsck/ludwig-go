@@ -14,19 +14,29 @@
 
 package ludwig
 
+// Predicate checks to see if a rune is
+type Predicate func(ch rune) bool
+
+func (p Predicate) not() Predicate {
+	return func(ch rune) bool {
+		return !p(ch)
+	}
+}
+
 // searchForward finds the first character in chars at or after (line, col), scanning forward.
 // Returns the matching (line, col), or (nil, 0) if not found.
-func searchForward(chars *[256]bool, line *LineHdrObject, col int) (*LineHdrObject, int) {
+func searchForward(contained Predicate, line *LineHdrObject, col int) (*LineHdrObject, int) {
 	for line != nil {
 		i := col
 		for i <= line.Used {
-			if chars[line.Str.Get(i)] {
+			// TODO: Proper rune extraction
+			if contained(rune(line.Str.Get(i))) {
 				return line, i
 			}
 			i += 1
 		}
 		// Match a space at EOL
-		if chars[' '] && i == line.Used+1 {
+		if contained(' ') && i == line.Used+1 {
 			return line, i
 		}
 		line = line.FLink
@@ -37,16 +47,17 @@ func searchForward(chars *[256]bool, line *LineHdrObject, col int) (*LineHdrObje
 
 // searchBackward finds the first character in chars at or before (line, col), scanning backward.
 // Returns the matching (line, col), or (nil, 0) if not found.
-func searchBackward(chars *[256]bool, line *LineHdrObject, col int, bridge bool) (*LineHdrObject, int) {
+func searchBackward(contained Predicate, line *LineHdrObject, col int, bridge bool) (*LineHdrObject, int) {
 	for line != nil {
 		if line.Used < col {
-			if chars[' '] {
+			if contained(' ') {
 				return line, col
 			}
 			col = line.Used
 		}
 		for j := col; j >= 1; j -= 1 {
-			if chars[line.Str.Get(j)] {
+			// TODO: Proper rune extraction
+			if contained(rune(line.Str.Get(j))) {
 				return line, j
 			}
 		}
@@ -66,7 +77,7 @@ func searchBackward(chars *[256]bool, line *LineHdrObject, col int, bridge bool)
 // NEXT searches for characters in the set, BRIDGE searches for characters NOT in the set
 func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	// Form the character set
-	chars := [256]bool{}
+	chars := make(map[rune]struct{})
 	i := 1
 	for i <= tpar.Len {
 		ch1 := tpar.Str.Get(i)
@@ -80,17 +91,18 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 		}
 		// Add range ch1..ch2 to set
 		for ch := ch1; ch <= ch2; ch += 1 {
-			chars[ch] = true
+			chars[rune(ch)] = struct{}{}
 		}
+	}
+
+	var predicate Predicate = func(ch rune) bool {
+		_, exists := chars[ch]
+		return exists
 	}
 
 	if bridge {
 		// Bridge inverts the character set
-		oldChars := chars
-		chars = [256]bool{}
-		for i := range oldChars {
-			chars[i] = !oldChars[i]
-		}
+		predicate = predicate.not()
 	}
 
 	// Search for a character in the set
@@ -103,7 +115,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			newCol += 1
 		}
 		for {
-			newLine, newCol = searchForward(&chars, newLine, newCol)
+			newLine, newCol = searchForward(predicate, newLine, newCol)
 			if newLine == nil {
 				return false
 			}
@@ -127,7 +139,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			newCol -= 1
 		}
 		for {
-			newLine, newCol = searchBackward(&chars, newLine, newCol, bridge)
+			newLine, newCol = searchBackward(predicate, newLine, newCol, bridge)
 			if newLine == nil {
 				return false
 			}

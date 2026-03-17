@@ -3,18 +3,18 @@
 package ludwig
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// makeCharSet builds a [256]bool from the given characters.
-func makeCharSet(chars ...byte) *[256]bool {
-	var set [256]bool
-	for _, ch := range chars {
-		set[ch] = true
+// makeCharSet builds a Predicate from the given characters.
+func makeCharSet(chars ...rune) Predicate {
+	// Not performant— good enough for tests
+	return func(ch rune) bool {
+		return slices.Contains(chars, ch)
 	}
-	return &set
 }
 
 func TestSearchForward(t *testing.T) {
