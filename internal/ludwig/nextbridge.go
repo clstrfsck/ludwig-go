@@ -16,7 +16,7 @@ package ludwig
 
 // searchForward finds the first character in chars at or after (line, col), scanning forward.
 // Returns the matching (line, col), or (nil, 0) if not found.
-func searchForward(chars [256]bool, line *LineHdrObject, col int) (*LineHdrObject, int) {
+func searchForward(chars *[256]bool, line *LineHdrObject, col int) (*LineHdrObject, int) {
 	for line != nil {
 		i := col
 		for i <= line.Used {
@@ -36,8 +36,8 @@ func searchForward(chars [256]bool, line *LineHdrObject, col int) (*LineHdrObjec
 }
 
 // searchBackward finds the first character in chars at or before (line, col), scanning backward.
-// Returns the matching (line, col) and true, or (nil, 0, false) if not found.
-func searchBackward(chars [256]bool, line *LineHdrObject, col int, bridge bool) (*LineHdrObject, int) {
+// Returns the matching (line, col), or (nil, 0) if not found.
+func searchBackward(chars *[256]bool, line *LineHdrObject, col int, bridge bool) (*LineHdrObject, int) {
 	for line != nil {
 		if line.Used < col {
 			if chars[' '] {
@@ -103,7 +103,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			newCol += 1
 		}
 		for {
-			newLine, newCol = searchForward(chars, newLine, newCol)
+			newLine, newCol = searchForward(&chars, newLine, newCol)
 			if newLine == nil {
 				return false
 			}
@@ -127,7 +127,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			newCol -= 1
 		}
 		for {
-			newLine, newCol = searchBackward(chars, newLine, newCol, bridge)
+			newLine, newCol = searchBackward(&chars, newLine, newCol, bridge)
 			if newLine == nil {
 				return false
 			}
