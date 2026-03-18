@@ -25,7 +25,7 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 	switch command {
 	case CmdWindowBackward:
 		if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
-			goto cleanup
+			break
 		}
 		if lineNr <= CurrentFrame.ScrHeight*count {
 			MarkCreate(
@@ -62,7 +62,7 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 
 	case CmdWindowForward:
 		if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
-			goto cleanup
+			break
 		}
 		lastGroup := CurrentFrame.LastGroup
 		dot := CurrentFrame.Dot
@@ -206,6 +206,5 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 		// All other commands ignored
 	}
 
-cleanup:
 	return cmdSuccess
 }

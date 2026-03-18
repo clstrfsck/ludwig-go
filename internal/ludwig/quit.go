@@ -22,6 +22,7 @@ const (
 func QuitCommand() bool {
 	if LudwigMode != LudwigBatch {
 		newSpan := FirstSpan
+	spanLoop:
 		for newSpan != nil {
 			if newSpan.Frame != nil {
 				if newSpan.Frame.TextModified && newSpan.Frame.OutputFile == 0 &&
@@ -37,7 +38,7 @@ func QuitCommand() bool {
 					case VerifyReplyYes:
 						// Nothing to do here
 					case VerifyReplyAlways:
-						goto l2
+						break spanLoop
 					case VerifyReplyNo, VerifyReplyQuit:
 						ExitAbort = true
 						return false
@@ -47,7 +48,6 @@ func QuitCommand() bool {
 			newSpan = newSpan.FLink
 		}
 	}
-l2:
 	ScreenUnload()
 	if LudwigMode != LudwigBatch {
 		ScreenMessage(MsgQuitting)
@@ -90,17 +90,13 @@ func doFrame(f *FrameObject) bool {
 	return result
 }
 
-// QuitCloseFiles closes all files during quit
-// THIS ROUTINE DOES BOTH THE NORMAL "Q" COMMAND, AND ALSO IS CALLED AS PART
-// OF THE LUDWIG "PROG_WINDUP" SEQUENCE. THUS BY TYPING "^Y EXIT" USERS MAY
-// SAFELY ABORT LUDWIG AND NOT LOSE ANY FILES.
-func QuitCloseFiles() {
+func closeAllFiles() {
 	nextSpan := FirstSpan
 	for nextSpan != nil {
 		nextFrame := nextSpan.Frame
 		if nextFrame != nil {
 			if !doFrame(nextFrame) {
-				goto l99
+				return
 			}
 		}
 		nextSpan = nextSpan.FLink
@@ -111,12 +107,20 @@ func QuitCloseFiles() {
 		for fileIndex := 1; fileIndex <= MaxFiles; fileIndex++ {
 			if Files[fileIndex] != nil {
 				if !FileCloseDelete(Files[fileIndex], false, true) {
-					goto l99
+					return
 				}
 			}
 		}
 	}
-l99:
+}
+
+// QuitCloseFiles closes all files during quit
+// THIS ROUTINE DOES BOTH THE NORMAL "Q" COMMAND, AND ALSO IS CALLED AS PART
+// OF THE LUDWIG "PROG_WINDUP" SEQUENCE. THUS BY TYPING "^Y EXIT" USERS MAY
+// SAFELY ABORT LUDWIG AND NOT LOSE ANY FILES.
+func QuitCloseFiles() {
+	closeAllFiles()
+
 	// Now free up the VDU, thus re-setting anything we have changed
 	if !VduFreeFlag { // Has it been called already?
 		VduFree()
