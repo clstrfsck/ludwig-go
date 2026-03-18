@@ -91,11 +91,7 @@ l9:
 	} else {
 		if cmdStatus {
 			CurrentFrame.TextModified = true
-			MarkCreate(
-				CurrentFrame.Dot.Line,
-				CurrentFrame.Dot.Col,
-				&CurrentFrame.Marks[MarkModified],
-			)
+			MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
 		}
 	}
@@ -116,7 +112,7 @@ func joinLines() bool {
 		defer MarkDestroy(&theOtherMark)
 		if TextRemove(theOtherMark, CurrentFrame.Dot) {
 			CurrentFrame.TextModified = true
-			return MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+			return MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 		}
 	}
 	return false
@@ -334,11 +330,7 @@ func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
 			CurrentFrame.Dot.Col = oldDotCol
 		} else if cmdStatus {
 			CurrentFrame.TextModified = true
-			MarkCreate(
-				CurrentFrame.Dot.Line,
-				CurrentFrame.Dot.Col,
-				&CurrentFrame.Marks[MarkModified],
-			)
+			MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
 		}
 	}

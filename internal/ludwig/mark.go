@@ -28,6 +28,10 @@ func removeFromMarks(markList *[]*MarkObject, mark *MarkObject) {
 	}
 }
 
+func MarkCopy(src *MarkObject, dst **MarkObject) bool {
+	return MarkCreate(src.Line, src.Col, dst)
+}
+
 // MarkCreate creates or moves a mark to the specified line and column.
 func MarkCreate(inLine *LineHdrObject, column int, mark **MarkObject) bool {
 	if *mark == nil {
