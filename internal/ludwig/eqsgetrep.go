@@ -449,11 +449,11 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 	var okay bool
 	result := false
 
-	if !MarkCopy(CurrentFrame.Dot, &oldDot) {
+	if !markCopy(CurrentFrame.Dot, &oldDot) {
 		goto l99
 	}
 	if CurrentFrame.Marks[MarkEquals] != nil {
-		if !MarkCopy(CurrentFrame.Marks[MarkEquals], &oldEquals) {
+		if !markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals) {
 			goto l99
 		}
 	}
@@ -552,27 +552,27 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				goto l99
 			}
 		}
-		if !MarkCopy(CurrentFrame.Dot, &oldDot) {
+		if !markCopy(CurrentFrame.Dot, &oldDot) {
 			goto l99
 		}
-		if !MarkCopy(CurrentFrame.Marks[MarkEquals], &oldEquals) {
+		if !markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals) {
 			goto l99
 		}
 		CurrentFrame.TextModified = true
-		if !MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
+		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
 			goto l99
 		}
 		count--
 	}
 l1:
-	if !MarkCopy(oldDot, &CurrentFrame.Dot) {
+	if !markCopy(oldDot, &CurrentFrame.Dot) {
 		goto l99
 	}
 	if !MarkDestroy(&oldDot) {
 		goto l99
 	}
 	if oldEquals != nil {
-		if !MarkCopy(oldEquals, &CurrentFrame.Marks[MarkEquals]) {
+		if !markCopy(oldEquals, &CurrentFrame.Marks[MarkEquals]) {
 			goto l99
 		}
 		if !MarkDestroy(&oldEquals) {

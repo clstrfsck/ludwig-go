@@ -127,7 +127,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		newCol -= 1
-		if !MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
+		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
 			return false
 		}
 	} else if count < 0 {
@@ -147,11 +147,11 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		newCol += 2
-		if !MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
+		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
 			return false
 		}
 	} else {
-		return MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+		return markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
 	}
 
 	// Found it, move dot to new point

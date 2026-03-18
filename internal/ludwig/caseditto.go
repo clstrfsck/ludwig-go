@@ -203,7 +203,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		CurrentFrame.Dot.Col = oldDotCol
 	} else if cmdStatus {
 		CurrentFrame.TextModified = true
-		MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 		MarkCreate(
 			CurrentFrame.Dot.Line,
 			oldDotCol,

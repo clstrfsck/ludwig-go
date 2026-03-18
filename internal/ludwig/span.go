@@ -85,10 +85,10 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 		}
 	}
 
-	if !MarkCopy(firstMark, &mrk1) {
+	if !markCopy(firstMark, &mrk1) {
 		return false
 	}
-	if !MarkCopy(lastMark, &mrk2) {
+	if !markCopy(lastMark, &mrk2) {
 		return false
 	}
 

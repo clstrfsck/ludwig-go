@@ -122,7 +122,7 @@ func ExecuteImmed() {
 					}
 					if cmdSuccess {
 						CurrentFrame.TextModified = true
-						if !MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
+						if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
 							cmdSuccess = false
 						}
 						if !MarkCreate(

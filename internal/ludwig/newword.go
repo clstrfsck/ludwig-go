@@ -127,11 +127,11 @@ func previousWord(dot *MarkObject) bool {
 func NewwordAdvanceWord(rept LeadParam, count int) bool {
 	result := false
 	var newDot *MarkObject
-	if !MarkCopy(CurrentFrame.Dot, &newDot) {
+	if !markCopy(CurrentFrame.Dot, &newDot) {
 		return false
 	}
 	if rept == LeadParamMarker {
-		if !MarkCopy(CurrentFrame.Marks[count], &newDot) {
+		if !markCopy(CurrentFrame.Marks[count], &newDot) {
 			goto l98
 		}
 		rept = LeadParamNInt
@@ -149,7 +149,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		if !MarkCopy(newDot, &CurrentFrame.Dot) {
+		if !markCopy(newDot, &CurrentFrame.Dot) {
 			goto l98
 		}
 
@@ -164,7 +164,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		if !MarkCopy(newDot, &CurrentFrame.Dot) {
+		if !markCopy(newDot, &CurrentFrame.Dot) {
 			goto l98
 		}
 
@@ -184,7 +184,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 			newDot.Col = newDot.Line.Used
 		}
 		for nextWord(newDot) {
-			if !MarkCopy(newDot, &CurrentFrame.Dot) {
+			if !markCopy(newDot, &CurrentFrame.Dot) {
 				goto l98
 			}
 		}
@@ -203,11 +203,11 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 		if !currentWord(newDot) {
 			goto l98
 		}
-		if !MarkCopy(newDot, &CurrentFrame.Dot) {
+		if !markCopy(newDot, &CurrentFrame.Dot) {
 			goto l98
 		}
 		for previousWord(newDot) {
-			if !MarkCopy(newDot, &CurrentFrame.Dot) {
+			if !markCopy(newDot, &CurrentFrame.Dot) {
 				goto l98
 			}
 		}
@@ -232,7 +232,7 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	var newLineNr int
 	var oldDotCol int
 
-	if !MarkCopy(CurrentFrame.Dot, &oldPos) {
+	if !markCopy(CurrentFrame.Dot, &oldPos) {
 		goto l99
 	}
 	// First Step: Get to the beginning of the word if we are in the middle of it
@@ -240,18 +240,18 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 		goto l99
 	}
 	// ASSERTION: We are on the beginning of a word
-	if !MarkCopy(CurrentFrame.Dot, &here) {
+	if !markCopy(CurrentFrame.Dot, &here) {
 		goto l99
 	}
 	if !NewwordAdvanceWord(rept, count) {
 		// Put Dot back and bail out
-		if !MarkCopy(oldPos, &CurrentFrame.Dot) {
+		if !markCopy(oldPos, &CurrentFrame.Dot) {
 			goto l99
 		}
 	}
 	// OK. We now wipe out everything from Dot to here
 	oldDotCol = CurrentFrame.Dot.Col
-	if !MarkCopy(CurrentFrame.Dot, &theOtherMark) {
+	if !markCopy(CurrentFrame.Dot, &theOtherMark) {
 		goto l99
 	}
 	if !LineToNumber(theOtherMark.Line, &lineNr) {
@@ -381,11 +381,11 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 	result := false
 	var newDot *MarkObject
 
-	if !MarkCopy(CurrentFrame.Dot, &newDot) {
+	if !markCopy(CurrentFrame.Dot, &newDot) {
 		return false
 	}
 	if rept == LeadParamMarker {
-		if !MarkCopy(CurrentFrame.Marks[count], &newDot) {
+		if !markCopy(CurrentFrame.Marks[count], &newDot) {
 			goto l98
 		}
 		rept = LeadParamNInt
@@ -403,7 +403,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		if !MarkCopy(newDot, &CurrentFrame.Dot) {
+		if !markCopy(newDot, &CurrentFrame.Dot) {
 			goto l98
 		}
 
@@ -424,7 +424,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		if !MarkCopy(newDot, &CurrentFrame.Dot) {
+		if !markCopy(newDot, &CurrentFrame.Dot) {
 			goto l98
 		}
 
@@ -478,7 +478,7 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	var lineNr int
 	var newLineNr int
 
-	if !MarkCopy(CurrentFrame.Dot, &oldPos) {
+	if !markCopy(CurrentFrame.Dot, &oldPos) {
 		goto l99
 	}
 	// Get to the beginning of the paragraph
@@ -490,7 +490,7 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	}
 	if !NewwordAdvanceParagraph(rept, count) {
 		// Something wrong so put dot back and abort
-		MarkCopy(oldPos, &CurrentFrame.Dot)
+		markCopy(oldPos, &CurrentFrame.Dot)
 		goto l99
 	}
 

@@ -624,7 +624,7 @@ func WordSqueeze(rept LeadParam, count int) bool {
 			goto cleanup
 		}
 		CurrentFrame.TextModified = true
-		if !MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
+		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
 			goto cleanup
 		}
 	}
@@ -823,7 +823,7 @@ func WordLeft(rept LeadParam, count int) bool {
 			goto cleanup
 		}
 		CurrentFrame.TextModified = true
-		if !MarkCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
+		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
 			goto cleanup
 		}
 	}
@@ -1003,26 +1003,26 @@ func WordDeleteWord(rept LeadParam, count int) bool {
 		ScreenMessage(MsgSyntaxError)
 		goto cleanup
 	}
-	if !MarkCopy(CurrentFrame.Dot, &oldPos) {
+	if !markCopy(CurrentFrame.Dot, &oldPos) {
 		goto cleanup
 	}
 	// Get to beginning of word if in middle
 	if !WordAdvanceWord(LeadParamPInt, 0) {
 		goto cleanup
 	}
-	if !MarkCopy(CurrentFrame.Dot, &here) {
+	if !markCopy(CurrentFrame.Dot, &here) {
 		goto cleanup
 	}
 	if !WordAdvanceWord(rept, count) {
 		// Put dot back and bail out
-		if !MarkCopy(oldPos, &CurrentFrame.Dot) {
+		if !markCopy(oldPos, &CurrentFrame.Dot) {
 			goto cleanup
 		}
 		goto cleanup
 	}
 	// Wipe out everything from dot to here
 	oldDotCol = CurrentFrame.Dot.Col
-	if !MarkCopy(CurrentFrame.Dot, &theOtherMark) {
+	if !markCopy(CurrentFrame.Dot, &theOtherMark) {
 		goto cleanup
 	}
 	if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {

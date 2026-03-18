@@ -14,6 +14,12 @@
 
 package ludwig
 
+// MarkObject represents a mark in the editor
+type MarkObject struct {
+	Line *LineHdrObject
+	Col  int
+}
+
 // removeFromMarks removes a mark from a mark list.
 func removeFromMarks(markList *[]*MarkObject, mark *MarkObject) {
 	if markList == nil || len(*markList) == 0 {
@@ -28,7 +34,8 @@ func removeFromMarks(markList *[]*MarkObject, mark *MarkObject) {
 	}
 }
 
-func MarkCopy(src *MarkObject, dst **MarkObject) bool {
+// markCopy copies src into dst, updating line links.
+func markCopy(src *MarkObject, dst **MarkObject) bool {
 	return MarkCreate(src.Line, src.Col, dst)
 }
 

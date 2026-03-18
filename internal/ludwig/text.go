@@ -64,7 +64,7 @@ func TextRealizeNull(oldNull *LineHdrObject) bool {
 		if LinesInject(newNull, newNull, oldNull) {
 			if MarksShift(oldNull, 1, MaxStrLenP, newNull, 1) {
 				newNull.Group.Frame.TextModified = true
-				if MarkCopy(newNull.Group.Frame.Dot, &newNull.Group.Frame.Marks[MarkModified]) {
+				if markCopy(newNull.Group.Frame.Dot, &newNull.Group.Frame.Marks[MarkModified]) {
 					return true
 				}
 			}
@@ -846,12 +846,12 @@ func TextMove(
 		}
 		if !copy {
 			markTwo.Line.Group.Frame.TextModified = true
-			if !MarkCopy(markTwo, &markTwo.Line.Group.Frame.Marks[MarkModified]) {
+			if !markCopy(markTwo, &markTwo.Line.Group.Frame.Marks[MarkModified]) {
 				return false
 			}
 		}
 		(*newEnd).Line.Group.Frame.TextModified = true
-		if !MarkCopy(*newEnd, &(*newEnd).Line.Group.Frame.Marks[MarkModified]) {
+		if !markCopy(*newEnd, &(*newEnd).Line.Group.Frame.Marks[MarkModified]) {
 			return false
 		}
 	}
