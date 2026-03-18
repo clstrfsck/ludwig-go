@@ -353,12 +353,6 @@ type FileObject struct {
 	Versions int
 }
 
-// MarkObject represents a mark in the editor
-type MarkObject struct {
-	Line *LineHdrObject
-	Col  int
-}
-
 // MarkArray represents an array of mark pointers
 type MarkArray [MaxMarkNumber + 1]*MarkObject
 

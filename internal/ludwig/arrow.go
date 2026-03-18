@@ -93,11 +93,11 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 	}
 
 	if TtControlC {
-		MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
+		markCopy(&oldDot, &CurrentFrame.Dot)
 	} else {
 		// Define Equals.
 		if cmdStatus {
-			MarkCreate(newEql.Line, newEql.Col, &CurrentFrame.Marks[MarkEquals])
+			markCopy(&newEql, &CurrentFrame.Marks[MarkEquals])
 			if (command == CmdDown) && (rept != LeadParamPIndef) &&
 				(CurrentFrame.Dot.Line.FLink == nil) {
 				cmdStatus = false

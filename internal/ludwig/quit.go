@@ -28,8 +28,7 @@ func QuitCommand() bool {
 				if newSpan.Frame.TextModified && newSpan.Frame.OutputFile == 0 &&
 					newSpan.Frame.InputFile != 0 {
 					CurrentFrame = newSpan.Frame
-					mm := newSpan.Frame.Marks[MarkModified]
-					MarkCreate(mm.Line, mm.Col, &newSpan.Frame.Dot)
+					markCopy(newSpan.Frame.Marks[MarkModified], &newSpan.Frame.Dot)
 					if LudwigMode == LudwigScreen {
 						ScreenFixup()
 					}
