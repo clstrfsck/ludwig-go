@@ -122,9 +122,7 @@ var FileData FileDataType
 var TerminalInfo TerminalInfoType
 
 func SetRegularTabStops(width int) {
-	if width < 2 || width > 8 {
-		return
-	}
+	width = min(8, max(2, width))
 	for i := range DefaultTabStops {
 		DefaultTabStops[i] = (i % width) == 1
 	}

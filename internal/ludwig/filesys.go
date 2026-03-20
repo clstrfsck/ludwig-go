@@ -251,6 +251,8 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 // Attempts to read MAX_STRLEN characters into buffer
 // Number of characters read is returned in outlen
 func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
+	tabWidth := min(8, max(2, FileData.TabWidth))
+
 	*outlen = 0
 	for {
 		r, _, err := fyle.Reader.ReadRune()
@@ -265,7 +267,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 			break
 		}
 		if r == '\t' {
-			exp := FileData.TabWidth - (*outlen % FileData.TabWidth)
+			exp := tabWidth - (*outlen % tabWidth)
 			if *outlen+exp > MaxStrLen {
 				exp = MaxStrLen - *outlen
 			}
@@ -309,6 +311,7 @@ func FilesysRewind(fyle *FileObject) bool {
 // FilesysWrite writes a line to a file
 // Attempts to write bufsiz characters from buffer to the file
 func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
+	tabWidth := min(8, max(2, FileData.TabWidth))
 	if bufsiz > 0 {
 		offset := 0
 		tabs := 0
@@ -321,8 +324,8 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				}
 				i += 1
 			}
-			tabs = (i - 1) / FileData.TabWidth
-			offset = tabs * (FileData.TabWidth - 1)
+			tabs = (i - 1) / tabWidth
+			offset = tabs * (tabWidth - 1)
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, '\t')
 			}
