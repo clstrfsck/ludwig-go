@@ -1025,12 +1025,8 @@ func WordDeleteWord(rept LeadParam, count int) bool {
 	if !markCopy(CurrentFrame.Dot, &theOtherMark) {
 		goto cleanup
 	}
-	if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
-		goto cleanup
-	}
-	if !LineToNumber(here.Line, &newLineNr) {
-		goto cleanup
-	}
+	lineNr = LineToNumber(CurrentFrame.Dot.Line)
+	newLineNr = LineToNumber(here.Line)
 	if (lineNr > newLineNr) ||
 		((lineNr == newLineNr) && (CurrentFrame.Dot.Col > here.Col)) {
 		// Reverse mark pointers

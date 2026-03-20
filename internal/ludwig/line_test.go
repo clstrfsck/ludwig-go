@@ -140,10 +140,8 @@ func TestLineToNumber(t *testing.T) {
 		frame := createTestFrame()
 		group := createTestGroup(frame, 1, 5)
 
-		var lineNr int
-		result := LineToNumber(group.FirstLine, &lineNr)
+		lineNr := LineToNumber(group.FirstLine)
 
-		assert.True(t, result, "LineToNumber returned false")
 		assert.Equal(t, 1, lineNr, "Expected line number 1")
 	})
 
@@ -151,10 +149,8 @@ func TestLineToNumber(t *testing.T) {
 		frame := createTestFrame()
 		group := createTestGroup(frame, 10, 5)
 
-		var lineNr int
-		result := LineToNumber(group.LastLine, &lineNr)
+		lineNr := LineToNumber(group.LastLine)
 
-		assert.True(t, result, "LineToNumber returned false")
 		assert.Equal(t, 14, lineNr, "Expected line number 14")
 	})
 
@@ -168,10 +164,8 @@ func TestLineToNumber(t *testing.T) {
 			line = line.FLink
 		}
 
-		var lineNr int
-		result := LineToNumber(line, &lineNr)
+		lineNr := LineToNumber(line)
 
-		assert.True(t, result, "LineToNumber returned false")
 		assert.Equal(t, 105, lineNr, "Expected line number 105")
 	})
 
@@ -181,10 +175,8 @@ func TestLineToNumber(t *testing.T) {
 		group2 := createTestGroup(frame, 11, 10)
 		linkGroups(group1, group2)
 
-		var lineNr int
-		result := LineToNumber(group2.FirstLine, &lineNr)
+		lineNr := LineToNumber(group2.FirstLine)
 
-		assert.True(t, result, "LineToNumber returned false")
 		assert.Equal(t, 11, lineNr, "Expected line number 11")
 	})
 }
@@ -198,10 +190,8 @@ func TestLineFromNumber(t *testing.T) {
 		frame.FirstGroup = group
 		frame.LastGroup = group
 
-		var line *LineHdrObject
-		result := LineFromNumber(frame, 1, &line)
+		line := LineFromNumber(frame, 1)
 
-		assert.True(t, result, "LineFromNumber returned false")
 		assert.Equal(t, group.FirstLine, line, "Did not return first line")
 	})
 
@@ -211,10 +201,8 @@ func TestLineFromNumber(t *testing.T) {
 		frame.FirstGroup = group
 		frame.LastGroup = group
 
-		var line *LineHdrObject
-		result := LineFromNumber(frame, 10, &line)
+		line := LineFromNumber(frame, 10)
 
-		assert.True(t, result, "LineFromNumber returned false")
 		assert.Equal(t, group.LastLine, line, "Did not return last line")
 	})
 
@@ -224,10 +212,8 @@ func TestLineFromNumber(t *testing.T) {
 		frame.FirstGroup = group
 		frame.LastGroup = group
 
-		var line *LineHdrObject
-		result := LineFromNumber(frame, 5, &line)
+		line := LineFromNumber(frame, 5)
 
-		assert.True(t, result, "LineFromNumber returned false")
 		assert.Equal(t, 4, line.OffsetNr, "Expected offset 4")
 	})
 
@@ -239,10 +225,8 @@ func TestLineFromNumber(t *testing.T) {
 		frame.FirstGroup = group1
 		frame.LastGroup = group2
 
-		var line *LineHdrObject
-		result := LineFromNumber(frame, 15, &line)
+		line := LineFromNumber(frame, 15)
 
-		assert.True(t, result, "LineFromNumber returned false")
 		assert.Equal(t, group2, line.Group, "Line not in second group")
 		assert.Equal(t, 4, line.OffsetNr, "Expected offset 4")
 	})
@@ -253,10 +237,8 @@ func TestLineFromNumber(t *testing.T) {
 		frame.FirstGroup = group
 		frame.LastGroup = group
 
-		var line *LineHdrObject
-		result := LineFromNumber(frame, 20, &line)
+		line := LineFromNumber(frame, 20)
 
-		assert.True(t, result, "LineFromNumber returned false")
 		assert.Nil(t, line, "Expected nil for out-of-range line number")
 	})
 
@@ -270,10 +252,8 @@ func TestLineFromNumber(t *testing.T) {
 		frame.FirstGroup = group1
 		frame.LastGroup = group3
 
-		var line *LineHdrObject
-		result := LineFromNumber(frame, 60, &line)
+		line := LineFromNumber(frame, 60)
 
-		assert.True(t, result, "LineFromNumber returned false")
 		assert.Equal(t, group3, line.Group, "Line not in third group")
 		assert.Equal(t, 9, line.OffsetNr, "Expected offset 9")
 	})
@@ -689,11 +669,10 @@ func TestLinesInject_Basic(t *testing.T) {
 		validateFrameStructure(t, frame)
 
 		// Check line numbers
-		var lineNr int
-		LineToNumber(firstLine, &lineNr)
+		lineNr := LineToNumber(firstLine)
 		assert.Equal(t, 1, lineNr, "First injected line should be line 1")
 
-		LineToNumber(beforeLine, &lineNr)
+		lineNr = LineToNumber(beforeLine)
 		assert.Equal(t, 4, lineNr, "EOP line should now be line 4")
 
 		// Check space was updated

@@ -140,26 +140,46 @@ func SyntaxDetectHeader(header []byte) *highlight.Highlighter {
 // extension of the file, or if no match based on the contents of an optionally
 // specified first line of a file.
 func SetupSyntaxHighlighting(frame *FrameObject) {
-	if syntaxEnabled {
-		filename := Files[frame.InputFile].Filename
-		if filename != "" {
-			if h := SyntaxDetectFilename(filename); h != nil {
-				SyntaxAttach(frame, h)
-				SyntaxHighlightFrame(frame, h)
-				return
-			}
+	if !syntaxEnabled {
+		return
+	}
+
+	if frame.InputFile <= 0 {
+		clearFrameHighlighting(frame)
+		return
+	}
+
+	// If a highlighter is already attached, we should just re-apply it unless
+	// we are at the start of a file.  This avoids changing or detaching the
+	// highlighter when paging changes the first visible line, but also allows
+	// for loading new files into the frame.
+	inputFile := Files[frame.InputFile]
+	if frame.Highlighter != nil {
+		lastLine := frame.LastGroup.LastLine
+		if LineToNumber(lastLine) < inputFile.LCounter+1 {
+			SyntaxHighlightFrame(frame, frame.Highlighter)
+			return
 		}
-		firstLine := frame.FirstGroup.FirstLine
-		lineContents := firstLine.Str.Slice(1, firstLine.Used)
-		if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
+	}
+
+	filename := inputFile.Filename
+	if filename != "" {
+		if h := SyntaxDetectFilename(filename); h != nil {
 			SyntaxAttach(frame, h)
 			SyntaxHighlightFrame(frame, h)
 			return
 		}
-
-		// No highlighter.  Make sure we remove existing.
-		clearFrameHighlighting(frame)
 	}
+	firstLine := frame.FirstGroup.FirstLine
+	lineContents := firstLine.Str.Slice(1, firstLine.Used)
+	if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
+		SyntaxAttach(frame, h)
+		SyntaxHighlightFrame(frame, h)
+		return
+	}
+
+	// No highlighter.  Make sure we remove existing.
+	clearFrameHighlighting(frame)
 }
 
 // clearFrameHighlighting removes any per-line syntax highlighting state from

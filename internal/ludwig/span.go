@@ -92,23 +92,20 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 		return false
 	}
 
-	var lineNrFirst int
-	var lineNrLast int
-	if LineToNumber(mrk1.Line, &lineNrFirst) && LineToNumber(mrk2.Line, &lineNrLast) {
-		ptr.Frame = nil
-		if (lineNrFirst < lineNrLast) ||
-			((lineNrFirst == lineNrLast) && (mrk1.Col < mrk2.Col)) {
-			// Marks are in the right order
-			ptr.MarkOne = mrk1
-			ptr.MarkTwo = mrk2
-		} else {
-			// Marks are in reverse order
-			ptr.MarkOne = mrk2
-			ptr.MarkTwo = mrk1
-		}
-		return true
+	lineNrFirst := LineToNumber(mrk1.Line)
+	lineNrLast := LineToNumber(mrk2.Line)
+	ptr.Frame = nil
+	if (lineNrFirst < lineNrLast) ||
+		((lineNrFirst == lineNrLast) && (mrk1.Col < mrk2.Col)) {
+		// Marks are in the right order
+		ptr.MarkOne = mrk1
+		ptr.MarkTwo = mrk2
+	} else {
+		// Marks are in reverse order
+		ptr.MarkOne = mrk2
+		ptr.MarkTwo = mrk1
 	}
-	return false
+	return true
 }
 
 // SpanDestroy destroys the specified span.

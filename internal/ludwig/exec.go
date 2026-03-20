@@ -49,13 +49,8 @@ func ExecComputeLineRange(
 				goto l99
 			}
 		} else {
-			var lineNr int
-			if !LineToNumber(*firstLine, &lineNr) {
-				goto l99
-			}
-			if !LineFromNumber(frame, lineNr+count-1, lastLine) {
-				goto l99
-			}
+			lineNr := LineToNumber(*firstLine)
+			*lastLine = LineFromNumber(frame, lineNr+count-1)
 			if *lastLine == nil {
 				goto l99
 			}
@@ -78,17 +73,12 @@ func ExecComputeLineRange(
 				}
 			}
 		} else {
-			var lineNr int
-			if !LineToNumber(*lastLine, &lineNr) {
-				goto l99
-			}
+			lineNr := LineToNumber(*lastLine)
 			if count > lineNr {
 				goto l99
 			}
 			lineNr = lineNr - count + 1
-			if !LineFromNumber(frame, lineNr, firstLine) {
-				goto l99
-			}
+			*firstLine = LineFromNumber(frame, lineNr)
 		}
 
 	case LeadParamPIndef:
@@ -116,14 +106,8 @@ func ExecComputeLineRange(
 		} else if markLine.BLink == *firstLine {
 			*lastLine = *firstLine
 		} else { // DO IT THE HARD WAY!
-			var markLineNr int
-			if !LineToNumber(markLine, &markLineNr) {
-				goto l99
-			}
-			var lineNr int
-			if !LineToNumber(frame.Dot.Line, &lineNr) {
-				goto l99
-			}
+			markLineNr := LineToNumber(markLine)
+			lineNr := LineToNumber(frame.Dot.Line)
 			if markLineNr < lineNr {
 				*firstLine = markLine
 				*lastLine = (*lastLine).BLink
@@ -221,12 +205,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					}
 				}
 			} else {
-				if !LineToNumber(newLine, &lineNr) {
-					goto l99
-				}
-				if !LineFromNumber(CurrentFrame, lineNr+count, &newLine) {
-					goto l99
-				}
+				lineNr = LineToNumber(newLine)
+				newLine = LineFromNumber(CurrentFrame, lineNr+count)
 				if newLine == nil {
 					goto l99
 				}
@@ -248,15 +228,11 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					}
 				}
 			} else {
-				if !LineToNumber(newLine, &lineNr) {
-					goto l99
-				}
+				lineNr = LineToNumber(newLine)
 				if count >= lineNr {
 					goto l99
 				}
-				if !LineFromNumber(CurrentFrame, lineNr-count, &newLine) {
-					goto l99
-				}
+				newLine = LineFromNumber(CurrentFrame, lineNr-count)
 				if newLine == nil {
 					goto l99
 				}
@@ -291,12 +267,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			cmdSuccess = CharcmdDelete(rept, count, fromSpan)
 		} else {
 			theOtherMark = CurrentFrame.Dot
-			if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
-				goto l99
-			}
-			if !LineToNumber(theMark.Line, &line2Nr) {
-				goto l99
-			}
+			lineNr = LineToNumber(CurrentFrame.Dot.Line)
+			line2Nr = LineToNumber(theMark.Line)
 			if lineNr > line2Nr || (lineNr == line2Nr && CurrentFrame.Dot.Col > theMark.Col) {
 				// Reverse mark pointers to get theOtherMark first
 				anotherMark = theMark
@@ -445,8 +417,9 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					} else {
 						cmdSuccess = (CurrentFrame.Dot.Col <= CurrentFrame.Marks[j].Col)
 					}
-				} else if LineToNumber(CurrentFrame.Dot.Line, &lineNr) &&
-					LineToNumber(CurrentFrame.Marks[j].Line, &line2Nr) {
+				} else {
+					lineNr = LineToNumber(CurrentFrame.Dot.Line)
+					line2Nr = LineToNumber(CurrentFrame.Marks[j].Line)
 					if rept == LeadParamPIndef {
 						cmdSuccess = (lineNr >= line2Nr)
 					} else {
@@ -874,9 +847,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		cmdSuccess = true
 
 	case CmdPositionLine:
-		if !LineFromNumber(CurrentFrame, count, &newLine) {
-			goto l99
-		}
+		newLine = LineFromNumber(CurrentFrame, count)
 		if newLine == nil {
 			goto l99
 		}

@@ -407,7 +407,7 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		if !FileRead(Files[currentFrame.InputFile], 50, true, &firstLine, &lastLine, &i) {
 			return false
 		}
-		currentFrame.InputCount += uint32(i)
+		currentFrame.InputCount += uint64(i)
 
 		if firstLine == nil {
 			goto l98
@@ -423,8 +423,8 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 			}
 		}
 	}
-	SetupSyntaxHighlighting(currentFrame)
 l98:
+	SetupSyntaxHighlighting(currentFrame)
 	if currentFrame.InputFile != 0 {
 		FileFixEOP(Files[currentFrame.InputFile].Eof, currentFrame.LastGroup.LastLine)
 	}
@@ -862,10 +862,10 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		var nrLines int
 		if last == nil {
 			nrLines = 0
-		} else if !LineToNumber(last, &nrLines) {
-			nrLines = 0
+		} else {
+			nrLines = LineToNumber(last)
 		}
-		CurrentFrame.InputCount = uint32(Files[CurrentFrame.OutputFile].LCounter + nrLines)
+		CurrentFrame.InputCount = uint64(Files[CurrentFrame.OutputFile].LCounter) + uint64(nrLines)
 		if CurrentFrame.InputFile != 0 {
 			Files[CurrentFrame.InputFile].LCounter = int(CurrentFrame.InputCount)
 		}

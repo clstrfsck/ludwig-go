@@ -110,10 +110,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) bool {
 	*newEql = *CurrentFrame.Dot
 	dotLine := CurrentFrame.Dot.Line
-	var lineNr int
-	if !LineToNumber(dotLine, &lineNr) {
-		return false
-	}
+	lineNr := LineToNumber(dotLine)
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if lineNr+count <= eopLineNr {
@@ -122,9 +119,7 @@ func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) boo
 					dotLine = dotLine.FLink
 				}
 			} else {
-				if !LineFromNumber(CurrentFrame, lineNr+count, &dotLine) {
-					return false
-				}
+				dotLine = LineFromNumber(CurrentFrame, lineNr+count)
 			}
 		}
 	case LeadParamPIndef:
@@ -201,10 +196,7 @@ func doCmdTabBacktab(step, count int, newEql *MarkObject) bool {
 func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 	*newEql = *CurrentFrame.Dot
 	dotLine := CurrentFrame.Dot.Line
-	var lineNr int
-	if !LineToNumber(dotLine, &lineNr) {
-		return false
-	}
+	lineNr := LineToNumber(dotLine)
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if lineNr-count > 0 {
@@ -213,9 +205,7 @@ func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 					dotLine = dotLine.BLink
 				}
 			} else {
-				if !LineFromNumber(CurrentFrame, lineNr-count, &dotLine) {
-					return false
-				}
+				dotLine = LineFromNumber(CurrentFrame, lineNr-count)
 			}
 		} else {
 			return false

@@ -231,7 +231,7 @@ func ScreenScroll(count int, expand bool) {
 		// FORWARD DIRECTION
 		var botLineNr int
 		if expand {
-			LineToNumber(botLine, &botLineNr)
+			botLineNr = LineToNumber(botLine)
 			eopLineNr := ScrFrame.LastGroup.FirstLineNr + ScrFrame.LastGroup.LastLine.OffsetNr
 			remainingLines := eopLineNr - botLineNr
 			if remainingLines < count {
@@ -259,7 +259,7 @@ func ScreenScroll(count int, expand bool) {
 			if expand {
 				frame = ScrFrame
 				botLineNr += count
-				LineFromNumber(ScrFrame, botLineNr, &botLine)
+				botLine = LineFromNumber(ScrFrame, botLineNr)
 			}
 			ScreenUnload()
 			if expand {
@@ -300,7 +300,7 @@ func ScreenScroll(count int, expand bool) {
 		count = -count
 		var topLineNr int
 		if expand {
-			LineToNumber(topLine, &topLineNr)
+			topLineNr = LineToNumber(topLine)
 			remainingLines := topLineNr - 1
 			if remainingLines < count {
 				count = remainingLines
@@ -329,7 +329,7 @@ func ScreenScroll(count int, expand bool) {
 			if expand {
 				frame = ScrFrame
 				topLineNr -= count
-				LineFromNumber(ScrFrame, topLineNr, &tmpTopLine)
+				tmpTopLine = LineFromNumber(ScrFrame, topLineNr)
 			}
 			ScreenUnload()
 			if expand {
@@ -435,13 +435,11 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 			}
 		}
 		if initUpwards && linesOnScr < height {
-			var nrLines int
-			if LineToNumber(ScrTopLine, &nrLines) {
-				if nrLines >= height-linesOnScr {
-					nrLines = height - linesOnScr
-				}
-				ScreenScroll(-nrLines, true)
+			nrLines := LineToNumber(ScrTopLine)
+			if nrLines >= height-linesOnScr {
+				nrLines = height - linesOnScr
 			}
+			ScreenScroll(-nrLines, true)
 		}
 	}
 
@@ -676,8 +674,7 @@ func ScreenLoad(line *LineHdrObject) {
 		}
 
 		newRow := frame.ScrDotLine
-		var lineNr int
-		LineToNumber(line, &lineNr)
+		lineNr := LineToNumber(line)
 		eopLineNr := frame.LastGroup.FirstLineNr + frame.LastGroup.NrLines - 1
 		if (eopLineNr - lineNr) < (TerminalInfo.Height - newRow) {
 			newRow = TerminalInfo.Height - (eopLineNr - lineNr)
@@ -767,10 +764,9 @@ func ScreenPosition(newLine *LineHdrObject, newCol int) {
 				(newLine.ScrRowNr-ScrTopLine.ScrRowNr < topMargin && ScrTopLine.BLink != nil) ||
 				(ScrBotLine.ScrRowNr-newLine.ScrRowNr < botMargin && ScrBotLine.FLink != nil)) {
 
-			var botLineNr, newLineNr, topLineNr int
-			LineToNumber(botLine, &botLineNr)
-			LineToNumber(newLine, &newLineNr)
-			LineToNumber(topLine, &topLineNr)
+			botLineNr := LineToNumber(botLine)
+			newLineNr := LineToNumber(newLine)
+			topLineNr := LineToNumber(topLine)
 
 			scrollState = scrollRedraw
 			if newLineNr < topLineNr ||

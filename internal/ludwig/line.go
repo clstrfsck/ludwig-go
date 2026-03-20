@@ -442,28 +442,24 @@ func LineChangeLength(line *LineHdrObject, newLength int) bool {
 }
 
 // LineToNumber determines the line number of a given line
-func LineToNumber(line *LineHdrObject, number *int) bool {
-	*number = line.Group.FirstLineNr + line.OffsetNr
-	return true
+func LineToNumber(line *LineHdrObject) int {
+	return line.Group.FirstLineNr + line.OffsetNr
 }
 
 // LineFromNumber finds the line with a given line number in a given frame
-func LineFromNumber(frame *FrameObject, number int, line **LineHdrObject) bool {
+func LineFromNumber(frame *FrameObject, number int) *LineHdrObject {
 	thisGroup := frame.LastGroup
 
 	if number >= thisGroup.FirstLineNr+thisGroup.NrLines {
-		*line = nil
-	} else {
-		for thisGroup.FirstLineNr > number {
-			thisGroup = thisGroup.BLink
-		}
-
-		thisLine := thisGroup.FirstLine
-		for lineNr := 1; lineNr <= number-thisGroup.FirstLineNr; lineNr++ {
-			thisLine = thisLine.FLink
-		}
-		*line = thisLine
+		return nil
+	}
+	for thisGroup.FirstLineNr > number {
+		thisGroup = thisGroup.BLink
 	}
 
-	return true
+	thisLine := thisGroup.FirstLine
+	for lineNr := 1; lineNr <= number-thisGroup.FirstLineNr; lineNr++ {
+		thisLine = thisLine.FLink
+	}
+	return thisLine
 }
