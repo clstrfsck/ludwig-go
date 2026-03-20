@@ -191,11 +191,9 @@ func clearFrameHighlighting(frame *FrameObject) {
 	if frame == nil {
 		return
 	}
-	for g := frame.FirstGroup; g != nil; g = g.FLink {
-		for line := g.FirstLine; line != nil; line = line.FLink {
-			line.HlMatch = nil
-			line.HlState = nil
-		}
+	for line := frame.FirstGroup.FirstLine; line != nil; line = line.FLink {
+		line.HlMatch = nil
+		line.HlState = nil
 	}
 	frame.Highlighter = nil
 	frame.DirtyLine = 0
