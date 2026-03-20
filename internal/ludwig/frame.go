@@ -970,21 +970,14 @@ func FrameParameter(tpar *TParObject) bool {
 		ScreenWriteInt(CurrentFrame.SpaceLeft, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "The number of lines in this frame    =")
-		var temp int
-		if LineToNumber(CurrentFrame.LastGroup.LastLine, &temp) {
-			temp--
-		} else {
-			temp = 0
-		}
+		temp := LineToNumber(CurrentFrame.LastGroup.LastLine) - 1
 		ScreenWriteInt(temp, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Lines read from input file so far    =")
-		ScreenWriteInt(int(CurrentFrame.InputCount), 9)
+		ScreenWriteInt(CurrentFrame.InputCount, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Current Line number in this frame    =")
-		if !LineToNumber(CurrentFrame.Dot.Line, &temp) {
-			temp = 0
-		}
+		temp = LineToNumber(CurrentFrame.Dot.Line)
 		ScreenWriteInt(temp, 9)
 		ScreenWritelnClel()
 		ScreenWritelnClel()

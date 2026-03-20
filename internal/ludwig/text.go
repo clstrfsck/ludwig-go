@@ -579,9 +579,6 @@ func textInterMove(
 	var nextDstLine *LineHdrObject
 	var firstNicked *LineHdrObject
 	var lastNicked *LineHdrObject
-	var lineOneNr int
-	var lineTwoNr int
-	var lineDstNr int
 	var linesRequired int
 	var lastLineLength int
 	var tempLen int
@@ -598,20 +595,14 @@ func textInterMove(
 	colOne := markOne.Col
 	lineTwo := markTwo.Line
 	colTwo := markTwo.Col
-	if !LineToNumber(lineOne, &lineOneNr) {
-		goto cleanup
-	}
-	if !LineToNumber(lineTwo, &lineTwoNr) {
-		goto cleanup
-	}
+	lineOneNr := LineToNumber(lineOne)
+	lineTwoNr := LineToNumber(lineTwo)
 
 	// Predict dst.Col and dst.Line.Used just before insertion
 	dstCol = dst.Col
 	dstUsed = dst.Line.Used
 	if !copy && dst.Line.Group.Frame == lineOne.Group.Frame {
-		if !LineToNumber(dst.Line, &lineDstNr) {
-			goto cleanup
-		}
+		lineDstNr := LineToNumber(dst.Line)
 		if (lineOneNr <= lineDstNr) && (lineDstNr <= lineTwoNr) {
 			if (lineTwoNr == lineDstNr) && (dstCol >= colTwo) {
 				dstCol = colOne + dstCol - colTwo

@@ -254,12 +254,8 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	if !markCopy(CurrentFrame.Dot, &theOtherMark) {
 		goto l99
 	}
-	if !LineToNumber(theOtherMark.Line, &lineNr) {
-		goto l99
-	}
-	if !LineToNumber(here.Line, &newLineNr) {
-		goto l99
-	}
+	lineNr = LineToNumber(theOtherMark.Line)
+	newLineNr = LineToNumber(here.Line)
 	if (lineNr > newLineNr) || ((lineNr == newLineNr) && (theOtherMark.Col > here.Col)) {
 		// Reverse mark pointers to get The_Other_Mark first.
 		anotherMark := here
@@ -498,12 +494,8 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	if !MarkCreate(CurrentFrame.Dot.Line, 1, &theOtherMark) {
 		goto l99
 	}
-	if !LineToNumber(theOtherMark.Line, &lineNr) {
-		goto l99
-	}
-	if !LineToNumber(here.Line, &newLineNr) {
-		goto l99
-	}
+	lineNr = LineToNumber(theOtherMark.Line)
+	newLineNr = LineToNumber(here.Line)
 	if lineNr > newLineNr {
 		// reverse marks to get the_other_mark first.
 		anotherMark := here

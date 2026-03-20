@@ -18,15 +18,9 @@ package ludwig
 func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bool {
 	cmdSuccess := false
 
-	var lineNr int
-	var line2Nr int
-	var line3Nr int
-
 	switch command {
 	case CmdWindowBackward:
-		if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
-			break
-		}
+		lineNr := LineToNumber(CurrentFrame.Dot.Line)
 		if lineNr <= CurrentFrame.ScrHeight*count {
 			MarkCreate(
 				CurrentFrame.FirstGroup.FirstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot,
@@ -61,9 +55,7 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 		)
 
 	case CmdWindowForward:
-		if !LineToNumber(CurrentFrame.Dot.Line, &lineNr) {
-			break
-		}
+		lineNr := LineToNumber(CurrentFrame.Dot.Line)
 		lastGroup := CurrentFrame.LastGroup
 		dot := CurrentFrame.Dot
 		if lineNr+CurrentFrame.ScrHeight*count >
@@ -111,10 +103,10 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 	case CmdWindowMiddle:
 		cmdSuccess = true
 		if ScrFrame == CurrentFrame {
-			if LineToNumber(CurrentFrame.Dot.Line, &lineNr) &&
-				LineToNumber(ScrTopLine, &line2Nr) && LineToNumber(ScrBotLine, &line3Nr) {
-				ScreenScroll(lineNr-((line2Nr+line3Nr)/2), true)
-			}
+			lineNr := LineToNumber(CurrentFrame.Dot.Line)
+			line2Nr := LineToNumber(ScrTopLine)
+			line3Nr := LineToNumber(ScrBotLine)
+			ScreenScroll(lineNr-((line2Nr+line3Nr)/2), true)
 		}
 
 	case CmdWindowNew:

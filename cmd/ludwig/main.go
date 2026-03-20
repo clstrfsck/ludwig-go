@@ -624,22 +624,6 @@ func startUp(argv []string) bool {
 	if LudwigMode != LudwigBatch {
 		ScreenClearMsgs(false)
 	}
-	if CurrentFrame.InputFile > 0 && Files[CurrentFrame.InputFile] != nil {
-		if filename := Files[CurrentFrame.InputFile].Filename; filename != "" {
-			if h := SyntaxDetectFilename(filename); h != nil {
-				SyntaxAttach(CurrentFrame, h)
-				SyntaxHighlightFrame(CurrentFrame, h)
-			}
-		}
-		firstLine := CurrentFrame.FirstGroup.FirstLine
-		if firstLine != nil && firstLine.FLink != nil {
-			lineContents := firstLine.Str.Slice(1, firstLine.Used)
-			if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
-				SyntaxAttach(CurrentFrame, h)
-				SyntaxHighlightFrame(CurrentFrame, h)
-			}
-		}
-	}
 	if LudwigMode == LudwigScreen {
 		ScreenFixup()
 	}

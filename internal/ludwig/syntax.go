@@ -136,6 +136,69 @@ func SyntaxDetectHeader(header []byte) *highlight.Highlighter {
 	return nil
 }
 
+// SetupSyntaxHighlighting sets up syntax highlighting for a file based on the
+// extension of the file, or if no match based on the contents of an optionally
+// specified first line of a file.
+func SetupSyntaxHighlighting(frame *FrameObject) {
+	if !syntaxEnabled {
+		return
+	}
+
+	if frame.InputFile <= 0 {
+		clearFrameHighlighting(frame)
+		return
+	}
+
+	// If a highlighter is already attached, we should just re-apply it unless
+	// we are at the start of a file.  This avoids changing or detaching the
+	// highlighter when paging changes the first visible line, but also allows
+	// for loading new files into the frame.
+	inputFile := Files[frame.InputFile]
+	if frame.Highlighter != nil {
+		lastLine := frame.LastGroup.LastLine
+		if LineToNumber(lastLine) < inputFile.LCounter+1 {
+			SyntaxHighlightFrame(frame, frame.Highlighter)
+			return
+		}
+	}
+
+	filename := inputFile.Filename
+	if filename != "" {
+		if h := SyntaxDetectFilename(filename); h != nil {
+			SyntaxAttach(frame, h)
+			SyntaxHighlightFrame(frame, h)
+			return
+		}
+	}
+	firstLine := frame.FirstGroup.FirstLine
+	if firstLine.Str != nil {
+		lineContents := firstLine.Str.Slice(1, firstLine.Used)
+		if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
+			SyntaxAttach(frame, h)
+			SyntaxHighlightFrame(frame, h)
+			return
+		}
+	}
+
+	// No highlighter.  Make sure we remove existing.
+	clearFrameHighlighting(frame)
+}
+
+// clearFrameHighlighting removes any per-line syntax highlighting state from
+// all lines in the given frame. This is used when detaching a highlighter to
+// ensure stale highlighting does not remain visible.
+func clearFrameHighlighting(frame *FrameObject) {
+	if frame == nil {
+		return
+	}
+	for line := frame.FirstGroup.FirstLine; line != nil; line = line.FLink {
+		line.HlMatch = nil
+		line.HlState = nil
+	}
+	frame.Highlighter = nil
+	frame.DirtyLine = 0
+}
+
 // LudwigBuffer implements highlight.LineStates over a frame's line list
 // using lazy cursor-based navigation to avoid materialising the full line slice.
 type LudwigBuffer struct {
