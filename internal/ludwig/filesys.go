@@ -265,7 +265,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 			break
 		}
 		if r == '\t' {
-			exp := 8 - (*outlen % 8)
+			exp := FileData.TabWidth - (*outlen % FileData.TabWidth)
 			if *outlen+exp > MaxStrLen {
 				exp = MaxStrLen - *outlen
 			}
@@ -321,8 +321,8 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				}
 				i += 1
 			}
-			tabs = (i - 1) / 8
-			offset = tabs * 7
+			tabs = (i - 1) / FileData.TabWidth
+			offset = tabs * (FileData.TabWidth - 1)
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, '\t')
 			}
@@ -453,6 +453,7 @@ func FilesysParse(
 	space := fileData.Space
 	purge := fileData.Purge
 	versions := fileData.Versions
+	tabWidth := fileData.TabWidth
 
 	createFlag := false
 	readOnlyFlag := false
@@ -555,6 +556,13 @@ func FilesysParse(
 				entab = true
 			case 'T':
 				entab = false
+			case 'w':
+				if val, err := strconv.Atoi(optarg); err != nil || val < 2 || val > 8 {
+					errors += 1
+				} else {
+					tabWidth = val
+					optind += 1
+				}
 			case '?', 'u':
 				usageFlag = true
 			}
@@ -571,12 +579,13 @@ func FilesysParse(
 	}
 
 	if parseType == ParseCommand {
-		fileData.Initial = initialize
-		fileData.Space = space
-		fileData.Entab = entab
 		fileData.Highlighting = highlighting
+		fileData.Entab = entab
+		fileData.Space = space
+		fileData.Initial = initialize
 		fileData.Purge = purge
 		fileData.Versions = versions
+		fileData.TabWidth = tabWidth
 	} else if createFlag || readOnlyFlag || initialize != "" || spaceFlag || versionFlag {
 		return false
 	}
