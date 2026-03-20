@@ -118,7 +118,7 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 		uniq := 0
 		fyle.Tnm = fyle.Filename + "-lw"
 		for SysFileExists(fyle.Tnm) {
-			uniq++
+			uniq += 1
 			fyle.Tnm = fyle.Filename + "-lw" + strconv.Itoa(uniq)
 		}
 		f, err := os.OpenFile(fyle.Tnm, os.O_RDWR|os.O_CREATE, 0600)
@@ -270,7 +270,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				exp = MaxStrLen - *outlen
 			}
 			for ; exp > 0; exp-- {
-				*outlen++
+				*outlen += 1
 				outputBuffer.Set(*outlen, ' ')
 			}
 		} else if unicode.IsPrint(r) {
@@ -282,7 +282,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				break
 			}
 			for _, b := range runeBytes {
-				*outlen++
+				*outlen += 1
 				outputBuffer.Set(*outlen, b)
 			}
 		}
@@ -319,7 +319,7 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				if buffer.Get(i) != ' ' {
 					break
 				}
-				i++
+				i += 1
 			}
 			tabs = (i - 1) / 8
 			offset = tabs * 7
@@ -485,7 +485,7 @@ func FilesysParse(
 		if !strings.HasPrefix(arg, "-") {
 			break
 		}
-		optind++
+		optind += 1
 
 		for _, c := range arg[1:] {
 			optarg := ""
@@ -497,11 +497,11 @@ func FilesysParse(
 			case 'b':
 				val, err := strconv.Atoi(optarg)
 				if err != nil {
-					errors++
+					errors += 1
 				} else {
 					versions = val
 					purge = false
-					optind++
+					optind += 1
 				}
 			case 'B':
 				if val, err := strconv.Atoi(optarg); err != nil {
@@ -545,11 +545,11 @@ func FilesysParse(
 				}
 			case 's':
 				if val, err := strconv.Atoi(optarg); err != nil {
-					errors++
+					errors += 1
 				} else {
 					space = val
 					spaceFlag = true
-					optind++
+					optind += 1
 				}
 			case 't':
 				entab = true
@@ -588,7 +588,7 @@ func FilesysParse(
 			return false
 		}
 		file = append(file, argv[optind])
-		optind++
+		optind += 1
 	}
 
 	if len(file) == 2 {

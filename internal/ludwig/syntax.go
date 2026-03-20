@@ -137,22 +137,28 @@ func SyntaxDetectHeader(header []byte) *highlight.Highlighter {
 }
 
 // SetupSyntaxHighlighting sets up syntax highlighting for a file based on the
-// files extension, or if no match based on the contents of an optionally
+// extension of the file, or if no match based on the contents of an optionally
 // specified first line of a file.
-func SetupSyntaxHighlighting(filename string, firstLine string) {
+func SetupSyntaxHighlighting(frame *FrameObject) {
 	if syntaxEnabled {
+		filename := Files[frame.InputFile].Filename
 		if filename != "" {
 			if h := SyntaxDetectFilename(filename); h != nil {
-				SyntaxAttach(CurrentFrame, h)
-				SyntaxHighlightFrame(CurrentFrame, h)
+				SyntaxAttach(frame, h)
+				SyntaxHighlightFrame(frame, h)
 				return
 			}
 		}
-		if h := SyntaxDetectHeader([]byte(firstLine)); h != nil {
-			SyntaxAttach(CurrentFrame, h)
-			SyntaxHighlightFrame(CurrentFrame, h)
+		firstLine := frame.FirstGroup.FirstLine
+		lineContents := firstLine.Str.Slice(1, firstLine.Used)
+		if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
+			SyntaxAttach(frame, h)
+			SyntaxHighlightFrame(frame, h)
 			return
 		}
+
+		// No highlighter.  Make sure we remove existing.
+		SyntaxAttach(frame, nil)
 	}
 }
 

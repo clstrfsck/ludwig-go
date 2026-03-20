@@ -624,13 +624,6 @@ func startUp(argv []string) bool {
 	if LudwigMode != LudwigBatch {
 		ScreenClearMsgs(false)
 	}
-	if CurrentFrame.InputFile > 0 && Files[CurrentFrame.InputFile] != nil {
-		firstLine := CurrentFrame.FirstGroup.FirstLine
-		SetupSyntaxHighlighting(
-			Files[CurrentFrame.InputFile].Filename,
-			firstLine.Str.Slice(1, firstLine.Used),
-		)
-	}
 	if LudwigMode == LudwigScreen {
 		ScreenFixup()
 	}
