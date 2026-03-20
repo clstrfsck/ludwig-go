@@ -432,11 +432,12 @@ func FilesysParse(
 	input *FileObject,
 	output *FileObject,
 ) bool {
-	const usage = "usage : ludwig [-c] [-r] [-i value] [-I] " +
+	const usage = "usage: ludwig [-c] [-r] [-i value] [-I] " +
 		"[-s value] [-m file] [-M] [-t] [-T] " +
 		"[-b value] [-B value] [-o] [-O] [-u] " +
+		"[-w value] " +
 		"[file [file]]"
-	const fileUsage = "usage : [-m file] [-t] [-T] [-b value] " +
+	const fileUsage = "usage: [-m file] [-t] [-T] [-b value] " +
 		"[-B value] [file [file]]"
 
 	if parseType == ParseStdin {
