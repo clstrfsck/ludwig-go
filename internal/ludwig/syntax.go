@@ -136,6 +136,26 @@ func SyntaxDetectHeader(header []byte) *highlight.Highlighter {
 	return nil
 }
 
+// SetupSyntaxHighlighting sets up syntax highlighting for a file based on the
+// files extension, or if no match based on the contents of an optionally
+// specified first line of a file.
+func SetupSyntaxHighlighting(filename string, firstLine string) {
+	if syntaxEnabled {
+		if filename != "" {
+			if h := SyntaxDetectFilename(filename); h != nil {
+				SyntaxAttach(CurrentFrame, h)
+				SyntaxHighlightFrame(CurrentFrame, h)
+				return
+			}
+		}
+		if h := SyntaxDetectHeader([]byte(firstLine)); h != nil {
+			SyntaxAttach(CurrentFrame, h)
+			SyntaxHighlightFrame(CurrentFrame, h)
+			return
+		}
+	}
+}
+
 // LudwigBuffer implements highlight.LineStates over a frame's line list
 // using lazy cursor-based navigation to avoid materialising the full line slice.
 type LudwigBuffer struct {

@@ -504,17 +504,16 @@ func FilesysParse(
 					optind++
 				}
 			case 'B':
-				val, err := strconv.Atoi(optarg)
-				if err != nil {
-					errors++
+				if val, err := strconv.Atoi(optarg); err != nil {
+					errors += 1
 				} else {
 					versions = val
 					purge = true
-					optind++
+					optind += 1
 				}
 			case 'c':
 				if readOnlyFlag {
-					errors++
+					errors += 1
 				} else {
 					createFlag = true
 				}
@@ -524,12 +523,12 @@ func FilesysParse(
 				highlighting = false
 			case 'i':
 				initialize = optarg
-				optind++
+				optind += 1
 			case 'I':
 				initialize = ""
 			case 'm':
 				memory = optarg
-				optind++
+				optind += 1
 			case 'M':
 				memory = ""
 			case 'o':
@@ -540,13 +539,12 @@ func FilesysParse(
 				fileData.OldCmds = false
 			case 'r':
 				if createFlag {
-					errors++
+					errors += 1
 				} else {
 					readOnlyFlag = true
 				}
 			case 's':
-				val, err := strconv.Atoi(optarg)
-				if err != nil {
+				if val, err := strconv.Atoi(optarg); err != nil {
 					errors++
 				} else {
 					space = val
@@ -557,7 +555,7 @@ func FilesysParse(
 				entab = true
 			case 'T':
 				entab = false
-			case 'u':
+			case '?', 'u':
 				usageFlag = true
 			}
 		}

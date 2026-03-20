@@ -422,6 +422,11 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 				return false
 			}
 		}
+		firstLine := currentFrame.FirstGroup.FirstLine
+		SetupSyntaxHighlighting(
+			Files[currentFrame.InputFile].Filename,
+			firstLine.Str.Slice(1, firstLine.Used),
+		)
 	}
 l98:
 	if currentFrame.InputFile != 0 {
