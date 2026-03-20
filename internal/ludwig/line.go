@@ -450,16 +450,22 @@ func LineToNumber(line *LineHdrObject) int {
 func LineFromNumber(frame *FrameObject, number int) *LineHdrObject {
 	thisGroup := frame.LastGroup
 
-	if number >= thisGroup.FirstLineNr+thisGroup.NrLines {
+	if number >= thisGroup.FirstLineNr+thisGroup.NrLines || number < 1 {
 		return nil
 	}
 	for thisGroup.FirstLineNr > number {
 		thisGroup = thisGroup.BLink
+		if thisGroup == nil {
+			return nil
+		}
 	}
 
 	thisLine := thisGroup.FirstLine
 	for lineNr := 1; lineNr <= number-thisGroup.FirstLineNr; lineNr++ {
 		thisLine = thisLine.FLink
+		if thisLine == nil {
+			return nil
+		}
 	}
 	return thisLine
 }

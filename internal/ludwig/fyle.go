@@ -407,7 +407,7 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		if !FileRead(Files[currentFrame.InputFile], 50, true, &firstLine, &lastLine, &i) {
 			return false
 		}
-		currentFrame.InputCount += uint64(i)
+		currentFrame.InputCount += i
 
 		if firstLine == nil {
 			goto l98
@@ -785,7 +785,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			}
 		}
 		var first, last *LineHdrObject
-		if !ExecComputeLineRange(CurrentFrame, rept, count, &first, &last) {
+		if !ExecComputeLineRange(CurrentFrame, rept, int(count), &first, &last) {
 			goto l99
 		}
 		if first != nil {
@@ -865,9 +865,9 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		} else {
 			nrLines = LineToNumber(last)
 		}
-		CurrentFrame.InputCount = uint64(Files[CurrentFrame.OutputFile].LCounter) + uint64(nrLines)
+		CurrentFrame.InputCount = Files[CurrentFrame.OutputFile].LCounter + nrLines
 		if CurrentFrame.InputFile != 0 {
-			Files[CurrentFrame.InputFile].LCounter = int(CurrentFrame.InputCount)
+			Files[CurrentFrame.InputFile].LCounter = CurrentFrame.InputCount
 		}
 		CurrentFrame.TextModified = false
 	}

@@ -171,11 +171,13 @@ func SetupSyntaxHighlighting(frame *FrameObject) {
 		}
 	}
 	firstLine := frame.FirstGroup.FirstLine
-	lineContents := firstLine.Str.Slice(1, firstLine.Used)
-	if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
-		SyntaxAttach(frame, h)
-		SyntaxHighlightFrame(frame, h)
-		return
+	if firstLine.Str != nil {
+		lineContents := firstLine.Str.Slice(1, firstLine.Used)
+		if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
+			SyntaxAttach(frame, h)
+			SyntaxHighlightFrame(frame, h)
+			return
+		}
 	}
 
 	// No highlighter.  Make sure we remove existing.
@@ -196,6 +198,7 @@ func clearFrameHighlighting(frame *FrameObject) {
 		}
 	}
 	frame.Highlighter = nil
+	frame.DirtyLine = 0
 }
 
 // LudwigBuffer implements highlight.LineStates over a frame's line list

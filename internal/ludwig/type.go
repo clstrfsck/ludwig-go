@@ -374,7 +374,7 @@ type FrameObject struct {
 	ScrDotLine    int
 	Span          *SpanObject
 	ReturnFrame   *FrameObject
-	InputCount    uint64
+	InputCount    int
 	SpaceLimit    int
 	SpaceLeft     int
 	TextModified  bool
