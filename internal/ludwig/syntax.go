@@ -158,8 +158,24 @@ func SetupSyntaxHighlighting(frame *FrameObject) {
 		}
 
 		// No highlighter.  Make sure we remove existing.
-		SyntaxAttach(frame, nil)
+		clearFrameHighlighting(frame)
 	}
+}
+
+// clearFrameHighlighting removes any per-line syntax highlighting state from
+// all lines in the given frame. This is used when detaching a highlighter to
+// ensure stale highlighting does not remain visible.
+func clearFrameHighlighting(frame *FrameObject) {
+	if frame == nil {
+		return
+	}
+	for g := frame.FirstGroup; g != nil; g = g.FLink {
+		for line := g.FirstLine; line != nil; line = line.FLink {
+			line.HlMatch = nil
+			line.HlState = nil
+		}
+	}
+	frame.Highlighter = nil
 }
 
 // LudwigBuffer implements highlight.LineStates over a frame's line list
