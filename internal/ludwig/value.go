@@ -80,11 +80,13 @@ func setupInitialValues() {
 	DfltPrompts[PatternSetPrompt] = "Pat Set:"
 
 	FileData.OldCmds = true
+	FileData.Highlighting = false
 	FileData.Entab = false
 	FileData.Space = 500000
+	FileData.Initial = ""
 	FileData.Purge = false
 	FileData.Versions = 1
-	FileData.Initial = ""
+	FileData.TabWidth = 8
 }
 
 // initCmd is a helper function to initialize command attributes

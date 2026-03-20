@@ -41,12 +41,9 @@ func progWindup(setHangup bool) {
 }
 
 func initialize() {
-	InitialTabStops = DefaultTabStops
-
 	// Now create the Code Header for the compiler to use
 	CodeTop = 0
 	CodeList = &CodeHeader{}
-	// with code_list^ do
 	CodeList.FLink = CodeList
 	CodeList.BLink = CodeList
 	CodeList.Ref = 1
@@ -529,6 +526,7 @@ func startUp(argv []string) bool {
 	if !FileCreateOpen(argv[1:], ParseCommand, &Files[1], &Files[2]) {
 		goto l99
 	}
+	SetRegularTabStops(FileData.TabWidth)
 
 	loadCommandTable(FileData.OldCmds)
 

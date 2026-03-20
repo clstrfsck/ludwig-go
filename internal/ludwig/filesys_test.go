@@ -31,6 +31,11 @@ func newReadFyle(t *testing.T, content string) *FileObject {
 func readLine(fyle *FileObject) (string, int, bool) {
 	buf := NewBlankStrObject(MaxStrLen)
 	var outlen int
+	oldTabs := FileData.TabWidth
+	defer func() {
+		FileData.TabWidth = oldTabs
+	}()
+	FileData.TabWidth = 8
 	ok := FilesysRead(fyle, buf, &outlen)
 	return buf.Slice(1, outlen), outlen, ok
 }
@@ -183,6 +188,12 @@ func TestFilesysWriteEntab(t *testing.T) {
 			expected: "hello\n",
 		},
 	}
+
+	oldTabs := FileData.TabWidth
+	defer func() {
+		FileData.TabWidth = oldTabs
+	}()
+	FileData.TabWidth = 8
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

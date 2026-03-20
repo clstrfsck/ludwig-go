@@ -251,6 +251,8 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 // Attempts to read MAX_STRLEN characters into buffer
 // Number of characters read is returned in outlen
 func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
+	tabWidth := min(8, max(2, FileData.TabWidth))
+
 	*outlen = 0
 	for {
 		r, _, err := fyle.Reader.ReadRune()
@@ -265,7 +267,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 			break
 		}
 		if r == '\t' {
-			exp := 8 - (*outlen % 8)
+			exp := tabWidth - (*outlen % tabWidth)
 			if *outlen+exp > MaxStrLen {
 				exp = MaxStrLen - *outlen
 			}
@@ -309,6 +311,7 @@ func FilesysRewind(fyle *FileObject) bool {
 // FilesysWrite writes a line to a file
 // Attempts to write bufsiz characters from buffer to the file
 func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
+	tabWidth := min(8, max(2, FileData.TabWidth))
 	if bufsiz > 0 {
 		offset := 0
 		tabs := 0
@@ -321,8 +324,8 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				}
 				i += 1
 			}
-			tabs = (i - 1) / 8
-			offset = tabs * 7
+			tabs = (i - 1) / tabWidth
+			offset = tabs * (tabWidth - 1)
 			for i := 1; i <= tabs; i++ {
 				buffer.Set(offset+i, '\t')
 			}
@@ -432,11 +435,12 @@ func FilesysParse(
 	input *FileObject,
 	output *FileObject,
 ) bool {
-	const usage = "usage : ludwig [-c] [-r] [-i value] [-I] " +
+	const usage = "usage: ludwig [-c] [-r] [-i value] [-I] " +
 		"[-s value] [-m file] [-M] [-t] [-T] " +
 		"[-b value] [-B value] [-o] [-O] [-u] " +
+		"[-w value] " +
 		"[file [file]]"
-	const fileUsage = "usage : [-m file] [-t] [-T] [-b value] " +
+	const fileUsage = "usage: [-m file] [-t] [-T] [-b value] " +
 		"[-B value] [file [file]]"
 
 	if parseType == ParseStdin {
@@ -453,6 +457,7 @@ func FilesysParse(
 	space := fileData.Space
 	purge := fileData.Purge
 	versions := fileData.Versions
+	tabWidth := fileData.TabWidth
 
 	createFlag := false
 	readOnlyFlag := false
@@ -555,6 +560,13 @@ func FilesysParse(
 				entab = true
 			case 'T':
 				entab = false
+			case 'w':
+				if val, err := strconv.Atoi(optarg); err != nil || val < 2 || val > 8 {
+					errors += 1
+				} else {
+					tabWidth = val
+					optind += 1
+				}
 			case '?', 'u':
 				usageFlag = true
 			}
@@ -571,12 +583,13 @@ func FilesysParse(
 	}
 
 	if parseType == ParseCommand {
-		fileData.Initial = initialize
-		fileData.Space = space
-		fileData.Entab = entab
 		fileData.Highlighting = highlighting
+		fileData.Entab = entab
+		fileData.Space = space
+		fileData.Initial = initialize
 		fileData.Purge = purge
 		fileData.Versions = versions
+		fileData.TabWidth = tabWidth
 	} else if createFlag || readOnlyFlag || initialize != "" || spaceFlag || versionFlag {
 		return false
 	}

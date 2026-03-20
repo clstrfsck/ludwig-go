@@ -121,9 +121,14 @@ var FileData FileDataType
 // Info about the terminal
 var TerminalInfo TerminalInfoType
 
-func init() {
-	// Initialize DefaultTabStops with the pattern: false, true, false, false...
+func SetRegularTabStops(width int) {
+	width = min(8, max(2, width))
 	for i := range DefaultTabStops {
-		DefaultTabStops[i] = (i % 8) == 1
+		DefaultTabStops[i] = (i % width) == 1
 	}
+	InitialTabStops = DefaultTabStops
+}
+
+func init() {
+	SetRegularTabStops(8)
 }

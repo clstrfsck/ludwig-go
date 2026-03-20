@@ -517,6 +517,7 @@ type FileDataType struct {
 	Initial      string
 	Purge        bool
 	Versions     int
+	TabWidth     int
 }
 
 // CodeObject represents a code instruction
