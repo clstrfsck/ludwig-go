@@ -253,7 +253,7 @@ func (s *StrObject) Slice(index, length int) string {
 
 // String returns the entire array as a string
 func (s *StrObject) String() string {
-	return string(s.array[:])
+	return string(s.array)
 }
 
 // TrimmedString returns the string up to the last non-space character
@@ -267,7 +267,7 @@ func (s *StrObject) TrimmedString() string {
 
 // Compare compares this StrObject with another
 func (s *StrObject) Compare(other *StrObject) int {
-	return bytes.Compare(s.array[:], other.array[:])
+	return bytes.Compare(s.array, other.array)
 }
 
 // Equal returns true if this StrObject is equal to another
@@ -277,7 +277,7 @@ func (s *StrObject) Equal(other *StrObject) bool {
 
 // Bytes returns a copy of the underlying byte array
 func (s *StrObject) Bytes() []byte {
-	return append([]byte(nil), s.array[:]...)
+	return append([]byte(nil), s.array...)
 }
 
 // Format implements fmt.Formatter for pretty printing
@@ -287,7 +287,7 @@ func (s *StrObject) Format(f fmt.State, verb rune) {
 		length := s.Length(' ', len(s.array))
 		_, _ = f.Write(s.array[:length])
 	case 'q':
-		fmt.Fprintf(f, "%q", s.array[:])
+		fmt.Fprintf(f, "%q", s.array)
 	default:
 		fmt.Fprintf(f, "%%!%c(StrObject)", verb)
 	}
