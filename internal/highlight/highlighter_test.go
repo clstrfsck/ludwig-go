@@ -544,16 +544,16 @@ rules:
 
 // MockLineStates implements LineStates interface for testing
 type MockLineStates struct {
-	lines  [][]byte
-	states []State
-	matches []LineMatch
+	lines   [][]byte
+	states  []State
+	matches []MatchEntries
 }
 
 func NewMockLineStates(lines []string) *MockLineStates {
 	m := &MockLineStates{
-		lines:  make([][]byte, len(lines)),
-		states: make([]State, len(lines)),
-		matches: make([]LineMatch, len(lines)),
+		lines:   make([][]byte, len(lines)),
+		states:  make([]State, len(lines)),
+		matches: make([]MatchEntries, len(lines)),
 	}
 	for i, line := range lines {
 		m.lines[i] = []byte(line)
@@ -585,7 +585,7 @@ func (m *MockLineStates) SetState(lineN int, s State) {
 	}
 }
 
-func (m *MockLineStates) SetMatch(lineN int, match LineMatch) {
+func (m *MockLineStates) SetMatch(lineN int, match MatchEntries) {
 	if lineN >= 0 && lineN < len(m.matches) {
 		m.matches[lineN] = match
 	}
@@ -753,10 +753,10 @@ rules:
 	h := NewHighlighter(def)
 
 	tests := []struct {
-		name       string
-		lines      []string
-		startline  int
-		checkRan   bool
+		name      string
+		lines     []string
+		startline int
+		checkRan  bool
 	}{
 		{
 			name:      "from beginning",

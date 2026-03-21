@@ -1,7 +1,9 @@
 package highlight
 
 import (
+	"cmp"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -60,7 +62,7 @@ type LineStates interface {
 	LinesNum() int
 	State(lineN int) State
 	SetState(lineN int, s State)
-	SetMatch(lineN int, m LineMatch)
+	SetMatch(lineN int, m MatchEntries)
 	Lock()
 	Unlock()
 }
@@ -78,8 +80,17 @@ func NewHighlighter(def *Def) *Highlighter {
 	return h
 }
 
-// LineMatch represents the syntax highlighting matches for one line. Each index where the coloring is changed is marked with that
-// color's group (represented as one byte)
+// MatchEntry represents a single syntax highlight match.
+type MatchEntry struct {
+	Position int
+	Group    Group
+}
+
+// MatchEntries are a slice of MatchEntry values, sorted by position.
+type MatchEntries []MatchEntry
+
+// LineMatch represents the syntax highlighting matches for one line. Each index where
+// the coloring is changed is marked with that color's group (represented as one byte)
 type LineMatch map[int]Group
 
 func findIndex(regex *regexp.Regexp, skip *regexp.Regexp, str []byte) []int {
@@ -330,7 +341,7 @@ func (h *Highlighter) HighlightMatches(input LineStates, startline, endline int)
 			match = h.highlightRegion(highlights, 0, true, i, line, input.State(i-1), false)
 		}
 
-		input.SetMatch(i, match)
+		input.SetMatch(i, lineMatchToMatchEntries(match))
 		input.Unlock()
 	}
 }
@@ -397,6 +408,22 @@ func (h *Highlighter) ReHighlightLine(input LineStates, lineN int) {
 	}
 	curState := h.lastRegion
 
-	input.SetMatch(lineN, match)
+	input.SetMatch(lineN, lineMatchToMatchEntries(match))
 	input.SetState(lineN, curState)
+}
+
+func lineMatchToMatchEntries(matchy LineMatch) MatchEntries {
+	entries := make(MatchEntries, len(matchy))
+	i := 0
+	for pos, group := range matchy {
+		entries[i] = MatchEntry{
+			Position: pos,
+			Group:    group,
+		}
+		i += 1
+	}
+	slices.SortFunc(entries, func(a, b MatchEntry) int {
+		return cmp.Compare(a.Position, b.Position)
+	})
+	return entries
 }
