@@ -14,10 +14,6 @@
 
 package ludwig
 
-import (
-	"math"
-)
-
 const (
 	thisOne        = "This one?"
 	replaceThisOne = "Replace this one?"
@@ -122,7 +118,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 			success = (endPos >= CurrentFrame.Dot.Line.Used) && found
 		}
 		if success && rept != LeadParamMinus {
-			success = MarkCreate(CurrentFrame.Dot.Line, endPos, &CurrentFrame.Marks[MarkEquals])
+			MarkCreate(CurrentFrame.Dot.Line, endPos, &CurrentFrame.Marks[MarkEquals])
 		}
 	} else {
 		exactcase := eqsgetrepExactcase(&tpar)
@@ -160,7 +156,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 			success = (result >= 0)
 		}
 		if success && rept != LeadParamMinus {
-			success = MarkCreate(
+			MarkCreate(
 				CurrentFrame.Dot.Line,
 				CurrentFrame.Dot.Col+nchIdent,
 				&CurrentFrame.Marks[MarkEquals],
@@ -253,18 +249,14 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 			}
 			count--
 			if count == 0 {
-				if !MarkCreate(line, startCol, &CurrentFrame.Dot) {
-					goto l99
-				}
+				MarkCreate(line, startCol, &CurrentFrame.Dot)
 				if !fromSpan {
 					switch ScreenVerify(thisOne) {
 					case VerifyReplyAlways, VerifyReplyYes:
 						break
 					case VerifyReplyQuit, VerifyReplyNo:
 						count = 1
-						if !MarkCreate(dotLine, dotCol, &CurrentFrame.Dot) {
-							goto l99
-						}
+						MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
 						if ExitAbort {
 							goto l99
 						} else {
@@ -273,13 +265,9 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 					}
 				}
 				if backwards {
-					if !MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals]) {
-						goto l99
-					}
+					MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals])
 				} else {
-					if !MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals]) {
-						goto l99
-					}
+					MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals])
 				}
 				result = true
 				goto l99
@@ -335,7 +323,7 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 	} else {
 		startCol = dotCol
 	}
-	count = int(math.Abs(float64(count)))
+	count = iabs(count)
 	if startCol > line.Used {
 		startCol = line.Used + 1
 	}
@@ -355,13 +343,9 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 				count--
 				if count == 0 {
 					if backwards {
-						if !MarkCreate(line, matchedStartCol, &CurrentFrame.Dot) {
-							goto l99
-						}
+						MarkCreate(line, matchedStartCol, &CurrentFrame.Dot)
 					} else {
-						if !MarkCreate(line, matchedFinishCol, &CurrentFrame.Dot) {
-							goto l99
-						}
+						MarkCreate(line, matchedFinishCol, &CurrentFrame.Dot)
 					}
 					if !fromSpan {
 						switch ScreenVerify(thisOne) {
@@ -369,9 +353,7 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 							break
 						case VerifyReplyQuit, VerifyReplyNo:
 							count = 1
-							if !MarkCreate(dotLine, dotCol, &CurrentFrame.Dot) {
-								goto l99
-							}
+							MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
 							if ExitAbort {
 								goto l99
 							} else {
@@ -380,11 +362,9 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 						}
 					}
 					if backwards {
-						if !MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals]) {
-							goto l99
-						}
-					} else if !MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals]) {
-						goto l99
+						MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals])
+					} else {
+						MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals])
 					}
 					result = true
 					goto l99
@@ -449,13 +429,9 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 	var okay bool
 	result := false
 
-	if !markCopy(CurrentFrame.Dot, &oldDot) {
-		goto l99
-	}
+	markCopy(CurrentFrame.Dot, &oldDot)
 	if CurrentFrame.Marks[MarkEquals] != nil {
-		if !markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals) {
-			goto l99
-		}
+		markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals)
 	}
 	if tpar.Dlm == TpdSmart {
 		if !eqsgetrepPatternBuild(tpar, &CurrentFrame.RepPatternPtr) {
@@ -529,19 +505,9 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				goto l99
 			}
 			if getcount > 0 {
-				if !MarkCreate(
-					CurrentFrame.Dot.Line, startCol, &CurrentFrame.Marks[MarkEquals],
-				) {
-					goto l99
-				}
+				MarkCreate(CurrentFrame.Dot.Line, startCol, &CurrentFrame.Marks[MarkEquals])
 			} else {
-				if !MarkCreate(
-					CurrentFrame.Dot.Line,
-					startCol+tpar2.Len,
-					&CurrentFrame.Marks[MarkEquals],
-				) {
-					goto l99
-				}
+				MarkCreate(CurrentFrame.Dot.Line, startCol+tpar2.Len, &CurrentFrame.Marks[MarkEquals])
 				CurrentFrame.Dot.Col = startCol
 			}
 		} else {
@@ -552,36 +518,20 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				goto l99
 			}
 		}
-		if !markCopy(CurrentFrame.Dot, &oldDot) {
-			goto l99
-		}
-		if !markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals) {
-			goto l99
-		}
+		markCopy(CurrentFrame.Dot, &oldDot)
+		markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals)
 		CurrentFrame.TextModified = true
-		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-			goto l99
-		}
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 		count--
 	}
 l1:
-	if !markCopy(oldDot, &CurrentFrame.Dot) {
-		goto l99
-	}
-	if !MarkDestroy(&oldDot) {
-		goto l99
-	}
+	markCopy(oldDot, &CurrentFrame.Dot)
+	MarkDestroy(&oldDot)
 	if oldEquals != nil {
-		if !markCopy(oldEquals, &CurrentFrame.Marks[MarkEquals]) {
-			goto l99
-		}
-		if !MarkDestroy(&oldEquals) {
-			goto l99
-		}
+		markCopy(oldEquals, &CurrentFrame.Marks[MarkEquals])
+		MarkDestroy(&oldEquals)
 	} else if CurrentFrame.Marks[MarkEquals] != nil {
-		if !MarkDestroy(&CurrentFrame.Marks[MarkEquals]) {
-			goto l99
-		}
+		MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 	}
 	result = (count == 0) || rept == LeadParamPIndef || rept == LeadParamNIndef
 l99:

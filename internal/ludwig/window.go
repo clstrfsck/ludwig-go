@@ -50,9 +50,8 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 		cmdSuccess = true
 
 	case CmdWindowEnd:
-		cmdSuccess = MarkCreate(
-			CurrentFrame.LastGroup.LastLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot,
-		)
+		MarkCreate(CurrentFrame.LastGroup.LastLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+		cmdSuccess = true
 
 	case CmdWindowForward:
 		lineNr := LineToNumber(CurrentFrame.Dot.Line)
@@ -184,9 +183,8 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 		cmdSuccess = FrameSetHeight(count, false)
 
 	case CmdWindowTop:
-		cmdSuccess = MarkCreate(
-			CurrentFrame.FirstGroup.FirstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot,
-		)
+		MarkCreate(CurrentFrame.FirstGroup.FirstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+		cmdSuccess = true
 
 	case CmdWindowUpdate:
 		cmdSuccess = true

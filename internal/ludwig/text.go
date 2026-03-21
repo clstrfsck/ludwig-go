@@ -60,14 +60,12 @@ func TextReturnCol(curLine *LineHdrObject, curCol int, splitting bool) int {
 // TextRealizeNull converts a null line into a real line
 func TextRealizeNull(oldNull *LineHdrObject) bool {
 	var newNull *LineHdrObject
-	if LinesCreate(1, &newNull, &newNull) {
-		if LinesInject(newNull, newNull, oldNull) {
-			if MarksShift(oldNull, 1, MaxStrLenP, newNull, 1) {
-				newNull.Group.Frame.TextModified = true
-				if markCopy(newNull.Group.Frame.Dot, &newNull.Group.Frame.Marks[MarkModified]) {
-					return true
-				}
-			}
+	LinesCreate(1, &newNull, &newNull)
+	if LinesInject(newNull, newNull, oldNull) {
+		if MarksShift(oldNull, 1, MaxStrLenP, newNull, 1) {
+			newNull.Group.Frame.TextModified = true
+			markCopy(newNull.Group.Frame.Dot, &newNull.Group.Frame.Marks[MarkModified])
+			return true
 		}
 	}
 	return false
@@ -104,9 +102,7 @@ func TextInsert(
 		}
 
 		if finalLen > dstLine.Len() {
-			if !LineChangeLength(dstLine, finalLen) {
-				return false
-			}
+			LineChangeLength(dstLine, finalLen)
 		}
 		if !MarksShift(dstLine, dstCol, MaxStrLenP-dstCol, dstLine, dstCol+insertLen) {
 			return false
@@ -187,9 +183,7 @@ func TextOvertype(
 		}
 
 		if finalLen > dstLine.Len() {
-			if !LineChangeLength(dstLine, finalLen) {
-				return false
-			}
+			LineChangeLength(dstLine, finalLen)
 		}
 		newCol := dst.Col
 		for range count {
@@ -240,9 +234,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			ScreenMessage(MsgNoRoomOnLine)
 			return false
 		}
-		if !MarkCreate(beforeMark.Line, beforeMark.Col-tp.Len, equalsMark) {
-			return false
-		}
+		MarkCreate(beforeMark.Line, beforeMark.Col-tp.Len, equalsMark)
 	} else {
 		if beforeMark.Col+tp.Len > MaxStrLen {
 			ScreenMessage(MsgNoRoomOnLine)
@@ -258,9 +250,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			ScreenMessage(MsgNoRoomOnLine)
 			return false
 		}
-		if !LinesCreate(lineCount, &firstLine, &lastLine) {
-			return false
-		}
+		LinesCreate(lineCount, &firstLine, &lastLine)
 		discard = true
 		if beforeMark.Line.FLink == nil && !TextRealizeNull(beforeMark.Line) {
 			goto cleanup
@@ -275,9 +265,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 		tmpTp = tp.Con
 		tmpLine := firstLine
 		for lc := 0; lc < lineCount; lc++ {
-			if !LineChangeLength(tmpLine, tmpTp.Len) {
-				goto cleanup
-			}
+			LineChangeLength(tmpLine, tmpTp.Len)
 			tmpLine.Str.Copy(tmpTp.Str, 1, tmpTp.Len, 1)
 			if tmpTp.Len == 0 {
 				tmpLine.Used = 0
@@ -428,9 +416,7 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	textLen = markOne.Col - 1
 	delta = markOne.Col - markTwo.Col
 	if delta < 0 {
-		if !MarkCreate(markTwo.Line, markOne.Col, &markStart) {
-			goto cleanup
-		}
+		MarkCreate(markTwo.Line, markOne.Col, &markStart)
 		if !textIntraRemove(markStart, markTwo.Col-markStart.Col) {
 			goto cleanup
 		}
@@ -441,9 +427,7 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 		}
 		textLen -= delta
 	}
-	if !MarkCreate(markTwo.Line, 1, &markStart) {
-		goto cleanup
-	}
+	MarkCreate(markTwo.Line, 1, &markStart)
 	if textLen > 0 {
 		if !TextOvertype(true, 1, strng, textLen, markStart) {
 			goto cleanup
@@ -464,9 +448,7 @@ extract:
 	if !LinesExtract(extrOne, extrTwo) {
 		goto cleanup
 	}
-	if !LinesDestroy(&extrOne, &extrTwo) {
-		goto cleanup
-	}
+	LinesDestroy(&extrOne, &extrTwo)
 success:
 	result = true
 cleanup:
@@ -555,12 +537,8 @@ func textIntraMove(
 		}
 	}
 	dstCol := dst.Col
-	if !MarkCreate(dst.Line, dstCol-fullLen, newStart) {
-		return false
-	}
-	if !MarkCreate(dst.Line, dstCol, newEnd) {
-		return false
-	}
+	MarkCreate(dst.Line, dstCol-fullLen, newStart)
+	MarkCreate(dst.Line, dstCol, newEnd)
 	return true
 }
 
@@ -634,9 +612,7 @@ func textInterMove(
 	if !copy {
 		linesRequired -= lineTwoNr - lineOneNr - 1
 	}
-	if !LinesCreate(linesRequired, &firstLine, &lastLine) {
-		goto cleanup
-	}
+	LinesCreate(linesRequired, &firstLine, &lastLine)
 
 	// Copy end of first line
 	textLen = 0
@@ -677,9 +653,7 @@ func textInterMove(
 
 		// Copy interior lines
 		for nextSrcLine != lineTwo {
-			if !LineChangeLength(nextDstLine, nextSrcLine.Used) {
-				goto cleanup
-			}
+			LineChangeLength(nextDstLine, nextSrcLine.Used)
 			nextDstLine.Str.Copy(nextSrcLine.Str, 1, nextSrcLine.Used, 1)
 			nextDstLine.Used = nextSrcLine.Used
 			nextSrcLine = nextSrcLine.FLink
@@ -688,14 +662,10 @@ func textInterMove(
 
 		// Copy the last line
 		if i != 0 {
-			if !LineChangeLength(nextDstLine, colTwo-1+textLen) {
-				goto cleanup
-			}
+			LineChangeLength(nextDstLine, colTwo-1+textLen)
 			nextDstLine.Str.Copy(textStr, 1, textLen, colTwo)
 		} else {
-			if !LineChangeLength(nextDstLine, colTwo-1) {
-				goto cleanup
-			}
+			LineChangeLength(nextDstLine, colTwo-1)
 		}
 		if colTwo > 1 {
 			if colTwo <= nextSrcLine.Used {
@@ -725,9 +695,7 @@ func textInterMove(
 	lastLineLength = lastLine.Used
 	i = dstLine.Used + 1 - dstCol
 	if i > 0 {
-		if !LineChangeLength(lastLine, lastLine.Used+i) {
-			goto cleanup
-		}
+		LineChangeLength(lastLine, lastLine.Used+i)
 		lastLine.Str.Copy(dstLine.Str, dstCol, i, lastLineLength+1)
 		lastLine.Used = lastLine.Str.Length(' ', lastLineLength+i)
 	} else if lastLineLength > 0 {
@@ -753,9 +721,7 @@ func textInterMove(
 			}
 
 			if textLen > 0 {
-				if !LineChangeLength(firstLine, textLen) {
-					goto cleanup
-				}
+				LineChangeLength(firstLine, textLen)
 				ChFillCopy(textStr, 1, textLen, firstLine.Str, 1, firstLine.Len(), ' ')
 				firstLine.Used = textLen
 			}
@@ -778,9 +744,7 @@ func textInterMove(
 	}
 	firstLine = nil
 	if textLen > 0 {
-		if !LineChangeLength(dstLine, dstCol+textLen-1) {
-			goto cleanup
-		}
+		LineChangeLength(dstLine, dstCol+textLen-1)
 		ChFillCopy(textStr, 1, textLen, dstLine.Str, dstCol, dstLine.Len()+1-dstCol, ' ')
 		dstLine.Used = dstCol + textLen - 1
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
@@ -797,12 +761,8 @@ func textInterMove(
 	}
 
 finished:
-	if !MarkCreate(dstLine, dstCol, newStart) {
-		goto cleanup
-	}
-	if !MarkCreate(lastLine, colTwo, newEnd) {
-		goto cleanup
-	}
+	MarkCreate(dstLine, dstCol, newStart)
+	MarkCreate(lastLine, colTwo, newEnd)
 	result = true
 cleanup:
 	if firstLine != nil {
@@ -837,14 +797,10 @@ func TextMove(
 		}
 		if !copy {
 			markTwo.Line.Group.Frame.TextModified = true
-			if !markCopy(markTwo, &markTwo.Line.Group.Frame.Marks[MarkModified]) {
-				return false
-			}
+			markCopy(markTwo, &markTwo.Line.Group.Frame.Marks[MarkModified])
 		}
 		(*newEnd).Line.Group.Frame.TextModified = true
-		if !markCopy(*newEnd, &(*newEnd).Line.Group.Frame.Marks[MarkModified]) {
-			return false
-		}
+		markCopy(*newEnd, &(*newEnd).Line.Group.Frame.Marks[MarkModified])
 	}
 	return true
 }
@@ -878,9 +834,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		}
 	}
 
-	if !LinesCreate(1, &newLine, &newLine) {
-		goto cleanup
-	}
+	LinesCreate(1, &newLine, &newLine)
 	discard = true
 
 	// Heuristic to decide which way to do the split
@@ -902,9 +856,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		equalsCol = beforeMark.Col
 		equalsLine = beforeMark.Line
 		if length > 0 {
-			if !LineChangeLength(newLine, newCol+length-1) {
-				goto cleanup
-			}
+			LineChangeLength(newLine, newCol+length-1)
 			newLine.Str.FillN(' ', newCol-1, 1)
 			newLine.Str.Copy(beforeMark.Line.Str, beforeMark.Col, length, newCol)
 			beforeMark.Line.Str.Fill(' ', beforeMark.Col, beforeMark.Col+length-1)
@@ -938,9 +890,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 			beforeMark.Col = beforeMark.Line.Used
 		}
 		if shift > 0 {
-			if !LineChangeLength(newLine, shift) {
-				goto cleanup
-			}
+			LineChangeLength(newLine, shift)
 			newLine.Str.Copy(beforeMark.Line.Str, 1, shift, 1)
 			newLine.Used = newLine.Str.Length(' ', shift)
 		}
@@ -984,17 +934,9 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 			}
 		}
 	}
-	if !MarkCreate(
-		beforeMark.Line,
-		beforeMark.Col,
-		&beforeMark.Line.Group.Frame.Marks[MarkModified],
-	) {
-		goto cleanup
-	}
+	MarkCreate(beforeMark.Line, beforeMark.Col, &beforeMark.Line.Group.Frame.Marks[MarkModified])
 	beforeMark.Line.Group.Frame.TextModified = true
-	if !MarkCreate(equalsLine, equalsCol, equalsMark) {
-		goto cleanup
-	}
+	MarkCreate(equalsLine, equalsCol, equalsMark)
 	result = true
 cleanup:
 	if discard {

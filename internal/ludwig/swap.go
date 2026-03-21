@@ -67,21 +67,14 @@ func SwapLine(rept LeadParam, count int) bool {
 		destLine = CurrentFrame.Marks[count].Line
 	}
 
-	if !MarkCreate(thisLine, 1, &topMark) {
-		return false
-	}
-	if !MarkCreate(nextLine, 1, &endMark) {
-		return false
-	}
-	if !MarkCreate(destLine, 1, &destMark) {
-		return false
-	}
+	MarkCreate(thisLine, 1, &topMark)
+	MarkCreate(nextLine, 1, &endMark)
+	MarkCreate(destLine, 1, &destMark)
 	if !TextMove(false, 1, topMark, endMark, destMark, &CurrentFrame.Dot, &topMark) {
 		return false
 	}
 	CurrentFrame.TextModified = true
 	CurrentFrame.Dot.Col = dotCol
-	return MarkCreate(
-		CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified],
-	)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+	return true
 }

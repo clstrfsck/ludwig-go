@@ -35,43 +35,39 @@ func removeFromMarks(markList *[]*MarkObject, mark *MarkObject) {
 }
 
 // markCopy copies src into dst, updating line links.
-func markCopy(src *MarkObject, dst **MarkObject) bool {
-	return MarkCreate(src.Line, src.Col, dst)
+func markCopy(src *MarkObject, dst **MarkObject) {
+	MarkCreate(src.Line, src.Col, dst)
 }
 
 // MarkCreate creates or moves a mark to the specified line and column.
-func MarkCreate(inLine *LineHdrObject, column int, mark **MarkObject) bool {
+func MarkCreate(inLine *LineHdrObject, column int, mark **MarkObject) {
 	if *mark == nil {
 		*mark = &MarkObject{
 			Line: inLine,
 			Col:  column,
 		}
 		inLine.Marks = append([]*MarkObject{*mark}, inLine.Marks...)
-		return true
-	}
-
-	currentLine := (*mark).Line
-	if currentLine == inLine {
-		// Mark is already on this line, just update column
-		(*mark).Col = column
 	} else {
-		// Move mark from current line to new line
-		removeFromMarks(&currentLine.Marks, *mark)
-		inLine.Marks = append([]*MarkObject{*mark}, inLine.Marks...)
-		(*mark).Line = inLine
-		(*mark).Col = column
+		currentLine := (*mark).Line
+		if currentLine == inLine {
+			// Mark is already on this line, just update column
+			(*mark).Col = column
+		} else {
+			// Move mark from current line to new line
+			removeFromMarks(&currentLine.Marks, *mark)
+			inLine.Marks = append([]*MarkObject{*mark}, inLine.Marks...)
+			(*mark).Line = inLine
+			(*mark).Col = column
+		}
 	}
-	return true
 }
 
 // MarkDestroy removes a mark from its line and sets the pointer to nil.
-func MarkDestroy(mark **MarkObject) bool {
-	if *mark == nil {
-		return false
+func MarkDestroy(mark **MarkObject) {
+	if *mark != nil {
+		removeFromMarks(&(*mark).Line.Marks, *mark)
+		*mark = nil
 	}
-	removeFromMarks(&(*mark).Line.Marks, *mark)
-	*mark = nil
-	return true
 }
 
 // MarksSqueeze moves all marks between first and last positions to the last position.

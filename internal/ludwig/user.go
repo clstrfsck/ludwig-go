@@ -142,9 +142,7 @@ func UserCommandIntroducer() bool {
 
 	if cmdSuccess {
 		CurrentFrame.TextModified = true
-		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-			cmdSuccess = false
-		}
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 	}
 	return cmdSuccess
 }
@@ -165,9 +163,7 @@ func UserKey(key *TParObject, strng *TParObject) bool {
 	}
 
 	// Create a span in frame "HEAP"
-	if !MarkCreate(FrameHeap.LastGroup.LastLine, 1, &FrameHeap.Span.MarkTwo) {
-		return false
-	}
+	MarkCreate(FrameHeap.LastGroup.LastLine, 1, &FrameHeap.Span.MarkTwo)
 	if !SpanCreate(BlankFrameName, FrameHeap.Span.MarkTwo, FrameHeap.Span.MarkTwo) {
 		return false
 	}

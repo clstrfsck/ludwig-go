@@ -423,9 +423,8 @@ func TestDoCmdHome(t *testing.T) {
 		}()
 
 		var newEql MarkObject
-		result := doCmdHome(&newEql)
+		doCmdHome(&newEql)
 
-		assert.True(t, result, "Expected home to succeed")
 		assert.Equal(t, 50, newEql.Col, "Expected newEql to store old column")
 		assert.Equal(t, 11, CurrentFrame.Dot.Col, "Expected column to be 1 after home")
 	})
@@ -452,9 +451,8 @@ func TestDoCmdHome(t *testing.T) {
 		}()
 
 		var newEql MarkObject
-		result := doCmdHome(&newEql)
+		doCmdHome(&newEql)
 
-		assert.True(t, result, "Expected home to succeed")
 		assert.Equal(t, 50, newEql.Col, "Expected newEql to store old column")
 	})
 }

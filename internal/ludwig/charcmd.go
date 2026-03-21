@@ -14,17 +14,13 @@
 
 package ludwig
 
-import (
-	"math"
-)
-
 // CharcmdInsert handles character insertion commands
 func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
 	cmdStatus := false
 	if rept == LeadParamMinus {
 		rept = LeadParamNInt
 	}
-	count = int(math.Abs(float64(count)))
+	count = iabs(count)
 
 	oldDotCol := CurrentFrame.Dot.Col
 	var maximum int
@@ -108,12 +104,12 @@ func joinLines() bool {
 		return false
 	}
 	var theOtherMark *MarkObject
-	if MarkCreate(bLine, bLine.Used+1, &theOtherMark) {
-		defer MarkDestroy(&theOtherMark)
-		if TextRemove(theOtherMark, CurrentFrame.Dot) {
-			CurrentFrame.TextModified = true
-			return markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
-		}
+	MarkCreate(bLine, bLine.Used+1, &theOtherMark)
+	defer MarkDestroy(&theOtherMark)
+	if TextRemove(theOtherMark, CurrentFrame.Dot) {
+		CurrentFrame.TextModified = true
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+		return true
 	}
 	return false
 }
