@@ -40,7 +40,7 @@ func FileName(fp *FileObject, maxLen int, actFnm *string) {
 // FileTable lists the current files.
 func FileTable() {
 	ScreenUnload()
-	ScreenHome(false)
+	ScreenHome(true)
 	ScreenWriteStrWidth(0, "Usage   Mod Frame  Filename", 27)
 	ScreenWriteln()
 	ScreenWriteStrWidth(0, "------- --- ------ --------", 27)

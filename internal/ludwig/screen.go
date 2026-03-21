@@ -1369,7 +1369,7 @@ func ScreenWriteNameStr(indent int, str string, width int) {
 	}
 }
 
-// ScreenWriteFileNameStr writes a file name with indent and width
+// ScreenWriteFileNameStr writes a file name with the given indent
 func ScreenWriteFileNameStr(indent int, str string) {
 	if LudwigMode == LudwigScreen {
 		VduDisplayStr(spc(indent), false)
