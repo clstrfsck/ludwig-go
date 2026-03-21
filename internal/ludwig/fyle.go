@@ -165,7 +165,7 @@ func FileCreateOpen(argv []string, parse ParseType, inputfp **FileObject, output
 
 // FileCloseDelete closes a file, if it is an output file it can optionally be deleted.
 func FileCloseDelete(fp **FileObject, delet bool, msgs bool) bool {
-	if fp != nil {
+	if fp != nil && *fp != nil {
 		deletFlag := 0
 		if delet {
 			deletFlag = 1
