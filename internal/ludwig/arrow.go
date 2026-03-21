@@ -44,8 +44,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 			cmdValid = doCmdReturn(count, &newEql, &eopLineNr)
 
 		case CmdHome:
-			doCmdHome(&newEql)
-			cmdValid = true
+			cmdValid = doCmdHome(&newEql)
 
 		case CmdTab:
 			cmdValid = doCmdTabBacktab(1, count, &newEql)
@@ -60,8 +59,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 			cmdValid = doCmdRight(rept, count, &newEql)
 
 		case CmdDown:
-			doCmdDown(rept, count, &newEql, eopLineNr)
-			cmdValid = true
+			cmdValid = doCmdDown(rept, count, &newEql, eopLineNr)
 
 		case CmdUp:
 			cmdValid = doCmdUp(rept, count, &newEql)
@@ -109,15 +107,14 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 	return cmdStatus || !fromSpan
 }
 
-func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) {
-	*newEql = *CurrentFrame.Dot
+func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) bool {
 	dotLine := CurrentFrame.Dot.Line
 	lineNr := LineToNumber(dotLine)
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
 		if lineNr+count <= eopLineNr {
 			if count < MaxGroupLines/2 {
-				for counter := 1; counter <= count; counter++ {
+				for counter := 1; dotLine != nil && counter <= count; counter++ {
 					dotLine = dotLine.FLink
 				}
 			} else {
@@ -127,14 +124,20 @@ func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) {
 	case LeadParamPIndef:
 		dotLine = CurrentFrame.LastGroup.LastLine
 	}
+	if dotLine == nil {
+		return false
+	}
+	*newEql = *CurrentFrame.Dot
 	MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+	return true
 }
 
-func doCmdHome(newEql *MarkObject) {
+func doCmdHome(newEql *MarkObject) bool {
 	*newEql = *CurrentFrame.Dot
 	if CurrentFrame == ScrFrame {
 		MarkCreate(ScrTopLine, CurrentFrame.ScrOffset+1, &CurrentFrame.Dot)
 	}
+	return true
 }
 
 func doCmdLeft(rept LeadParam, count int, newEql *MarkObject) bool {
@@ -193,7 +196,6 @@ func doCmdTabBacktab(step, count int, newEql *MarkObject) bool {
 }
 
 func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
-	*newEql = *CurrentFrame.Dot
 	dotLine := CurrentFrame.Dot.Line
 	lineNr := LineToNumber(dotLine)
 	switch rept {
@@ -212,6 +214,10 @@ func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 	case LeadParamPIndef:
 		dotLine = CurrentFrame.FirstGroup.FirstLine
 	}
+	if dotLine == nil {
+		return false
+	}
+	*newEql = *CurrentFrame.Dot
 	MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 	return true
 }

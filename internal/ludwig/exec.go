@@ -20,7 +20,10 @@ import (
 
 func iabs(n int) int {
 	if n < 0 {
-		// Still an issue with -2^31
+		if n == math.MinInt {
+			// Going to assume this is close enough
+			return math.MaxInt
+		}
 		return -n
 	}
 	return n
@@ -584,7 +587,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdInsertLine:
 		if count != 0 {
-			LinesCreate(int(math.Abs(float64(count))), &firstLine, &lastLine)
+			LinesCreate(iabs(count), &firstLine, &lastLine)
 			cmdSuccess = LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
 			if cmdSuccess {
 				if count > 0 {
