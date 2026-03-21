@@ -195,7 +195,7 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 			}
 			LinesCreate(1, &line, &line2)
 			LineChangeLength(line, outlen)
-			ChFillCopy(buffer, 1, outlen, line.Str, 1, line.Len(), ' ')
+			line.Str.FillCopy(buffer, 1, outlen, 1, line.Len(), ' ')
 			line.Used = outlen
 			line.BLink = fp.LastLine
 			if fp.LastLine != nil {

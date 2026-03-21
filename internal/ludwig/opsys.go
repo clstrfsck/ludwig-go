@@ -49,7 +49,7 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 			var line2 *LineHdrObject
 			LinesCreate(1, &line, &line2)
 			LineChangeLength(line, outlen)
-			ChFillCopy(result, 1, outlen, line.Str, 1, line.Len(), ' ')
+			line.Str.FillCopy(result, 1, outlen, 1, line.Len(), ' ')
 			line.Used = outlen
 			line.BLink = *last
 			if *last != nil {

@@ -164,7 +164,7 @@ func SetupSyntaxHighlighting(frame *FrameObject) {
 	filename := inputFile.Filename
 	if filename != "" {
 		if h := SyntaxDetectFilename(filename); h != nil {
-			SyntaxAttach(frame, h)
+			frame.Highlighter = h
 			SyntaxHighlightFrame(frame, h)
 			return
 		}
@@ -173,7 +173,7 @@ func SetupSyntaxHighlighting(frame *FrameObject) {
 	if firstLine.Str != nil {
 		lineContents := firstLine.Str.Slice(1, firstLine.Used)
 		if h := SyntaxDetectHeader([]byte(lineContents)); h != nil {
-			SyntaxAttach(frame, h)
+			frame.Highlighter = h
 			SyntaxHighlightFrame(frame, h)
 			return
 		}
@@ -312,20 +312,10 @@ func SyntaxRehighlightFrom(frame *FrameObject, h *highlight.Highlighter, fromLin
 	h.HighlightMatches(buf, fromLine, end)
 }
 
-// SyntaxAttach attaches a highlighter to a frame
-func SyntaxAttach(frame *FrameObject, h *highlight.Highlighter) {
-	frame.Highlighter = h
-}
-
-// SyntaxGet returns the highlighter for a frame (may be nil)
-func SyntaxGet(frame *FrameObject) *highlight.Highlighter {
-	return frame.Highlighter
-}
-
 // SyntaxMarkLineDirty records that a line has been modified and needs re-highlighting.
 // The re-highlighting is deferred and applied by SyntaxApplyDirty before the next screen redraw.
 func SyntaxMarkLineDirty(frame *FrameObject, line *LineHdrObject) {
-	if SyntaxGet(frame) == nil {
+	if frame.Highlighter == nil {
 		return
 	}
 	idx := max(line.Group.FirstLineNr+line.OffsetNr, 1)
@@ -338,7 +328,7 @@ func SyntaxMarkLineDirty(frame *FrameObject, line *LineHdrObject) {
 // and redraws all currently visible lines so the updated colors take effect.
 // screenExpand only draws lines not yet on screen, so we must do this ourselves.
 func SyntaxApplyDirty(frame *FrameObject) {
-	h := SyntaxGet(frame)
+	h := frame.Highlighter
 	if h == nil {
 		return
 	}

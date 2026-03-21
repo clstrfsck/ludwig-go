@@ -28,23 +28,6 @@ func sgn(val int) int {
 	return 0
 }
 
-// ChFillCopy is a wrapper for array copy that handles copies with fill character.
-// It copies srclen bytes from src starting at srcofs to dst starting at dstofs,
-// filling the remaining dstlen bytes with the fill character if srclen < dstlen.
-func ChFillCopy(
-	src *StrObject,
-	srcofs int,
-	srclen int,
-	dst *StrObject,
-	dstofs int,
-	dstlen int,
-	fill byte,
-) {
-	if dstlen > 0 {
-		dst.FillCopy(src, srcofs, srclen, dstofs, dstlen, fill)
-	}
-}
-
 // ChCompareStr compares two string regions and returns their ordering.
 // Returns -1 if target < text, 0 if equal, 1 if target > text.
 // The nchIdent output parameter receives the number of identical characters.
@@ -184,13 +167,6 @@ func ChToUpper(ch byte) byte {
 // ChToLower converts a character to lowercase.
 func ChToLower(ch byte) byte {
 	return byte(unicode.ToLower(rune(ch)))
-}
-
-// ChApplyN applies a function to n characters in a string object
-func ChApplyN(str *StrObject, fn func(byte) byte, n int) {
-	if n > 0 {
-		str.ApplyN(fn, n, 1)
-	}
 }
 
 // ChSearchStr searches for a target string within a text string.

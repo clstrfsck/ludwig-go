@@ -164,7 +164,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			} else {
 				srclen = tpar.Len
 			}
-			ChFillCopy(startMark.Line.Str, startMark.Col, srclen, tpar.Str, 1, tpar.Len, ' ')
+			tpar.Str.FillCopy(startMark.Line.Str, startMark.Col, srclen, 1, tpar.Len, ' ')
 		} else if !CmdAttrib[cmd].TparInfo[thisTp].MlAllowed {
 			ScreenMessage(MsgSpanMustBeOneLine)
 			return false
@@ -210,7 +210,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			tmpTp.Nxt = nil
 			tmpTp.Con = nil
 			tmpTp.Len = endMark.Col - 1
-			ChFillCopy(endMark.Line.Str, 1, endMark.Line.Used, tmpTp.Str, 1, tpar.Len, ' ')
+			tmpTp.Str.FillCopy(endMark.Line.Str, 1, endMark.Line.Used, 1, tpar.Len, ' ')
 		}
 	} else {
 		ScreenMessage(MsgNoSuchSpan)
