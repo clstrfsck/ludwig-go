@@ -19,17 +19,8 @@ func LineEOPCreate(inframe *FrameObject, group **GroupObject) {
 	newLine := &LineHdrObject{}
 	newGroup := &GroupObject{}
 
-	newLine.FLink = nil
-	newLine.BLink = nil
 	newLine.Group = newGroup
-	newLine.OffsetNr = 0
-	newLine.Marks = nil
-	newLine.Str = nil
-	newLine.Used = 0
-	newLine.ScrRowNr = 0
 
-	newGroup.FLink = nil
-	newGroup.BLink = nil
 	newGroup.Frame = inframe
 	newGroup.FirstLine = newLine
 	newGroup.LastLine = newLine
@@ -39,18 +30,6 @@ func LineEOPCreate(inframe *FrameObject, group **GroupObject) {
 	*group = newGroup
 }
 
-// LineEOPDestroy destroys a group containing only the EOP line
-func LineEOPDestroy(group **GroupObject) bool {
-	eopLine := (*group).FirstLine
-
-	if eopLine.Str != nil {
-		eopLine.Str = nil
-		eopLine.Marks = nil
-	}
-	*group = nil
-	return true
-}
-
 // LinesCreate creates a linked list of lines
 func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObject) {
 	var topLine *LineHdrObject
@@ -58,20 +37,13 @@ func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObj
 	var thisLine *LineHdrObject
 
 	for lineNr := 1; lineNr <= lineCount; lineNr++ {
-		thisLine = &LineHdrObject{}
+		thisLine = &LineHdrObject{
+			BLink: prevLine,
+		}
 
 		if topLine == nil {
 			topLine = thisLine
 		}
-
-		thisLine.FLink = nil
-		thisLine.BLink = prevLine
-		thisLine.Group = nil
-		thisLine.OffsetNr = 0
-		thisLine.Marks = nil
-		thisLine.Str = nil
-		thisLine.Used = 0
-		thisLine.ScrRowNr = 0
 
 		if prevLine != nil {
 			prevLine.FLink = thisLine
@@ -132,19 +104,15 @@ func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *
 		var lastGroup *GroupObject
 
 		for groupNr := 1; groupNr <= nrNewGroups; groupNr++ {
-			thisGroup := &GroupObject{}
+			thisGroup := &GroupObject{
+				BLink:       lastGroup,
+				Frame:       thisFrame,
+				FirstLineNr: lineNr,
+			}
 
 			if firstGroup == nil {
 				firstGroup = thisGroup
 			}
-
-			thisGroup.FLink = nil
-			thisGroup.BLink = lastGroup
-			thisGroup.Frame = thisFrame
-			thisGroup.FirstLine = nil
-			thisGroup.LastLine = nil
-			thisGroup.FirstLineNr = lineNr
-			thisGroup.NrLines = 0
 
 			if lastGroup != nil {
 				lastGroup.FLink = thisGroup

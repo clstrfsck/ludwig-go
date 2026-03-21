@@ -504,33 +504,6 @@ func TestLineEOPCreate(t *testing.T) {
 	})
 }
 
-func TestLineEOPDestroy(t *testing.T) {
-	t.Run("DestroyEOPGroup", func(t *testing.T) {
-		frame := createTestFrame()
-		var group *GroupObject
-		LineEOPCreate(frame, &group)
-
-		result := LineEOPDestroy(&group)
-
-		assert.True(t, result, "LineEOPDestroy returned false")
-		assert.Nil(t, group, "group should be nil after destroy")
-	})
-
-	t.Run("DestroyEOPWithStr", func(t *testing.T) {
-		frame := createTestFrame()
-		var group *GroupObject
-		LineEOPCreate(frame, &group)
-
-		// Add a Str object to the EOP line
-		group.FirstLine.Str = NewBlankStrObject(MaxStrLen)
-
-		result := LineEOPDestroy(&group)
-
-		assert.True(t, result, "LineEOPDestroy returned false")
-		assert.Nil(t, group, "group should be nil after destroy")
-	})
-}
-
 // Tests for LinesInject - Basic cases
 
 func TestLinesInject_Basic(t *testing.T) {

@@ -39,9 +39,7 @@ func setupInitialValues() {
 	ExecLevel = 0
 
 	// Set up all the Default Default characteristics for a frame
-	for i := 0; i <= MaxMarkNumber; i++ {
-		InitialMarks[i] = nil
-	}
+	InitialMarks = MarkArray{}
 
 	InitialScrHeight = 1  // Set to tt_height for terminals
 	InitialScrWidth = 132 // Set to tt_width for terminals
