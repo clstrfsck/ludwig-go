@@ -14,10 +14,6 @@
 
 package ludwig
 
-import (
-	"math"
-)
-
 const (
 	thisOne        = "This one?"
 	replaceThisOne = "Replace this one?"
@@ -327,7 +323,7 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 	} else {
 		startCol = dotCol
 	}
-	count = int(math.Abs(float64(count)))
+	count = iabs(count)
 	if startCol > line.Used {
 		startCol = line.Used + 1
 	}

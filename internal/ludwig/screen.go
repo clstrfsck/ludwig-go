@@ -1083,7 +1083,7 @@ func ScreenGetLineP(
 	thisTp int,
 ) {
 	*outlen = 0
-	maxTp = abs(maxTp)
+	maxTp = iabs(maxTp)
 
 	if TtControlC {
 		return
@@ -1115,14 +1115,6 @@ func ScreenGetLineP(
 	if thisTp == maxTp || *outlen == 0 {
 		restorePromptLines(maxTp)
 	}
-}
-
-// abs returns the absolute value of an integer
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
 }
 
 // ScreenFreeBottomLine frees the bottom line of the screen
