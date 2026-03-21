@@ -1370,26 +1370,13 @@ func ScreenWriteNameStr(indent int, str string, width int) {
 }
 
 // ScreenWriteFileNameStr writes a file name with indent and width
-func ScreenWriteFileNameStr(indent int, str string, width int) {
+func ScreenWriteFileNameStr(indent int, str string) {
 	if LudwigMode == LudwigScreen {
-		for range indent {
-			VduDisplayCh(' ')
-		}
-		len := min(width, len(str))
-		spaces := width - len
-		VduDisplayStr(str[:len], false)
-		if spaces > 0 {
-			VduDisplayStr(spc(spaces), false)
-		}
+		VduDisplayStr(spc(indent), false)
+		VduDisplayStr(str, false)
 	} else {
 		fmt.Print(spc(indent))
-		for i := range width {
-			if i < len(str) {
-				fmt.Print(string(str[i]))
-			} else {
-				fmt.Print(" ")
-			}
-		}
+		fmt.Print(str)
 	}
 }
 
