@@ -156,7 +156,7 @@ func TextInsert(
 				}
 				lenRedraw := lastColRedraw - firstColRedraw + 1
 				if lenRedraw > 0 {
-					VduDisplayStr(dstLine.Str.Slice(firstColRedraw, lenRedraw), 0)
+					VduDisplayStr(dstLine.Str.Slice(firstColRedraw, lenRedraw), false)
 				}
 			}
 		}
@@ -217,7 +217,7 @@ func TextOvertype(
 			lenOnScr := lastColOnScr - firstColOnScr
 			if lenOnScr > 0 {
 				VduMoveCurs(firstColOnScr-dstLine.Group.Frame.ScrOffset, dstLine.ScrRowNr)
-				VduDisplayStr(dstLine.Str.Slice(firstColOnScr, lenOnScr), 0)
+				VduDisplayStr(dstLine.Str.Slice(firstColOnScr, lenOnScr), false)
 			}
 		}
 
@@ -378,7 +378,7 @@ func textIntraRemove(markOne *MarkObject, size int) bool {
 	if bufLen <= 0 {
 		VduClearEOL()
 	} else {
-		VduDisplayStr(ln.Str.Slice(firstColOnScr, bufLen), 3)
+		VduDisplayStr(ln.Str.Slice(firstColOnScr, bufLen), true)
 	}
 	return true
 }

@@ -32,7 +32,6 @@ const (
 	SPC = 32
 	DEL = 127
 
-	OutMClearEOL    = 1
 	NumControlChars = 33
 )
 
@@ -126,7 +125,7 @@ func VduClearEOL() {
 }
 
 // VduDisplayStr displays a string with optional clear to end of line
-func VduDisplayStr(str string, opts int) {
+func VduDisplayStr(str string, clearToEol bool) {
 	_, maxX := stdscr.MaxYX()
 	_, curX := stdscr.CursorYX()
 	maxlen := maxX - curX
@@ -140,7 +139,7 @@ func VduDisplayStr(str string, opts int) {
 
 	stdscr.Print(str[:slen])
 
-	if !hitMargin && (opts&OutMClearEOL) != 0 {
+	if !hitMargin && clearToEol {
 		VduClearEOL()
 	}
 }
@@ -245,7 +244,7 @@ func VduGetKey() int {
 // VduGetInput gets a line of input from the user with a prompt
 func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 	VduBold()
-	VduDisplayStr(prompt, OutMClearEOL)
+	VduDisplayStr(prompt, true)
 	VduNormal()
 
 	// Fill get with spaces
