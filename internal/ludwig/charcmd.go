@@ -108,12 +108,12 @@ func joinLines() bool {
 		return false
 	}
 	var theOtherMark *MarkObject
-	if MarkCreate(bLine, bLine.Used+1, &theOtherMark) {
-		defer MarkDestroy(&theOtherMark)
-		if TextRemove(theOtherMark, CurrentFrame.Dot) {
-			CurrentFrame.TextModified = true
-			return markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
-		}
+	MarkCreate(bLine, bLine.Used+1, &theOtherMark)
+	defer MarkDestroy(&theOtherMark)
+	if TextRemove(theOtherMark, CurrentFrame.Dot) {
+		CurrentFrame.TextModified = true
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+		return true
 	}
 	return false
 }

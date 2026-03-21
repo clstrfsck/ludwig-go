@@ -47,13 +47,8 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 		if FilesysRead(&mbx, result, &outlen) {
 			var line *LineHdrObject
 			var line2 *LineHdrObject
-			if !LinesCreate(1, &line, &line2) {
-				return false
-			}
-			if !LineChangeLength(line, outlen) {
-				LinesDestroy(&line, &line2)
-				return false
-			}
+			LinesCreate(1, &line, &line2)
+			LineChangeLength(line, outlen)
 			ChFillCopy(result, 1, outlen, line.Str, 1, line.Len(), ' ')
 			line.Used = outlen
 			line.BLink = *last

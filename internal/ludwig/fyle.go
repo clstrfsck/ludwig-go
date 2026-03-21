@@ -196,14 +196,8 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 			if outlen > 0 {
 				outlen = buffer.Length(' ', outlen)
 			}
-			if !LinesCreate(1, &line, &line2) {
-				return false
-			}
-			if !LineChangeLength(line, outlen) {
-				var tmp1, tmp2 *LineHdrObject = line, line2
-				LinesDestroy(&tmp1, &tmp2)
-				return false
-			}
+			LinesCreate(1, &line, &line2)
+			LineChangeLength(line, outlen)
 			ChFillCopy(buffer, 1, outlen, line.Str, 1, line.Len(), ' ')
 			line.Used = outlen
 			line.BLink = fp.LastLine
@@ -314,9 +308,7 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 			goto l98
 		}
 		var tmp1, tmp2 *LineHdrObject = firstLine, lastLine
-		if !LinesDestroy(&tmp1, &tmp2) {
-			goto l98
-		}
+		LinesDestroy(&tmp1, &tmp2)
 		if current.InputFile != 0 {
 			if Files[current.InputFile] != nil {
 				Files[current.InputFile].LineCount = 0
@@ -393,9 +385,7 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 			return false
 		}
 		var tmp1, tmp2 *LineHdrObject = firstLine, lastLine
-		if !LinesDestroy(&tmp1, &tmp2) {
-			return false
-		}
+		LinesDestroy(&tmp1, &tmp2)
 	}
 
 	// Page in the new lines
@@ -418,9 +408,7 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 
 		// If dot was on the null line, shift it onto the first line
 		if currentFrame.Dot.Line.FLink == nil {
-			if !MarkCreate(firstLine, currentFrame.Dot.Col, &currentFrame.Dot) {
-				return false
-			}
+			MarkCreate(firstLine, currentFrame.Dot.Col, &currentFrame.Dot)
 		}
 	}
 l98:
@@ -762,16 +750,10 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			if !LinesInject(first, last, CurrentFrame.Dot.Line) {
 				goto l99
 			}
-			if !MarkCreate(first, 1, &CurrentFrame.Marks[MarkEquals]) {
-				goto l99
-			}
+			MarkCreate(first, 1, &CurrentFrame.Marks[MarkEquals])
 			CurrentFrame.TextModified = true
-			if !MarkCreate(last.FLink, 1, &CurrentFrame.Marks[MarkModified]) {
-				goto l99
-			}
-			if !MarkCreate(last.FLink, 1, &CurrentFrame.Dot) {
-				goto l99
-			}
+			MarkCreate(last.FLink, 1, &CurrentFrame.Marks[MarkModified])
+			MarkCreate(last.FLink, 1, &CurrentFrame.Dot)
 		}
 
 	case CmdFileWrite:

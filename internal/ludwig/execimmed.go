@@ -122,16 +122,8 @@ func ExecuteImmed() {
 					}
 					if cmdSuccess {
 						CurrentFrame.TextModified = true
-						if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-							cmdSuccess = false
-						}
-						if !MarkCreate(
-							CurrentFrame.Dot.Line,
-							CurrentFrame.Dot.Col-inputLen,
-							&CurrentFrame.Marks[MarkEquals],
-						) {
-							cmdSuccess = false
-						}
+						markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+						MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col-inputLen, &CurrentFrame.Marks[MarkEquals])
 					} else {
 						// IF, FOR SOME REASON, THAT FAILED, CORRECT THE VDU IMAGE OF
 						// THE LINE. THIS IS BECAUSE VDU_GET_TEXT HAS CORRUPTED IT.
@@ -250,9 +242,7 @@ func ExecuteImmed() {
 			for {
 				// Destroy all of cmd_span's contents.
 				if cmdSpan.MarkOne.Line != nil {
-					if !LinesDestroy(&cmdSpan.MarkOne.Line, &cmdSpan.MarkTwo.Line) {
-						return
-					}
+					LinesDestroy(&cmdSpan.MarkOne.Line, &cmdSpan.MarkTwo.Line)
 					cmdSpan.MarkOne.Line = nil
 					cmdSpan.MarkTwo.Line = nil
 				}

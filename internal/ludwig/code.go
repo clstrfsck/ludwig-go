@@ -110,9 +110,7 @@ func errorMsg(ps *parseState, errText string) {
 				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 			}
 			var eLine *LineHdrObject
-			if !LinesCreate(1, &eLine, &eLine) {
-				return
-			}
+			LinesCreate(1, &eLine, &eLine)
 
 			str := NewBlankStrObject(MaxStrLen)
 			i := ps.currentPoint.Col
@@ -126,9 +124,7 @@ func errorMsg(ps *parseState, errText string) {
 				str.Set(i, errText[0])
 				errText = errText[1:]
 			}
-			if !LineChangeLength(eLine, i) {
-				return
-			}
+			LineChangeLength(eLine, i)
 			// "i" can't be zero here, so e_line->str != nullptr
 			eLine.Str.Copy(str, 1, i, 1)
 			eLine.Used = str.Length(' ', i)

@@ -15,7 +15,7 @@
 package ludwig
 
 // LineEOPCreate creates a group containing only the EOP line
-func LineEOPCreate(inframe *FrameObject, group **GroupObject) bool {
+func LineEOPCreate(inframe *FrameObject, group **GroupObject) {
 	newLine := &LineHdrObject{}
 	newGroup := &GroupObject{}
 
@@ -37,7 +37,6 @@ func LineEOPCreate(inframe *FrameObject, group **GroupObject) bool {
 	newGroup.NrLines = 1
 
 	*group = newGroup
-	return true
 }
 
 // LineEOPDestroy destroys a group containing only the EOP line
@@ -53,7 +52,7 @@ func LineEOPDestroy(group **GroupObject) bool {
 }
 
 // LinesCreate creates a linked list of lines
-func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObject) bool {
+func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObject) {
 	var topLine *LineHdrObject
 	var prevLine *LineHdrObject
 	var thisLine *LineHdrObject
@@ -82,11 +81,10 @@ func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObj
 
 	*firstLine = topLine
 	*lastLine = thisLine
-	return true
 }
 
 // LinesDestroy destroys a linked list of lines
-func LinesDestroy(firstLine **LineHdrObject, lastLine **LineHdrObject) bool {
+func LinesDestroy(firstLine **LineHdrObject, lastLine **LineHdrObject) {
 	thisLine := *firstLine
 
 	for thisLine != nil {
@@ -101,14 +99,12 @@ func LinesDestroy(firstLine **LineHdrObject, lastLine **LineHdrObject) bool {
 
 	*firstLine = nil
 	*lastLine = nil
-	return true
 }
 
 // GroupsDestroy destroys a linked list of groups
-func GroupsDestroy(firstGroup **GroupObject, lastGroup **GroupObject) bool {
+func GroupsDestroy(firstGroup **GroupObject, lastGroup **GroupObject) {
 	*firstGroup = nil
 	*lastGroup = nil
-	return true
 }
 
 // LinesInject injects a linked list of lines into the data structure
@@ -404,16 +400,14 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) bool {
 		lastGroup.FLink = nil
 		endGroup.BLink = topGroup
 
-		if !GroupsDestroy(&firstGroup, &lastGroup) {
-			return false
-		}
+		GroupsDestroy(&firstGroup, &lastGroup)
 	}
 
 	return true
 }
 
 // LineChangeLength changes the length of the allocated text of a line
-func LineChangeLength(line *LineHdrObject, newLength int) bool {
+func LineChangeLength(line *LineHdrObject, newLength int) {
 	var newStr *StrObject
 
 	if newLength > 0 {
@@ -437,8 +431,6 @@ func LineChangeLength(line *LineHdrObject, newLength int) bool {
 
 	// Change line to refer to the new str_object
 	line.Str = newStr
-
-	return true
 }
 
 // LineToNumber determines the line number of a given line

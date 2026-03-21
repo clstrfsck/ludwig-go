@@ -68,9 +68,7 @@ func WordFill(rept LeadParam, count int) bool {
 				}
 				if (startChar < CurrentFrame.MarginLeft) &&
 					(startChar < CurrentFrame.Dot.Line.Used) {
-					if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-						goto cleanup
-					}
+					MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 					if !TextInsert(
 						true, 1, BlankString, CurrentFrame.MarginLeft-startChar, here,
 					) {
@@ -87,12 +85,8 @@ func WordFill(rept LeadParam, count int) bool {
 							endChar++
 						}
 						if endChar > 1 {
-							if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-								goto cleanup
-							}
-							if !MarkCreate(CurrentFrame.Dot.Line, endChar, &there) {
-								goto cleanup
-							}
+							MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
+							MarkCreate(CurrentFrame.Dot.Line, endChar, &there)
 							if !TextRemove(here, there) {
 								goto cleanup
 							}
@@ -129,23 +123,15 @@ func WordFill(rept LeadParam, count int) bool {
 				startChar++
 			}
 			// 3. Split the line and ensure new line starts at margin_left
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-				goto cleanup
-			}
+			MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 			if CurrentFrame.Dot.Col > endChar {
-				if !MarkCreate(CurrentFrame.Dot.Line, endChar, &CurrentFrame.Dot) {
-					goto cleanup
-				}
+				MarkCreate(CurrentFrame.Dot.Line, endChar, &CurrentFrame.Dot)
 			}
 			if !TextSplitLine(here, CurrentFrame.MarginLeft, &there) {
 				goto cleanup
 			}
-			if !MarkDestroy(&here) {
-				goto cleanup
-			}
-			if !MarkDestroy(&there) {
-				goto cleanup
-			}
+			MarkDestroy(&here)
+			MarkDestroy(&there)
 			if rept != LeadParamPIndef {
 				count++
 			}
@@ -183,18 +169,10 @@ func WordFill(rept LeadParam, count int) bool {
 					// It will fit
 					oldHere = nil
 					oldThere = nil
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &here) {
-						goto cleanup
-					}
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &oldHere) {
-						goto cleanup
-					}
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &there) {
-						goto cleanup
-					}
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere) {
-						goto cleanup
-					}
+					MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &here)
+					MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &oldHere)
+					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &there)
+					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
 					CurrentFrame.Dot.Col = CurrentFrame.Dot.Line.Used + 2
 					// Copy the text
 					if !TextMove(true, 1, here, there, CurrentFrame.Dot, &here, &there) {
@@ -211,12 +189,8 @@ func WordFill(rept LeadParam, count int) bool {
 						goto cleanup
 					}
 					// Wipe out the old text
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, 1, &oldHere) {
-						goto cleanup
-					}
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere) {
-						goto cleanup
-					}
+					MarkCreate(CurrentFrame.Dot.Line.FLink, 1, &oldHere)
+					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
 					if !TextRemove(oldHere, oldThere) {
 						goto cleanup
 					}
@@ -236,9 +210,7 @@ func WordFill(rept LeadParam, count int) bool {
 						if !LinesExtract(thisLine, thisLine) {
 							goto cleanup
 						}
-						if !LinesDestroy(&thisLine, &thisLine) {
-							goto cleanup
-						}
+						LinesDestroy(&thisLine, &thisLine)
 						count--
 						if count > 0 {
 							goto getMore
@@ -252,9 +224,7 @@ func WordFill(rept LeadParam, count int) bool {
 					for CurrentFrame.Dot.Line.FLink.Str.Get(startChar) == ' ' {
 						startChar++
 					}
-					if !MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &there) {
-						goto cleanup
-					}
+					MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &there)
 					if startChar < CurrentFrame.MarginLeft {
 						// Must insert some chars
 						if !TextInsert(
@@ -267,44 +237,26 @@ func WordFill(rept LeadParam, count int) bool {
 							goto cleanup
 						}
 					} else {
-						if !MarkCreate(
-							CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &here,
-						) {
-							goto cleanup
-						}
+						MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &here)
 						if !TextRemove(here, there) {
 							goto cleanup
 						}
 					}
 				}
 				if here != nil {
-					if !MarkDestroy(&here) {
-						goto cleanup
-					}
+					MarkDestroy(&here)
 				}
 				if there != nil {
-					if !MarkDestroy(&there) {
-						goto cleanup
-					}
+					MarkDestroy(&there)
 				}
 			}
 		}
 		count--
 		if !leaveDotAlone {
-			if !MarkCreate(
-				CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot,
-			) {
-				goto cleanup
-			}
+			MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		}
 		CurrentFrame.TextModified = true
-		if !MarkCreate(
-			CurrentFrame.Dot.Line,
-			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified],
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
 	result = (count <= 0) || (rept == LeadParamPIndef)
 cleanup:
@@ -369,46 +321,24 @@ func WordCentre(rept LeadParam, count int) bool {
 			(CurrentFrame.Dot.Line.Used-startChar))/2 -
 			(startChar - CurrentFrame.MarginLeft)
 		if spaceToAdd > 0 {
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-				goto cleanup
-			}
+			MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 			if !TextInsert(true, 1, BlankString, spaceToAdd, here) {
 				goto cleanup
 			}
-			if !MarkDestroy(&here) {
-				goto cleanup
-			}
+			MarkDestroy(&here)
 		} else if spaceToAdd < 0 {
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar, &there) {
-				goto cleanup
-			}
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar-spaceToAdd, &here) {
-				goto cleanup
-			}
+			MarkCreate(CurrentFrame.Dot.Line, startChar, &there)
+			MarkCreate(CurrentFrame.Dot.Line, startChar-spaceToAdd, &here)
 			if !TextRemove(there, here) {
 				goto cleanup
 			}
-			if !MarkDestroy(&here) {
-				goto cleanup
-			}
-			if !MarkDestroy(&there) {
-				goto cleanup
-			}
+			MarkDestroy(&here)
+			MarkDestroy(&there)
 		}
 		count--
-		if !MarkCreate(
-			CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot,
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
-		if !MarkCreate(
-			CurrentFrame.Dot.Line,
-			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified],
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
 	result = (count <= 0) || (rept == LeadParamPIndef)
 cleanup:
@@ -507,15 +437,11 @@ func WordJustify(rept LeadParam, count int) bool {
 			spaceToAdd = int(debit + 0.5)
 			if spaceToAdd > 0 {
 				here = nil
-				if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-					goto cleanup
-				}
+				MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 				if !TextInsert(true, 1, BlankString, spaceToAdd, here) {
 					goto cleanup
 				}
-				if !MarkDestroy(&here) {
-					goto cleanup
-				}
+				MarkDestroy(&here)
 				debit -= float64(spaceToAdd)
 			}
 			for CurrentFrame.Dot.Line.Str.Get(startChar) == ' ' {
@@ -524,19 +450,9 @@ func WordJustify(rept LeadParam, count int) bool {
 		}
 	nextLine:
 		count--
-		if !MarkCreate(
-			CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot,
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
-		if !MarkCreate(
-			CurrentFrame.Dot.Line,
-			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified],
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
 	result = (count <= 0) || (rept == LeadParamPIndef)
 cleanup:
@@ -603,13 +519,9 @@ func WordSqueeze(rept LeadParam, count int) bool {
 			}
 			if (endChar - startChar) > 1 {
 				here = nil
-				if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-					goto cleanup
-				}
+				MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 				there = nil
-				if !MarkCreate(CurrentFrame.Dot.Line, endChar-1, &there) {
-					goto cleanup
-				}
+				MarkCreate(CurrentFrame.Dot.Line, endChar-1, &there)
 				if !TextRemove(here, there) {
 					goto cleanup
 				}
@@ -620,13 +532,9 @@ func WordSqueeze(rept LeadParam, count int) bool {
 		}
 
 		count -= 1
-		if !MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
-		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-			goto cleanup
-		}
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 	}
 	result = (count <= 0) || (rept == LeadParamPIndef)
 cleanup:
@@ -689,46 +597,24 @@ func WordRight(rept LeadParam, count int) bool {
 		}
 		spaceToAdd = CurrentFrame.MarginRight - CurrentFrame.Dot.Line.Used
 		if spaceToAdd > 0 {
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-				goto cleanup
-			}
+			MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 			if !TextInsert(true, 1, BlankString, spaceToAdd, here) {
 				goto cleanup
 			}
-			if !MarkDestroy(&here) {
-				goto cleanup
-			}
+			MarkDestroy(&here)
 		} else if spaceToAdd < 0 {
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar, &there) {
-				goto cleanup
-			}
-			if !MarkCreate(CurrentFrame.Dot.Line, startChar-spaceToAdd, &here) {
-				goto cleanup
-			}
+			MarkCreate(CurrentFrame.Dot.Line, startChar, &there)
+			MarkCreate(CurrentFrame.Dot.Line, startChar-spaceToAdd, &here)
 			if !TextRemove(there, here) {
 				goto cleanup
 			}
-			if !MarkDestroy(&here) {
-				goto cleanup
-			}
-			if !MarkDestroy(&there) {
-				goto cleanup
-			}
+			MarkDestroy(&here)
+			MarkDestroy(&there)
 		}
 		count--
-		if !MarkCreate(
-			CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot,
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
-		if !MarkCreate(
-			CurrentFrame.Dot.Line,
-			CurrentFrame.Dot.Col,
-			&CurrentFrame.Marks[MarkModified],
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
 	result = (count <= 0) || (rept == LeadParamPIndef)
 cleanup:
@@ -787,45 +673,27 @@ func WordLeft(rept LeadParam, count int) bool {
 		}
 		if startChar != CurrentFrame.MarginLeft {
 			if startChar < CurrentFrame.MarginLeft {
-				if !MarkCreate(CurrentFrame.Dot.Line, startChar, &here) {
-					goto cleanup
-				}
+				MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 				if !TextInsert(
 					true, 1, BlankString, CurrentFrame.MarginLeft-startChar, here,
 				) {
 					goto cleanup
 				}
-				if !MarkDestroy(&here) {
-					goto cleanup
-				}
+				MarkDestroy(&here)
 			} else {
-				if !MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.MarginLeft, &here) {
-					goto cleanup
-				}
-				if !MarkCreate(CurrentFrame.Dot.Line, startChar, &there) {
-					goto cleanup
-				}
+				MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.MarginLeft, &here)
+				MarkCreate(CurrentFrame.Dot.Line, startChar, &there)
 				if !TextRemove(here, there) {
 					goto cleanup
 				}
-				if !MarkDestroy(&here) {
-					goto cleanup
-				}
-				if !MarkDestroy(&there) {
-					goto cleanup
-				}
+				MarkDestroy(&here)
+				MarkDestroy(&there)
 			}
 		}
 		count--
-		if !MarkCreate(
-			CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot,
-		) {
-			goto cleanup
-		}
+		MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
-		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-			goto cleanup
-		}
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 	}
 	result = (count <= 0) || (rept == LeadParamPIndef)
 cleanup:
@@ -896,9 +764,7 @@ func WordAdvanceWord(rept LeadParam, count int) bool {
 			count--
 		}
 	success:
-		if !MarkCreate(thisLine, pos, &CurrentFrame.Dot) {
-			goto cleanup
-		}
+		MarkCreate(thisLine, pos, &CurrentFrame.Dot)
 		result = true
 	} else if rept == LeadParamNIndef {
 		// Find non-blank line in paragraph
@@ -920,9 +786,7 @@ func WordAdvanceWord(rept LeadParam, count int) bool {
 		for thisLine.Str.Get(pos) == ' ' {
 			pos++
 		}
-		if !MarkCreate(thisLine, pos, &CurrentFrame.Dot) {
-			goto cleanup
-		}
+		MarkCreate(thisLine, pos, &CurrentFrame.Dot)
 		result = true
 	} else {
 		// Move backwards
@@ -976,9 +840,7 @@ func WordAdvanceWord(rept LeadParam, count int) bool {
 				break
 			}
 		}
-		if !MarkCreate(thisLine, pos, &CurrentFrame.Dot) {
-			goto cleanup
-		}
+		MarkCreate(thisLine, pos, &CurrentFrame.Dot)
 		result = true
 	}
 cleanup:
@@ -1003,28 +865,20 @@ func WordDeleteWord(rept LeadParam, count int) bool {
 		ScreenMessage(MsgSyntaxError)
 		goto cleanup
 	}
-	if !markCopy(CurrentFrame.Dot, &oldPos) {
-		goto cleanup
-	}
+	markCopy(CurrentFrame.Dot, &oldPos)
 	// Get to beginning of word if in middle
 	if !WordAdvanceWord(LeadParamPInt, 0) {
 		goto cleanup
 	}
-	if !markCopy(CurrentFrame.Dot, &here) {
-		goto cleanup
-	}
+	markCopy(CurrentFrame.Dot, &here)
 	if !WordAdvanceWord(rept, count) {
 		// Put dot back and bail out
-		if !markCopy(oldPos, &CurrentFrame.Dot) {
-			goto cleanup
-		}
+		markCopy(oldPos, &CurrentFrame.Dot)
 		goto cleanup
 	}
 	// Wipe out everything from dot to here
 	oldDotCol = CurrentFrame.Dot.Col
-	if !markCopy(CurrentFrame.Dot, &theOtherMark) {
-		goto cleanup
-	}
+	markCopy(CurrentFrame.Dot, &theOtherMark)
 	lineNr = LineToNumber(CurrentFrame.Dot.Line)
 	newLineNr = LineToNumber(here.Line)
 	if (lineNr > newLineNr) ||
@@ -1036,9 +890,7 @@ func WordDeleteWord(rept LeadParam, count int) bool {
 	}
 	if CurrentFrame != FrameOops {
 		// Make sure oops_span is okay
-		if !MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo) {
-			goto cleanup
-		}
+		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
 		result = TextMove(
 			false,
 			1,

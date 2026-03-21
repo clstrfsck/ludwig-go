@@ -62,81 +62,76 @@ func FrameEdit(frameName string) bool {
 	created |= frmCreated | spnCreated
 
 	var gptr *GroupObject
-	if LineEOPCreate(fptr, &gptr) {
-		created |= grpCreated
+	LineEOPCreate(fptr, &gptr)
+	created |= grpCreated
 
-		// Set up span object
-		sptr.BLink = oldp
-		sptr.FLink = ptr
-		if oldp == nil {
-			FirstSpan = sptr
-		} else {
-			oldp.FLink = sptr
-		}
-		if ptr != nil {
-			ptr.BLink = sptr
-		}
-		sptr.Name = fname
-		sptr.Frame = fptr
-		sptr.MarkOne = nil
-		sptr.MarkTwo = nil
-		sptr.Code = nil
+	// Set up span object
+	sptr.BLink = oldp
+	sptr.FLink = ptr
+	if oldp == nil {
+		FirstSpan = sptr
+	} else {
+		oldp.FLink = sptr
+	}
+	if ptr != nil {
+		ptr.BLink = sptr
+	}
+	sptr.Name = fname
+	sptr.Frame = fptr
+	sptr.MarkOne = nil
+	sptr.MarkTwo = nil
+	sptr.Code = nil
 
-		if MarkCreate(gptr.FirstLine, 1, &sptr.MarkOne) {
-			created |= mrk1Created
-			if MarkCreate(gptr.LastLine, 1, &sptr.MarkTwo) {
-				created |= mrk2Created
-				fptr.Dot = nil
-				if MarkCreate(gptr.FirstLine, InitialMarginLeft, &fptr.Dot) {
-					created |= dotCreated
-				}
-			}
-		}
+	MarkCreate(gptr.FirstLine, 1, &sptr.MarkOne)
+	created |= mrk1Created
+	MarkCreate(gptr.LastLine, 1, &sptr.MarkTwo)
+	created |= mrk2Created
+	fptr.Dot = nil
+	MarkCreate(gptr.FirstLine, InitialMarginLeft, &fptr.Dot)
+	created |= dotCreated
 
-		if (created & dotCreated) != 0 {
-			// Initialize frame object
-			fptr.FirstGroup = gptr
-			fptr.LastGroup = gptr
-			fptr.Marks = InitialMarks
-			fptr.ScrHeight = InitialScrHeight
-			fptr.ScrWidth = InitialScrWidth
-			fptr.ScrOffset = InitialScrOffset
-			fptr.ScrDotLine = 1
-			fptr.Span = sptr
-			fptr.ReturnFrame = CurrentFrame
-			fptr.InputCount = 0
-			fptr.SpaceLimit = FileData.Space
-			fptr.SpaceLeft = FileData.Space
-			fptr.TextModified = false
-			fptr.MarginLeft = InitialMarginLeft
-			fptr.MarginRight = InitialMarginRight
-			fptr.MarginTop = InitialMarginTop
-			fptr.MarginBottom = InitialMarginBottom
-			fptr.TabStops = InitialTabStops
-			fptr.Options = InitialOptions
-			fptr.InputFile = 0
-			fptr.OutputFile = 0
-			fptr.GetTpar = TParObject{}
-			fptr.GetPatternPtr = nil
-			fptr.EqsTpar = TParObject{}
-			fptr.EqsPatternPtr = nil
-			fptr.Rep1Tpar = TParObject{}
-			fptr.RepPatternPtr = nil
-			fptr.Rep2Tpar = TParObject{}
-			fptr.VerifyTpar = TParObject{}
+	if (created & dotCreated) != 0 {
+		// Initialize frame object
+		fptr.FirstGroup = gptr
+		fptr.LastGroup = gptr
+		fptr.Marks = InitialMarks
+		fptr.ScrHeight = InitialScrHeight
+		fptr.ScrWidth = InitialScrWidth
+		fptr.ScrOffset = InitialScrOffset
+		fptr.ScrDotLine = 1
+		fptr.Span = sptr
+		fptr.ReturnFrame = CurrentFrame
+		fptr.InputCount = 0
+		fptr.SpaceLimit = FileData.Space
+		fptr.SpaceLeft = FileData.Space
+		fptr.TextModified = false
+		fptr.MarginLeft = InitialMarginLeft
+		fptr.MarginRight = InitialMarginRight
+		fptr.MarginTop = InitialMarginTop
+		fptr.MarginBottom = InitialMarginBottom
+		fptr.TabStops = InitialTabStops
+		fptr.Options = InitialOptions
+		fptr.InputFile = 0
+		fptr.OutputFile = 0
+		fptr.GetTpar = TParObject{}
+		fptr.GetPatternPtr = nil
+		fptr.EqsTpar = TParObject{}
+		fptr.EqsPatternPtr = nil
+		fptr.Rep1Tpar = TParObject{}
+		fptr.RepPatternPtr = nil
+		fptr.Rep2Tpar = TParObject{}
+		fptr.VerifyTpar = TParObject{}
 
-			if LineChangeLength(gptr.LastLine, NameLen+len(endOfFile)) {
-				// Copy end-of-file message and frame name
-				if gptr.LastLine.Str != nil {
-					lineLen := gptr.LastLine.Len()
-					gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, lineLen, ' ')
-					eofLen := len(endOfFile) + 1
-					gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
-					gptr.LastLine.Used = 0 // Special feature of the NULL line!
-					CurrentFrame = fptr
-					return true
-				}
-			}
+		LineChangeLength(gptr.LastLine, NameLen+len(endOfFile))
+		// Copy end-of-file message and frame name
+		if gptr.LastLine.Str != nil {
+			lineLen := gptr.LastLine.Len()
+			gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, lineLen, ' ')
+			eofLen := len(endOfFile) + 1
+			gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
+			gptr.LastLine.Used = 0 // Special feature of the NULL line!
+			CurrentFrame = fptr
+			return true
 		}
 	}
 
@@ -206,14 +201,10 @@ func FrameKill(frameName string) bool {
 	}
 
 	// Step 3a: Destroy all internal lines
-	if !MarkDestroy(&thisFrame.Dot) {
-		return false
-	}
+	MarkDestroy(&thisFrame.Dot)
 	for i := 0; i <= MaxMarkNumber; i++ {
 		if thisFrame.Marks[i] != nil {
-			if !MarkDestroy(&thisFrame.Marks[i]) {
-				return false
-			}
+			MarkDestroy(&thisFrame.Marks[i])
 		}
 	}
 
@@ -223,9 +214,7 @@ func FrameKill(frameName string) bool {
 		if !LinesExtract(ptr1, ptr2) {
 			return false
 		}
-		if !LinesDestroy(&ptr1, &ptr2) {
-			return false
-		}
+		LinesDestroy(&ptr1, &ptr2)
 	}
 
 	// Step 3b: Destroy the <eop> line
@@ -519,12 +508,8 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 	case 'I': // insert tabs
 		var firstLine *LineHdrObject
 		var lastLine *LineHdrObject
-		if !LinesCreate(1, &firstLine, &lastLine) {
-			return false
-		}
-		if !LineChangeLength(firstLine, MaxStrLen) {
-			return false
-		}
+		LinesCreate(1, &firstLine, &lastLine)
+		LineChangeLength(firstLine, MaxStrLen)
 		if setInitial {
 			for i := 1; i <= MaxStrLen; i++ {
 				if InitialTabStops[i] {
@@ -544,16 +529,10 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		}
 		// Calculate used length
 		firstLine.Used = firstLine.Str.Length(' ', MaxStrLen)
-		if !LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line) {
-			return false
-		}
-		if !MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot) {
-			return false
-		}
+		LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
+		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
-		if !MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified]) {
-			return false
-		}
+		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 
 	case 'R': // Template Ruler
 		i := 1
@@ -619,9 +598,7 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		if !LinesExtract(firstLine, firstLine) {
 			return false
 		}
-		if !LinesDestroy(&firstLine, &firstLine) {
-			return false
-		}
+		LinesDestroy(&firstLine, &firstLine)
 		CurrentFrame.Dot.Col = dotCol
 
 	case 'S': // Set tab

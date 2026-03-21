@@ -44,7 +44,8 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 			cmdValid = doCmdReturn(count, &newEql, &eopLineNr)
 
 		case CmdHome:
-			cmdValid = doCmdHome(&newEql)
+			doCmdHome(&newEql)
+			cmdValid = true
 
 		case CmdTab:
 			cmdValid = doCmdTabBacktab(1, count, &newEql)
@@ -59,7 +60,8 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 			cmdValid = doCmdRight(rept, count, &newEql)
 
 		case CmdDown:
-			cmdValid = doCmdDown(rept, count, &newEql, eopLineNr)
+			doCmdDown(rept, count, &newEql, eopLineNr)
+			cmdValid = true
 
 		case CmdUp:
 			cmdValid = doCmdUp(rept, count, &newEql)
@@ -107,7 +109,7 @@ func ArrowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bo
 	return cmdStatus || !fromSpan
 }
 
-func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) bool {
+func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) {
 	*newEql = *CurrentFrame.Dot
 	dotLine := CurrentFrame.Dot.Line
 	lineNr := LineToNumber(dotLine)
@@ -125,17 +127,14 @@ func doCmdDown(rept LeadParam, count int, newEql *MarkObject, eopLineNr int) boo
 	case LeadParamPIndef:
 		dotLine = CurrentFrame.LastGroup.LastLine
 	}
-	return MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+	MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 }
 
-func doCmdHome(newEql *MarkObject) bool {
+func doCmdHome(newEql *MarkObject) {
 	*newEql = *CurrentFrame.Dot
 	if CurrentFrame == ScrFrame {
-		if !MarkCreate(ScrTopLine, CurrentFrame.ScrOffset+1, &CurrentFrame.Dot) {
-			return false
-		}
+		MarkCreate(ScrTopLine, CurrentFrame.ScrOffset+1, &CurrentFrame.Dot)
 	}
-	return true
 }
 
 func doCmdLeft(rept LeadParam, count int, newEql *MarkObject) bool {
@@ -213,7 +212,8 @@ func doCmdUp(rept LeadParam, count int, newEql *MarkObject) bool {
 	case LeadParamPIndef:
 		dotLine = CurrentFrame.FirstGroup.FirstLine
 	}
-	return MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+	MarkCreate(dotLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+	return true
 }
 
 func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
@@ -237,5 +237,6 @@ func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
 		dotCol = TextReturnCol(dotLine, dotCol, false)
 		dotLine = dotLine.FLink
 	}
-	return MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
+	MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
+	return true
 }

@@ -269,9 +269,8 @@ func TestLineChangeLength(t *testing.T) {
 
 		originalSpace := frame.SpaceLeft
 
-		result := LineChangeLength(line, 15)
+		LineChangeLength(line, 15)
 
-		assert.True(t, result, "LineChangeLength returned false")
 		assert.NotNil(t, line.Str, "Str should not be nil")
 		// Should be quantized to 20
 		assert.Equal(t, 20, line.Len(), "Expected length 20 (quantized)")
@@ -288,9 +287,8 @@ func TestLineChangeLength(t *testing.T) {
 		space1 := frame.SpaceLeft
 
 		// Expand to 25
-		result := LineChangeLength(line, 25)
+		LineChangeLength(line, 25)
 
-		assert.True(t, result, "LineChangeLength returned false")
 		// Should be quantized to 30
 		assert.Equal(t, 30, line.Len(), "Expected length 30 (quantized)")
 		// Space change: -30 + 20 = -10 from space1
@@ -309,9 +307,8 @@ func TestLineChangeLength(t *testing.T) {
 		space1 := frame.SpaceLeft
 
 		// Shrink to 20
-		result := LineChangeLength(line, 20)
+		LineChangeLength(line, 20)
 
-		assert.True(t, result, "LineChangeLength returned false")
 		// Should be quantized to 30 (20/10 + 1) * 10 = 30
 		assert.Equal(t, 30, line.Len(), "Expected length 30 (quantized)")
 		// Space freed: oldLen - 30
@@ -329,9 +326,8 @@ func TestLineChangeLength(t *testing.T) {
 		space1 := frame.SpaceLeft
 
 		// Set to zero
-		result := LineChangeLength(line, 0)
+		LineChangeLength(line, 0)
 
-		assert.True(t, result, "LineChangeLength returned false")
 		assert.Nil(t, line.Str, "Str should be nil when length is 0")
 		assert.Equal(t, 0, line.Len(), "Expected length 0")
 		// All space should be freed
@@ -367,8 +363,7 @@ func TestLineChangeLength(t *testing.T) {
 		}
 
 		for _, tc := range testCases {
-			result := LineChangeLength(line, tc.requested)
-			assert.True(t, result, "LineChangeLength(%d) returned false", tc.requested)
+			LineChangeLength(line, tc.requested)
 			assert.Equal(t, tc.expected, line.Len(), "LineChangeLength(%d): expected %d", tc.requested, tc.expected)
 		}
 	})
@@ -379,9 +374,8 @@ func TestLineChangeLength(t *testing.T) {
 			Str: EmptyStrObject(),
 		}
 
-		result := LineChangeLength(line, 20)
+		LineChangeLength(line, 20)
 
-		assert.True(t, result, "LineChangeLength returned false")
 		// Should be quantized to 30
 		assert.Equal(t, 30, line.Len(), "Expected length 30 (quantized)")
 		// Should not panic even without a group
@@ -394,9 +388,8 @@ func TestLinesCreate(t *testing.T) {
 	t.Run("CreateSingleLine", func(t *testing.T) {
 		var firstLine, lastLine *LineHdrObject
 
-		result := LinesCreate(1, &firstLine, &lastLine)
+		LinesCreate(1, &firstLine, &lastLine)
 
-		assert.True(t, result, "LinesCreate returned false")
 		assert.NotNil(t, firstLine, "firstLine is nil")
 		assert.NotNil(t, lastLine, "lastLine is nil")
 		assert.Equal(t, lastLine, firstLine, "For single line, firstLine should equal lastLine")
@@ -407,9 +400,8 @@ func TestLinesCreate(t *testing.T) {
 	t.Run("CreateMultipleLines", func(t *testing.T) {
 		var firstLine, lastLine *LineHdrObject
 
-		result := LinesCreate(5, &firstLine, &lastLine)
+		LinesCreate(5, &firstLine, &lastLine)
 
-		assert.True(t, result, "LinesCreate returned false")
 		assert.NotNil(t, firstLine, "firstLine is nil")
 		assert.NotNil(t, lastLine, "lastLine is nil")
 
@@ -451,10 +443,10 @@ func TestLinesCreate(t *testing.T) {
 	t.Run("ZeroLines", func(t *testing.T) {
 		var firstLine, lastLine *LineHdrObject
 
-		result := LinesCreate(0, &firstLine, &lastLine)
+		LinesCreate(0, &firstLine, &lastLine)
 
-		assert.True(t, result, "LinesCreate returned false")
-		// With 0 lines, both should remain nil (or undefined)
+		assert.Nil(t, firstLine, "LinesCreate should return nil for zero lines")
+		assert.Nil(t, lastLine, "LinesCreate should return nil for zero lines")
 	})
 
 	t.Run("VerifyInitialization", func(t *testing.T) {
@@ -481,9 +473,8 @@ func TestLinesDestroy(t *testing.T) {
 		var firstLine, lastLine *LineHdrObject
 		LinesCreate(1, &firstLine, &lastLine)
 
-		result := LinesDestroy(&firstLine, &lastLine)
+		LinesDestroy(&firstLine, &lastLine)
 
-		assert.True(t, result, "LinesDestroy returned false")
 		assert.Nil(t, firstLine, "firstLine should be nil after destroy")
 		assert.Nil(t, lastLine, "lastLine should be nil after destroy")
 	})
@@ -492,9 +483,8 @@ func TestLinesDestroy(t *testing.T) {
 		var firstLine, lastLine *LineHdrObject
 		LinesCreate(10, &firstLine, &lastLine)
 
-		result := LinesDestroy(&firstLine, &lastLine)
+		LinesDestroy(&firstLine, &lastLine)
 
-		assert.True(t, result, "LinesDestroy returned false")
 		assert.Nil(t, firstLine, "firstLine should be nil after destroy")
 		assert.Nil(t, lastLine, "lastLine should be nil after destroy")
 	})
@@ -510,19 +500,19 @@ func TestLinesDestroy(t *testing.T) {
 			line = line.FLink
 		}
 
-		result := LinesDestroy(&firstLine, &lastLine)
+		LinesDestroy(&firstLine, &lastLine)
 
-		assert.True(t, result, "LinesDestroy returned false")
-		// Should not panic and should clean up Str objects
+		assert.Nil(t, firstLine, "LinesDestroy should set lines to nil")
+		assert.Nil(t, lastLine, "LinesDestroy should set lines to nil")
 	})
 
 	t.Run("DestroyNilLines", func(t *testing.T) {
 		var firstLine, lastLine *LineHdrObject
 
-		result := LinesDestroy(&firstLine, &lastLine)
+		LinesDestroy(&firstLine, &lastLine)
 
-		assert.True(t, result, "LinesDestroy returned false")
-		// Should handle nil gracefully
+		assert.Nil(t, firstLine, "LinesDestroy should set lines to nil")
+		assert.Nil(t, lastLine, "LinesDestroy should set lines to nil")
 	})
 }
 
@@ -533,9 +523,8 @@ func TestLineEOPCreate(t *testing.T) {
 		frame := createTestFrame()
 		var group *GroupObject
 
-		result := LineEOPCreate(frame, &group)
+		LineEOPCreate(frame, &group)
 
-		assert.True(t, result, "LineEOPCreate returned false")
 		assert.NotNil(t, group, "group is nil")
 		assert.Equal(t, frame, group.Frame, "Group frame mismatch")
 		assert.NotNil(t, group.FirstLine, "FirstLine is nil")
@@ -599,9 +588,8 @@ func TestGroupsDestroy(t *testing.T) {
 		firstGroup := group
 		lastGroup := group
 
-		result := GroupsDestroy(&firstGroup, &lastGroup)
+		GroupsDestroy(&firstGroup, &lastGroup)
 
-		assert.True(t, result, "GroupsDestroy returned false")
 		assert.Nil(t, firstGroup, "firstGroup should be nil")
 		assert.Nil(t, lastGroup, "lastGroup should be nil")
 	})
@@ -617,9 +605,8 @@ func TestGroupsDestroy(t *testing.T) {
 		firstGroup := group1
 		lastGroup := group3
 
-		result := GroupsDestroy(&firstGroup, &lastGroup)
+		GroupsDestroy(&firstGroup, &lastGroup)
 
-		assert.True(t, result, "GroupsDestroy returned false")
 		assert.Nil(t, firstGroup, "firstGroup should be nil")
 		assert.Nil(t, lastGroup, "lastGroup should be nil")
 	})

@@ -129,9 +129,8 @@ func TestMarkCreate(t *testing.T) {
 		line := createTestLine()
 		var mark *MarkObject
 
-		result := MarkCreate(line, 10, &mark)
+		MarkCreate(line, 10, &mark)
 
-		assert.True(t, result, "MarkCreate should return true")
 		assert.NotNil(t, mark, "Mark should be created")
 		assert.Equal(t, line, mark.Line, "Mark should be on the specified line")
 		assert.Equal(t, 10, mark.Col, "Mark column should be 10")
@@ -144,9 +143,8 @@ func TestMarkCreate(t *testing.T) {
 		var mark *MarkObject
 
 		MarkCreate(line, 10, &mark)
-		result := MarkCreate(line, 20, &mark)
+		MarkCreate(line, 20, &mark)
 
-		assert.True(t, result, "MarkCreate should return true")
 		assert.Equal(t, line, mark.Line, "Mark should still be on the same line")
 		assert.Equal(t, 20, mark.Col, "Mark column should be 20")
 		assert.Len(t, line.Marks, 1, "Line should still have 1 mark")
@@ -158,9 +156,8 @@ func TestMarkCreate(t *testing.T) {
 		var mark *MarkObject
 
 		MarkCreate(line1, 10, &mark)
-		result := MarkCreate(line2, 15, &mark)
+		MarkCreate(line2, 15, &mark)
 
-		assert.True(t, result, "MarkCreate should return true")
 		assert.Equal(t, line2, mark.Line, "Mark should be on line2")
 		assert.Equal(t, 15, mark.Col, "Mark column should be 15")
 		assert.Empty(t, line1.Marks, "Line1 should have 0 marks")
@@ -191,9 +188,8 @@ func TestMarkDestroy(t *testing.T) {
 		var mark *MarkObject
 
 		MarkCreate(line, 10, &mark)
-		result := MarkDestroy(&mark)
+		MarkDestroy(&mark)
 
-		assert.True(t, result, "MarkDestroy should return true")
 		assert.Nil(t, mark, "Mark should be nil after destruction")
 		assert.Empty(t, line.Marks, "Line should have 0 marks after destruction")
 	})

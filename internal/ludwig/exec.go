@@ -18,6 +18,14 @@ import (
 	"math"
 )
 
+func iabs(n int) int {
+	if n < 0 {
+		// Still an issue with -2^31
+		return -n
+	}
+	return n
+}
+
 // ExecComputeLineRange returns the range of lines specified by the REPT/COUNT pair.
 // It returns false if the range does not exist.
 // It returns firstLine as nil if the range is empty.
@@ -161,7 +169,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	// Fix commands which use marks without using @ in the syntax
 	switch command {
 	case CmdMark:
-		if count == 0 || int(math.Abs(float64(count))) > MaxUserMarkNumber {
+		if count == 0 || iabs(count) > MaxUserMarkNumber {
 			ScreenMessage(MsgIllegalMarkNumber)
 			goto l99
 		}
@@ -249,9 +257,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			newLine = theMark.Line
 		}
 
-		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
-			goto l99
-		}
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
 		MarkCreate(newLine, 1, &CurrentFrame.Dot)
 
 	case CmdBridge, CmdNext:
@@ -277,9 +283,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 			if CurrentFrame != FrameOops {
 				// Make sure oops_span is okay
-				if !MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo) {
-					goto l99
-				}
+				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
 				cmdSuccess = TextMove(
 					false,                        // Don't copy, transfer
 					1,                            // One instance of
@@ -318,16 +322,12 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesInject(firstLine, lastLine, FrameOops.LastGroup.LastLine) {
 					goto l99
 				}
-				if !MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals]) {
-					goto l99
-				}
-				if !MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot) {
-					goto l99
-				}
+				MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals])
+				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot)
 				FrameOops.TextModified = true
 				markCopy(FrameOops.Dot, &FrameOops.Marks[MarkModified])
-			} else if !LinesDestroy(&firstLine, &lastLine) {
-				goto l99
+			} else {
+				LinesDestroy(&firstLine, &lastLine)
 			}
 			CurrentFrame.Dot.Col = dotCol
 			CurrentFrame.TextModified = true
@@ -467,9 +467,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesExtract(firstLine, lastLine) {
 					goto l99
 				}
-				if !LinesDestroy(&firstLine, &lastLine) {
-					goto l99
-				}
+				LinesDestroy(&firstLine, &lastLine)
 			}
 
 			// Insert the new tpar into frame COMMAND
@@ -512,9 +510,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesExtract(firstLine, lastLine) {
 					goto l99
 				}
-				if !LinesDestroy(&firstLine, &lastLine) {
-					goto l99
-				}
+				LinesDestroy(&firstLine, &lastLine)
 			}
 			if FileCommand(CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
 				CurrentFrame = CurrentFrame.ReturnFrame
@@ -588,23 +584,21 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdInsertLine:
 		if count != 0 {
-			cmdSuccess = LinesCreate(int(math.Abs(float64(count))), &firstLine, &lastLine)
-			if cmdSuccess {
-				cmdSuccess = LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
-			}
+			LinesCreate(int(math.Abs(float64(count))), &firstLine, &lastLine)
+			cmdSuccess = LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
 			if cmdSuccess {
 				if count > 0 {
 					markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
-					cmdSuccess = MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+					MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 				} else {
-					cmdSuccess = MarkCreate(firstLine, CurrentFrame.Dot.Col,
-						&CurrentFrame.Marks[MarkEquals])
+					MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 				}
 				CurrentFrame.TextModified = true
 				markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 			}
 		} else {
-			cmdSuccess = markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+			markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+			cmdSuccess = true
 		}
 
 	case CmdInsertMode:
@@ -624,7 +618,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				cmdSuccess = TextInsert(true, count, request.Str, request.Len, CurrentFrame.Dot)
 				if cmdSuccess && (count*request.Len != 0) {
 					CurrentFrame.TextModified = true
-					cmdSuccess = markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+					markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 				}
 			} else {
 				for i = 1; i <= count; i++ {
@@ -633,7 +627,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					}
 				}
 				CurrentFrame.TextModified = true
-				cmdSuccess = markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+				markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+				cmdSuccess = true
 			}
 		}
 
@@ -675,9 +670,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		cmdSuccess = TextInsert(true, 1, newStr, count, CurrentFrame.Dot)
 		if cmdSuccess && count != 0 {
 			CurrentFrame.TextModified = true
-			if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-				cmdSuccess = false
-			}
+			markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 		}
 
 	case CmdJump:
@@ -698,9 +691,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		case LeadParamNIndef:
 			count = 1 - CurrentFrame.Dot.Col
 		case LeadParamMarker:
-			if !markCopy(theMark, &CurrentFrame.Dot) {
-				goto l99
-			}
+			markCopy(theMark, &CurrentFrame.Dot)
 			count = 0
 		}
 		CurrentFrame.Dot.Col += count
@@ -745,14 +736,11 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		cmdSuccess = NewwordDeleteParagraph(rept, count)
 
 	case CmdMark:
+		cmdSuccess = true
 		if count < 0 {
-			if CurrentFrame.Marks[-count] != nil {
-				cmdSuccess = MarkDestroy(&CurrentFrame.Marks[-count])
-			} else {
-				cmdSuccess = true
-			}
+			MarkDestroy(&CurrentFrame.Marks[-count])
 		} else {
-			cmdSuccess = markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[count])
+			markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[count])
 		}
 
 	case CmdNoop:
@@ -797,9 +785,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			cmdSuccess = TextOvertype(true, count, request.Str, request.Len, CurrentFrame.Dot)
 			if cmdSuccess && (count*request.Len != 0) {
 				CurrentFrame.TextModified = true
-				if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified]) {
-					cmdSuccess = false
-				}
+				markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 			}
 		}
 
@@ -825,16 +811,10 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line) {
 					goto l99
 				}
-				if !MarkCreate(firstLine, 1, &CurrentFrame.Marks[MarkEquals]) {
-					goto l99
-				}
+				MarkCreate(firstLine, 1, &CurrentFrame.Marks[MarkEquals])
 				CurrentFrame.TextModified = true
-				if !MarkCreate(lastLine.FLink, 1, &CurrentFrame.Marks[MarkModified]) {
-					goto l99
-				}
-				if !MarkCreate(lastLine.FLink, 1, &CurrentFrame.Dot) {
-					goto l99
-				}
+				MarkCreate(lastLine.FLink, 1, &CurrentFrame.Marks[MarkModified])
+				MarkCreate(lastLine.FLink, 1, &CurrentFrame.Dot)
 				cmdSuccess = true
 			}
 		}
@@ -852,9 +832,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			goto l99
 		}
 		cmdSuccess = true
-		if !markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
-			goto l99
-		}
+		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
 		MarkCreate(newLine, 1, &CurrentFrame.Dot)
 
 	case CmdQuit:
@@ -930,17 +908,17 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 						newLine = newSpan.MarkTwo.Line
 					}
 					if newLine.Group.Frame == CurrentFrame {
-						cmdSuccess = markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
-						if cmdSuccess {
-							cmdSuccess = MarkCreate(newLine, newCol, &CurrentFrame.Dot)
-						}
+						markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+						MarkCreate(newLine, newCol, &CurrentFrame.Dot)
+						cmdSuccess = true
 					} else {
 						fr := newLine.Group.Frame
 						if FrameEdit(fr.Span.Name) {
 							if fr.Marks[MarkEquals] != nil {
 								MarkDestroy(&fr.Marks[MarkEquals])
 							}
-							cmdSuccess = MarkCreate(newLine, newCol, &fr.Dot)
+							MarkCreate(newLine, newCol, &fr.Dot)
+							cmdSuccess = true
 						}
 					}
 				} else {
@@ -1003,9 +981,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				}
 			} else {
 				// Make sure oops_span is okay
-				if !MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo) {
-					goto l99
-				}
+				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
 				if !TextMove(
 					false, // Don't copy, transfer
 					1,     // One instance of
@@ -1020,9 +996,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 		} else {
 			// Create a span in frame "HEAP"
-			if !MarkCreate(FrameHeap.LastGroup.LastLine, 1, &FrameHeap.Span.MarkTwo) {
-				goto l99
-			}
+			MarkCreate(FrameHeap.LastGroup.LastLine, 1, &FrameHeap.Span.MarkTwo)
 			if !SpanCreate(newName, FrameHeap.Span.MarkTwo, FrameHeap.Span.MarkTwo) {
 				goto l99
 			}
@@ -1036,7 +1010,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 		fr := newSpan.MarkTwo.Line.Group.Frame
 		fr.TextModified = true
-		cmdSuccess = markCopy(newSpan.MarkTwo, &fr.Marks[MarkModified])
+		markCopy(newSpan.MarkTwo, &fr.Marks[MarkModified])
+		cmdSuccess = true
 
 	case CmdSplitLine:
 		if CurrentFrame.Dot.Line.FLink == nil {
@@ -1108,10 +1083,11 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	if cmdSuccess {
 		switch CmdAttrib[command].EqAction {
 		case EqOld:
-			eqSet = markCopy(&oldDot, &oldFrame.Marks[MarkEquals])
+			eqSet = true
+			markCopy(&oldDot, &oldFrame.Marks[MarkEquals])
 		case EqDel:
-			eqSet = (oldFrame.Marks[MarkEquals] == nil) ||
-				MarkDestroy(&oldFrame.Marks[MarkEquals])
+			eqSet = true
+			MarkDestroy(&oldFrame.Marks[MarkEquals])
 		case EqNil:
 			eqSet = true
 		}

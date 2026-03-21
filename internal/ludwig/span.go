@@ -32,10 +32,8 @@ func SpanFind(spanName string, ptr **SpanObject, oldp **SpanObject) bool {
 	}
 	if (*ptr).Name == spanName {
 		if (*ptr).Frame != nil {
-			if !MarkCreate((*ptr).Frame.FirstGroup.FirstLine, 1, &(*ptr).MarkOne) ||
-				!MarkCreate((*ptr).Frame.LastGroup.LastLine, 1, &(*ptr).MarkTwo) {
-				return false
-			}
+			MarkCreate((*ptr).Frame.FirstGroup.FirstLine, 1, &(*ptr).MarkOne)
+			MarkCreate((*ptr).Frame.LastGroup.LastLine, 1, &(*ptr).MarkTwo)
 		}
 		return true
 	}
@@ -85,12 +83,8 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 		}
 	}
 
-	if !markCopy(firstMark, &mrk1) {
-		return false
-	}
-	if !markCopy(lastMark, &mrk2) {
-		return false
-	}
+	markCopy(firstMark, &mrk1)
+	markCopy(lastMark, &mrk2)
 
 	lineNrFirst := LineToNumber(mrk1.Line)
 	lineNrLast := LineToNumber(mrk2.Line)
@@ -126,13 +120,10 @@ func SpanDestroy(span **SpanObject) bool {
 	if (*span).FLink != nil {
 		(*span).FLink.BLink = (*span).BLink
 	}
-	if MarkDestroy(&(*span).MarkOne) {
-		if MarkDestroy(&(*span).MarkTwo) {
-			*span = nil
-			return true
-		}
-	}
-	return false
+	MarkDestroy(&(*span).MarkOne)
+	MarkDestroy(&(*span).MarkTwo)
+	*span = nil
+	return true
 }
 
 // SpanIndex displays the list of spans. This is the \SI command.
