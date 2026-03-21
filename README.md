@@ -148,8 +148,15 @@ For the most part, this is a fairly direct translation of the original Pascal
 version into Go.  There are a couple of noteworthy differences:
 
 - The help files for both the old and new command sets are embedded into the
-  executable using the Go `embed` package.
+  executable using the Go `embed` package.  This makes the executable completely
+  stand-alone.
 - The Go version includes basic syntax highlighting.  Syntax highlighting is
   disabled by default and can be enabled with the `-h` option.  There are two
-  hardcoded colour schemes at present.  One is used when the terminal supports
-  the basic 8 ANSI colours, and another that is used for 256+ colour terminals.
+  hardcoded colour schemes and a handful of language configuration files at
+  present, including golang.  One of the colour schemes is used when the 
+  terminal supports the basic 8 ANSI colours, and another that is used for
+  256+ colour terminals.
+- The Go version also has an option to set the width of tabstops on startup.
+  For example, if you use option `-w 4`, tabs in input files will be converted
+  to four spaces and vice-versa when writing entabbed files.  The default tabs
+  will also be set to be spaced at the interval specified.
