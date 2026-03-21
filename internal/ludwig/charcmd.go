@@ -195,7 +195,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 					if length > CurrentFrame.Dot.Line.Used+1-firstCol {
 						length = CurrentFrame.Dot.Line.Used + 1 - firstCol
 					}
-					VduDisplayStr(CurrentFrame.Dot.Line.Str.Slice(firstCol, length), 3)
+					VduDisplayStr(CurrentFrame.Dot.Line.Str.Slice(firstCol, length), true)
 				}
 			}
 			deleted += count

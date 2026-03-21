@@ -67,7 +67,7 @@ func ScreenMessage(message string) {
 			VduMoveCurs(1, TerminalInfo.Height)
 			j := min(len(message)-i, TerminalInfo.Width-1)
 			VduBold()
-			VduDisplayStr(message[i:i+j], 3)
+			VduDisplayStr(message[i:i+j], true)
 			VduNormal()
 			i += j
 		}
@@ -99,13 +99,13 @@ func ScreenDrawLine(line *LineHdrObject) {
 		}
 		if eopLine {
 			VduDim()
-			VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
+			VduDisplayStr(line.Str.Slice(offset+1, strlen), true)
 			VduNormal()
 		} else if line.HlMatch != nil {
 			syntaxDrawLine(line, offset, strlen)
 			VduClearEOL()
 		} else {
-			VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
+			VduDisplayStr(line.Str.Slice(offset+1, strlen), true)
 		}
 	}
 
@@ -147,7 +147,7 @@ func screenSlideLine(line *LineHdrObject, slideDist int, slideState slideType) {
 				VduInsertChars(slideDist)
 				overlap = slideDist
 			}
-			VduDisplayStr(line.Str.Slice(offset+1, overlap), 2)
+			VduDisplayStr(line.Str.Slice(offset+1, overlap), false)
 		}
 	} else {
 		if offset-slideDist < line.Used {
@@ -163,7 +163,7 @@ func screenSlideLine(line *LineHdrObject, slideDist int, slideState slideType) {
 				if overlap > slideDist {
 					overlap = slideDist
 				}
-				VduDisplayStr(line.Str.Slice(offset+width+1-slideDist+1, overlap), 2)
+				VduDisplayStr(line.Str.Slice(offset+width+1-slideDist+1, overlap), false)
 			}
 		}
 	}
@@ -450,7 +450,7 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 			curRow += 1
 			VduMoveCurs(1, curRow)
 			VduBold()
-			VduDisplayStr("<BOTTOM>", 3)
+			VduDisplayStr("<BOTTOM>", true)
 			VduNormal()
 			if curRow == ScrMsgRow {
 				ScrMsgRow += 1
@@ -461,7 +461,7 @@ func screenExpand(initUpwards bool, initDownwards bool) {
 	if ScrTopLine.ScrRowNr > 1 {
 		VduMoveCurs(1, ScrTopLine.ScrRowNr-1)
 		VduBold()
-		VduDisplayStr("<TOP>", 3)
+		VduDisplayStr("<TOP>", true)
 		VduNormal()
 	}
 }
@@ -1320,7 +1320,7 @@ func ScreenHome(clear bool) {
 func ScreenWriteInt(intVal int, width int) {
 	if LudwigMode == LudwigScreen {
 		str := fmt.Sprintf("%*d", width, intVal)
-		VduDisplayStr(str, 0)
+		VduDisplayStr(str, false)
 	} else {
 		fmt.Printf("%d", intVal)
 	}
@@ -1329,7 +1329,7 @@ func ScreenWriteInt(intVal int, width int) {
 // ScreenWriteCh writes a character with indent
 func ScreenWriteCh(indent int, ch byte) {
 	if LudwigMode == LudwigScreen {
-		VduDisplayStr(spc(indent)+string(ch), 0)
+		VduDisplayStr(spc(indent)+string(ch), false)
 	} else {
 		fmt.Print(spc(indent) + string(ch))
 	}
@@ -1338,7 +1338,7 @@ func ScreenWriteCh(indent int, ch byte) {
 // ScreenWriteStr writes a string with indent
 func ScreenWriteStr(indent int, str string) {
 	if LudwigMode == LudwigScreen {
-		VduDisplayStr(spc(indent)+str, 3)
+		VduDisplayStr(spc(indent)+str, true)
 		VduFlush()
 	} else {
 		fmt.Print(spc(indent) + str)
@@ -1350,7 +1350,7 @@ func ScreenWriteStrWidth(indent int, str string, width int) {
 	if LudwigMode == LudwigScreen {
 		strLen := min(len(str), width)
 		trailingSpaces := width - strLen
-		VduDisplayStr(spc(indent)+str[:strLen]+spc(trailingSpaces), 3)
+		VduDisplayStr(spc(indent)+str[:strLen]+spc(trailingSpaces), true)
 	} else {
 		fmt.Print(spc(indent) + str)
 	}
@@ -1361,7 +1361,7 @@ func ScreenWriteNameStr(indent int, str string, width int) {
 	strLen := min(len(str), width)
 	trailingSpaces := width - strLen
 	if LudwigMode == LudwigScreen {
-		VduDisplayStr(spc(indent)+str[:strLen]+spc(trailingSpaces), 3)
+		VduDisplayStr(spc(indent)+str[:strLen]+spc(trailingSpaces), true)
 	} else {
 		fmt.Print(spc(indent))
 		fmt.Print(str[:strLen])
@@ -1369,28 +1369,14 @@ func ScreenWriteNameStr(indent int, str string, width int) {
 	}
 }
 
-// ScreenWriteFileNameStr writes a file name with indent and width
-func ScreenWriteFileNameStr(indent int, str string, width int) {
+// ScreenWriteFileNameStr writes a file name with the given indent
+func ScreenWriteFileNameStr(indent int, str string) {
 	if LudwigMode == LudwigScreen {
-		for range indent {
-			VduDisplayCh(' ')
-		}
-		for i := range width {
-			if i < len(str) && str[i] >= 32 && str[i] <= 126 {
-				VduDisplayCh(str[i])
-			} else {
-				VduDisplayCh(' ')
-			}
-		}
+		VduDisplayStr(spc(indent), false)
+		VduDisplayStr(str, false)
 	} else {
 		fmt.Print(spc(indent))
-		for i := range width {
-			if i < len(str) {
-				fmt.Print(string(str[i]))
-			} else {
-				fmt.Print(" ")
-			}
-		}
+		fmt.Print(str)
 	}
 }
 

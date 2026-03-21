@@ -40,7 +40,7 @@ func FileName(fp *FileObject, maxLen int, actFnm *string) {
 // FileTable lists the current files.
 func FileTable() {
 	ScreenUnload()
-	ScreenHome(false)
+	ScreenHome(true)
 	ScreenWriteStrWidth(0, "Usage   Mod Frame  Filename", 27)
 	ScreenWriteln()
 	ScreenWriteStrWidth(0, "------- --- ------ --------", 27)
@@ -87,7 +87,7 @@ func FileTable() {
 				ScreenWriteStrWidth(1, "   ", 3)
 			}
 
-			ScreenWriteNameStr(1, frameName, len(frameName))
+			ScreenWriteNameStr(1, frameName, max(6, len(frameName)))
 			if len(frameName) > 6 {
 				ScreenWriteln()
 				ScreenWriteStrWidth(0, "                  ", 18)
@@ -101,7 +101,7 @@ func FileTable() {
 			}
 			var compressedFnm string
 			FileName(Files[fileSlot], room, &compressedFnm)
-			ScreenWriteFileNameStr(1, compressedFnm, len(compressedFnm))
+			ScreenWriteFileNameStr(1, compressedFnm)
 			ScreenWriteln()
 		}
 	}

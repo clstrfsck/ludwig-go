@@ -380,7 +380,7 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		}
 	}()
 	if len(match) == 0 {
-		VduDisplayStr(line.Str.Slice(offset+1, strlen), 3)
+		VduDisplayStr(line.Str.Slice(offset+1, strlen), true)
 		return
 	}
 
@@ -403,7 +403,7 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 			if col+segLen > end {
 				segLen = end - col
 			}
-			VduDisplayStr(line.Str.Slice(col+1, segLen), 0)
+			VduDisplayStr(line.Str.Slice(col+1, segLen), false)
 			col += segLen
 		}
 
@@ -421,6 +421,6 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 
 	// Render the remaining tail
 	if col < end {
-		VduDisplayStr(line.Str.Slice(col+1, end-col), 0)
+		VduDisplayStr(line.Str.Slice(col+1, end-col), false)
 	}
 }
