@@ -287,7 +287,7 @@ func (b *LudwigBuffer) SetState(n int, s highlight.State) {
 	}
 }
 
-func (b *LudwigBuffer) SetMatch(n int, m highlight.LineMatchx) {
+func (b *LudwigBuffer) SetMatch(n int, m highlight.MatchEntries) {
 	if line := b.lineAt(n); line != nil {
 		line.HlMatch = m
 	}

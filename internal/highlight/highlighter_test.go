@@ -324,7 +324,7 @@ func TestFindAllIndex(t *testing.T) {
 }
 
 func TestLineMatch(t *testing.T) {
-	lm := make(LineMatchy)
+	lm := make(LineMatch)
 	lm[0] = 1
 	lm[5] = 2
 	lm[10] = 3
@@ -546,14 +546,14 @@ rules:
 type MockLineStates struct {
 	lines   [][]byte
 	states  []State
-	matches []LineMatchx
+	matches []MatchEntries
 }
 
 func NewMockLineStates(lines []string) *MockLineStates {
 	m := &MockLineStates{
 		lines:   make([][]byte, len(lines)),
 		states:  make([]State, len(lines)),
-		matches: make([]LineMatchx, len(lines)),
+		matches: make([]MatchEntries, len(lines)),
 	}
 	for i, line := range lines {
 		m.lines[i] = []byte(line)
@@ -585,7 +585,7 @@ func (m *MockLineStates) SetState(lineN int, s State) {
 	}
 }
 
-func (m *MockLineStates) SetMatch(lineN int, match LineMatchx) {
+func (m *MockLineStates) SetMatch(lineN int, match MatchEntries) {
 	if lineN >= 0 && lineN < len(m.matches) {
 		m.matches[lineN] = match
 	}

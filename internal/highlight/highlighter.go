@@ -62,7 +62,7 @@ type LineStates interface {
 	LinesNum() int
 	State(lineN int) State
 	SetState(lineN int, s State)
-	SetMatch(lineN int, m LineMatchx)
+	SetMatch(lineN int, m MatchEntries)
 	Lock()
 	Unlock()
 }
@@ -86,8 +86,8 @@ type MatchEntry struct {
 	Position int
 	Group    Group
 }
-type LineMatchx []MatchEntry
-type LineMatchy map[int]Group
+type MatchEntries []MatchEntry
+type LineMatch map[int]Group
 
 func findIndex(regex *regexp.Regexp, skip *regexp.Regexp, str []byte) []int {
 	var strbytes []byte
@@ -117,7 +117,7 @@ func findAllIndex(regex *regexp.Regexp, str []byte) [][]int {
 	return matches
 }
 
-func (h *Highlighter) highlightRegion(highlights LineMatchy, start int, canMatchEnd bool, lineNum int, line []byte, curRegion *region, statesOnly bool) LineMatchy {
+func (h *Highlighter) highlightRegion(highlights LineMatch, start int, canMatchEnd bool, lineNum int, line []byte, curRegion *region, statesOnly bool) LineMatch {
 	lineLen := CharacterCount(line)
 	if start == 0 {
 		if !statesOnly {
@@ -211,7 +211,7 @@ func (h *Highlighter) highlightRegion(highlights LineMatchy, start int, canMatch
 	return highlights
 }
 
-func (h *Highlighter) highlightEmptyRegion(highlights LineMatchy, start int, canMatchEnd bool, lineNum int, line []byte, statesOnly bool) LineMatchy {
+func (h *Highlighter) highlightEmptyRegion(highlights LineMatch, start int, canMatchEnd bool, lineNum int, line []byte, statesOnly bool) LineMatch {
 	lineLen := CharacterCount(line)
 	if lineLen == 0 {
 		if canMatchEnd {
@@ -274,13 +274,13 @@ func (h *Highlighter) highlightEmptyRegion(highlights LineMatchy, start int, can
 // Use this function for simple syntax highlighting and use the other functions for
 // more advanced syntax highlighting. They are optimized for quick rehighlighting of the same
 // text with minor changes made
-func (h *Highlighter) HighlightString(input string) []LineMatchy {
+func (h *Highlighter) HighlightString(input string) []LineMatch {
 	lines := strings.Split(input, "\n")
-	var lineMatches []LineMatchy
+	var lineMatches []LineMatch
 
 	for i := range lines {
 		line := []byte(lines[i])
-		highlights := make(LineMatchy)
+		highlights := make(LineMatch)
 
 		if i == 0 || h.lastRegion == nil {
 			lineMatches = append(lineMatches, h.highlightEmptyRegion(highlights, 0, true, i, line, false))
@@ -328,9 +328,9 @@ func (h *Highlighter) HighlightMatches(input LineStates, startline, endline int)
 		}
 
 		line := input.LineBytes(i)
-		highlights := make(LineMatchy)
+		highlights := make(LineMatch)
 
-		var match LineMatchy
+		var match LineMatch
 		if i == 0 || input.State(i-1) == nil {
 			match = h.highlightEmptyRegion(highlights, 0, true, i, line, false)
 		} else {
@@ -389,14 +389,14 @@ func (h *Highlighter) ReHighlightLine(input LineStates, lineN int) {
 	defer input.Unlock()
 
 	line := input.LineBytes(lineN)
-	highlights := make(LineMatchy)
+	highlights := make(LineMatch)
 
 	h.lastRegion = nil
 	if lineN > 0 {
 		h.lastRegion = input.State(lineN - 1)
 	}
 
-	var match LineMatchy
+	var match LineMatch
 	if lineN == 0 || h.lastRegion == nil {
 		match = h.highlightEmptyRegion(highlights, 0, true, lineN, line, false)
 	} else {
@@ -408,8 +408,8 @@ func (h *Highlighter) ReHighlightLine(input LineStates, lineN int) {
 	input.SetState(lineN, curState)
 }
 
-func matchyToMatchx(matchy LineMatchy) LineMatchx {
-	var matchx LineMatchx
+func matchyToMatchx(matchy LineMatch) MatchEntries {
+	var matchx MatchEntries
 	for pos, group := range matchy {
 		matchx = append(matchx, MatchEntry{pos, group})
 	}
