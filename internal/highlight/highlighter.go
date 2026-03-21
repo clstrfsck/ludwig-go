@@ -413,7 +413,7 @@ func (h *Highlighter) ReHighlightLine(input LineStates, lineN int) {
 }
 
 func lineMatchToMatchEntries(matchy LineMatch) MatchEntries {
-	entries := make(MatchEntries, 0, len(matchy))
+	entries := make(MatchEntries, len(matchy))
 	i := 0
 	for pos, group := range matchy {
 		entries[i] = MatchEntry{
