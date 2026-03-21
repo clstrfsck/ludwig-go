@@ -468,7 +468,7 @@ func TestLinesCreate(t *testing.T) {
 	})
 }
 
-// Tests for LineEOPCreate and LineEOPDestroy
+// Tests for LineEOPCreate
 
 func TestLineEOPCreate(t *testing.T) {
 	t.Run("CreateEOPGroup", func(t *testing.T) {
