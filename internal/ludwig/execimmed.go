@@ -242,7 +242,6 @@ func ExecuteImmed() {
 			for {
 				// Destroy all of cmd_span's contents.
 				if cmdSpan.MarkOne.Line != nil {
-					LinesDestroy(&cmdSpan.MarkOne.Line, &cmdSpan.MarkTwo.Line)
 					cmdSpan.MarkOne.Line = nil
 					cmdSpan.MarkTwo.Line = nil
 				}

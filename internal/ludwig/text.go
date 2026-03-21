@@ -226,7 +226,6 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 	result := false
 	var firstLine *LineHdrObject
 	var lastLine *LineHdrObject
-	discard := false
 
 	// Check for the simple case
 	if tp.Con == nil {
@@ -251,7 +250,6 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			return false
 		}
 		LinesCreate(lineCount, &firstLine, &lastLine)
-		discard = true
 		if beforeMark.Line.FLink == nil && !TextRealizeNull(beforeMark.Line) {
 			goto cleanup
 		}
@@ -280,16 +278,12 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 				goto cleanup
 			}
 		}
-		discard = false
 		if !TextInsert(true, 1, tmpTp.Str, tmpTp.Len, beforeMark) {
 			return false
 		}
 	}
 	result = true
 cleanup:
-	if discard {
-		LinesDestroy(&firstLine, &lastLine)
-	}
 	return result
 }
 
@@ -448,7 +442,6 @@ extract:
 	if !LinesExtract(extrOne, extrTwo) {
 		goto cleanup
 	}
-	LinesDestroy(&extrOne, &extrTwo)
 success:
 	result = true
 cleanup:
@@ -765,9 +758,6 @@ finished:
 	MarkCreate(lastLine, colTwo, newEnd)
 	result = true
 cleanup:
-	if firstLine != nil {
-		LinesDestroy(&firstLine, &lastLine)
-	}
 	return result
 }
 
@@ -816,7 +806,6 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	var equalsLine *LineHdrObject
 
 	result := false
-	discard := false
 	if beforeMark.Line.FLink == nil {
 		ScreenMessage(MsgCantSplitNullLine)
 		goto cleanup
@@ -835,7 +824,6 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	}
 
 	LinesCreate(1, &newLine, &newLine)
-	discard = true
 
 	// Heuristic to decide which way to do the split
 	shift = newCol - beforeMark.Col
@@ -876,7 +864,6 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		if !LinesInject(newLine, newLine, beforeMark.Line.FLink) {
 			goto cleanup
 		}
-		discard = false
 		if !MarksShift(beforeMark.Line, beforeMark.Col, MaxStrLenP+1-beforeMark.Col, newLine, newCol) {
 			goto cleanup
 		}
@@ -897,7 +884,6 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		if !LinesInject(newLine, newLine, beforeMark.Line) {
 			goto cleanup
 		}
-		discard = false
 		SyntaxMarkLineDirty(newLine.Group.Frame, newLine)
 		if beforeMark.Col > 1 {
 			if !MarksShift(beforeMark.Line, 1, beforeMark.Col-1, newLine, 1) {
@@ -939,8 +925,5 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	MarkCreate(equalsLine, equalsCol, equalsMark)
 	result = true
 cleanup:
-	if discard {
-		LinesDestroy(&newLine, &newLine)
-	}
 	return result
 }

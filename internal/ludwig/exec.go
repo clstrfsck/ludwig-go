@@ -329,8 +329,6 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot)
 				FrameOops.TextModified = true
 				markCopy(FrameOops.Dot, &FrameOops.Marks[MarkModified])
-			} else {
-				LinesDestroy(&firstLine, &lastLine)
 			}
 			CurrentFrame.Dot.Col = dotCol
 			CurrentFrame.TextModified = true
@@ -470,7 +468,6 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesExtract(firstLine, lastLine) {
 					goto l99
 				}
-				LinesDestroy(&firstLine, &lastLine)
 			}
 
 			// Insert the new tpar into frame COMMAND
@@ -513,7 +510,6 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				if !LinesExtract(firstLine, lastLine) {
 					goto l99
 				}
-				LinesDestroy(&firstLine, &lastLine)
 			}
 			if FileCommand(CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
 				CurrentFrame = CurrentFrame.ReturnFrame
@@ -850,7 +846,6 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				}
 			} else {
 				CurrentFrame.Rep1Tpar = request // If did specify, save for next time
-				TparCleanObject(&CurrentFrame.Rep2Tpar)
 				CurrentFrame.Rep2Tpar = request2
 				request2.Con = nil
 			}
@@ -1100,8 +1095,6 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	}
 
 l99:
-	TparCleanObject(&request)
-	TparCleanObject(&request2)
 	ExecLevel--
 	return cmdSuccess
 }

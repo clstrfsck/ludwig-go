@@ -468,54 +468,6 @@ func TestLinesCreate(t *testing.T) {
 	})
 }
 
-func TestLinesDestroy(t *testing.T) {
-	t.Run("DestroySingleLine", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(1, &firstLine, &lastLine)
-
-		LinesDestroy(&firstLine, &lastLine)
-
-		assert.Nil(t, firstLine, "firstLine should be nil after destroy")
-		assert.Nil(t, lastLine, "lastLine should be nil after destroy")
-	})
-
-	t.Run("DestroyMultipleLines", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(10, &firstLine, &lastLine)
-
-		LinesDestroy(&firstLine, &lastLine)
-
-		assert.Nil(t, firstLine, "firstLine should be nil after destroy")
-		assert.Nil(t, lastLine, "lastLine should be nil after destroy")
-	})
-
-	t.Run("DestroyLinesWithStrObjects", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(5, &firstLine, &lastLine)
-
-		// Add Str objects to some lines
-		line := firstLine
-		for i := 0; i < 3 && line != nil; i++ {
-			line.Str = NewBlankStrObject(MaxStrLen)
-			line = line.FLink
-		}
-
-		LinesDestroy(&firstLine, &lastLine)
-
-		assert.Nil(t, firstLine, "LinesDestroy should set lines to nil")
-		assert.Nil(t, lastLine, "LinesDestroy should set lines to nil")
-	})
-
-	t.Run("DestroyNilLines", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-
-		LinesDestroy(&firstLine, &lastLine)
-
-		assert.Nil(t, firstLine, "LinesDestroy should set lines to nil")
-		assert.Nil(t, lastLine, "LinesDestroy should set lines to nil")
-	})
-}
-
 // Tests for LineEOPCreate and LineEOPDestroy
 
 func TestLineEOPCreate(t *testing.T) {
@@ -576,39 +528,6 @@ func TestLineEOPDestroy(t *testing.T) {
 
 		assert.True(t, result, "LineEOPDestroy returned false")
 		assert.Nil(t, group, "group should be nil after destroy")
-	})
-}
-
-// Tests for GroupsDestroy
-
-func TestGroupsDestroy(t *testing.T) {
-	t.Run("DestroySingleGroup", func(t *testing.T) {
-		frame := createTestFrame()
-		group := createTestGroup(frame, 1, 5)
-		firstGroup := group
-		lastGroup := group
-
-		GroupsDestroy(&firstGroup, &lastGroup)
-
-		assert.Nil(t, firstGroup, "firstGroup should be nil")
-		assert.Nil(t, lastGroup, "lastGroup should be nil")
-	})
-
-	t.Run("DestroyMultipleGroups", func(t *testing.T) {
-		frame := createTestFrame()
-		group1 := createTestGroup(frame, 1, 10)
-		group2 := createTestGroup(frame, 11, 10)
-		group3 := createTestGroup(frame, 21, 10)
-		linkGroups(group1, group2)
-		linkGroups(group2, group3)
-
-		firstGroup := group1
-		lastGroup := group3
-
-		GroupsDestroy(&firstGroup, &lastGroup)
-
-		assert.Nil(t, firstGroup, "firstGroup should be nil")
-		assert.Nil(t, lastGroup, "lastGroup should be nil")
 	})
 }
 

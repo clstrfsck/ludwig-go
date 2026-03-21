@@ -179,10 +179,7 @@ func UserKey(key *TParObject, strng *TParObject) bool {
 				if Lookup[keyCode].Code != nil {
 					CodeDiscard(&Lookup[keyCode].Code)
 				}
-				if Lookup[keyCode].Tpar != nil {
-					TparCleanObject(Lookup[keyCode].Tpar)
-					Lookup[keyCode].Tpar = nil
-				}
+				Lookup[keyCode].Tpar = nil
 
 				code := keySpan.Code
 				if (code.Len == 2) && (CompilerCode[code.Code].Rep == LeadParamNone) &&
