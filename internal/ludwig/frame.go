@@ -31,8 +31,7 @@ func FrameEdit(frameName string) bool {
 		frmCreated  = 0x0002
 		mrk1Created = 0x0004
 		mrk2Created = 0x0008
-		grpCreated  = 0x0010
-		dotCreated  = 0x0020
+		dotCreated  = 0x0010
 	)
 
 	created := 0
@@ -63,7 +62,6 @@ func FrameEdit(frameName string) bool {
 
 	var gptr *GroupObject
 	LineEOPCreate(fptr, &gptr)
-	created |= grpCreated
 
 	// Set up span object
 	sptr.BLink = oldp
@@ -142,9 +140,6 @@ func FrameEdit(frameName string) bool {
 	if (created & mrk2Created) != 0 {
 		MarkDestroy(&sptr.MarkTwo)
 	}
-	if (created & grpCreated) != 0 {
-		LineEOPDestroy(&gptr)
-	}
 
 	return false
 }
@@ -203,9 +198,7 @@ func FrameKill(frameName string) bool {
 	// Step 3a: Destroy all internal lines
 	MarkDestroy(&thisFrame.Dot)
 	for i := 0; i <= MaxMarkNumber; i++ {
-		if thisFrame.Marks[i] != nil {
-			MarkDestroy(&thisFrame.Marks[i])
-		}
+		MarkDestroy(&thisFrame.Marks[i])
 	}
 
 	ptr2 := thisFrame.LastGroup.LastLine.BLink
@@ -217,9 +210,7 @@ func FrameKill(frameName string) bool {
 	}
 
 	// Step 3b: Destroy the <eop> line
-	if !LineEOPDestroy(&thisFrame.FirstGroup) {
-		return false
-	}
+	thisFrame.FirstGroup = nil
 
 	// Step 4: Dispose of the frame header and any pattern tables attached
 	if !PatternDFATableKill(&thisFrame.EqsPatternPtr) {

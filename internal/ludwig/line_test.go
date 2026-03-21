@@ -468,7 +468,7 @@ func TestLinesCreate(t *testing.T) {
 	})
 }
 
-// Tests for LineEOPCreate and LineEOPDestroy
+// Tests for LineEOPCreate
 
 func TestLineEOPCreate(t *testing.T) {
 	t.Run("CreateEOPGroup", func(t *testing.T) {
@@ -501,33 +501,6 @@ func TestLineEOPCreate(t *testing.T) {
 		assert.Nil(t, line.Str, "EOP line Str should be nil")
 		assert.Equal(t, 0, line.Len(), "EOP line Len should be 0")
 		assert.Equal(t, 0, line.Used, "EOP line Used should be 0")
-	})
-}
-
-func TestLineEOPDestroy(t *testing.T) {
-	t.Run("DestroyEOPGroup", func(t *testing.T) {
-		frame := createTestFrame()
-		var group *GroupObject
-		LineEOPCreate(frame, &group)
-
-		result := LineEOPDestroy(&group)
-
-		assert.True(t, result, "LineEOPDestroy returned false")
-		assert.Nil(t, group, "group should be nil after destroy")
-	})
-
-	t.Run("DestroyEOPWithStr", func(t *testing.T) {
-		frame := createTestFrame()
-		var group *GroupObject
-		LineEOPCreate(frame, &group)
-
-		// Add a Str object to the EOP line
-		group.FirstLine.Str = NewBlankStrObject(MaxStrLen)
-
-		result := LineEOPDestroy(&group)
-
-		assert.True(t, result, "LineEOPDestroy returned false")
-		assert.Nil(t, group, "group should be nil after destroy")
 	})
 }
 
