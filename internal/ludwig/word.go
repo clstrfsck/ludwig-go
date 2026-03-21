@@ -210,7 +210,6 @@ func WordFill(rept LeadParam, count int) bool {
 						if !LinesExtract(thisLine, thisLine) {
 							goto cleanup
 						}
-						LinesDestroy(&thisLine, &thisLine)
 						count--
 						if count > 0 {
 							goto getMore

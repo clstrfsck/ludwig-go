@@ -164,19 +164,16 @@ func FileCreateOpen(argv []string, parse ParseType, inputfp **FileObject, output
 }
 
 // FileCloseDelete closes a file, if it is an output file it can optionally be deleted.
-func FileCloseDelete(fp *FileObject, delet bool, msgs bool) bool {
+func FileCloseDelete(fp **FileObject, delet bool, msgs bool) bool {
 	if fp != nil {
 		deletFlag := 0
 		if delet {
 			deletFlag = 1
 		}
-		if FilesysClose(fp, deletFlag, msgs) {
-			if fp.FirstLine != nil {
-				var tmp1, tmp2 *LineHdrObject = fp.FirstLine, fp.LastLine
-				LinesDestroy(&tmp1, &tmp2)
-			}
+		if FilesysClose(*fp, deletFlag, msgs) {
+			*fp = nil
+			return true
 		}
-		return true
 	}
 	return false
 }
@@ -307,8 +304,6 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 		if !LinesExtract(firstLine, lastLine) {
 			goto l98
 		}
-		var tmp1, tmp2 *LineHdrObject = firstLine, lastLine
-		LinesDestroy(&tmp1, &tmp2)
 		if current.InputFile != 0 {
 			if Files[current.InputFile] != nil {
 				Files[current.InputFile].LineCount = 0
@@ -349,8 +344,6 @@ l98:
 func FileRewind(fp **FileObject) bool {
 	if *fp != nil {
 		if (*fp).FirstLine != nil {
-			var tmp1, tmp2 *LineHdrObject = (*fp).FirstLine, (*fp).LastLine
-			LinesDestroy(&tmp1, &tmp2)
 			(*fp).FirstLine = nil
 			(*fp).LastLine = nil
 			(*fp).LineCount = 0
@@ -384,8 +377,6 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		if !LinesExtract(firstLine, lastLine) {
 			return false
 		}
-		var tmp1, tmp2 *LineHdrObject = firstLine, lastLine
-		LinesDestroy(&tmp1, &tmp2)
 	}
 
 	// Page in the new lines
@@ -502,7 +493,6 @@ func getFileName(tparam *TParObject, fnm *string, command Commands) bool {
 		return false
 	}
 	*fnm = tpFileName.Str.Slice(1, tpFileName.Len)
-	TparCleanObject(&tpFileName)
 	return true
 }
 
@@ -623,7 +613,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !freeFile(fileSlot, &status) {
 			goto l99
 		}
-		if !FileCloseDelete(Files[fileSlot], true, false) {
+		if !FileCloseDelete(&Files[fileSlot], true, false) {
 			goto l99
 		}
 
@@ -650,11 +640,11 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			goto l99
 		}
 		if savedCmd == CmdFileGlobalInput || savedCmd == CmdFileGlobalOutput {
-			if !FileCloseDelete(Files[fileSlot], false, true) {
+			if !FileCloseDelete(&Files[fileSlot], false, true) {
 				goto l99
 			}
 		} else {
-			if !FileCloseDelete(Files[fileSlot], !CurrentFrame.TextModified,
+			if !FileCloseDelete(&Files[fileSlot], !CurrentFrame.TextModified,
 				CurrentFrame.TextModified || !Files[fileSlot].OutputFlag) {
 				goto l99
 			}
@@ -664,7 +654,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			if !freeFile(fileSlot, &status) {
 				goto l99
 			}
-			if !FileCloseDelete(Files[fileSlot], !CurrentFrame.TextModified, CurrentFrame.TextModified) {
+			if !FileCloseDelete(&Files[fileSlot], !CurrentFrame.TextModified, CurrentFrame.TextModified) {
 				goto l99
 			}
 		}
@@ -677,7 +667,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !freeFile(fileSlot, &status) {
 			goto l99
 		}
-		if !FileCloseDelete(Files[fileSlot], true, true) {
+		if !FileCloseDelete(&Files[fileSlot], true, true) {
 			goto l99
 		}
 
@@ -686,7 +676,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if !freeFile(fileSlot, &status) {
 			goto l99
 		}
-		if !FileCloseDelete(Files[fileSlot], true, true) {
+		if !FileCloseDelete(&Files[fileSlot], true, true) {
 			goto l99
 		}
 

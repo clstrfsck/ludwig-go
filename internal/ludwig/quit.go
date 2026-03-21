@@ -74,7 +74,7 @@ func doFrame(f *FrameObject) bool {
 	}
 	if f.InputFile != 0 {
 		if Files[f.InputFile] != nil {
-			if !FileCloseDelete(Files[f.InputFile], false, true) {
+			if !FileCloseDelete(&Files[f.InputFile], false, true) {
 				return false
 			}
 			f.InputFile = 0
@@ -83,7 +83,7 @@ func doFrame(f *FrameObject) bool {
 	// Close the output file
 	result := true
 	if !LudwigAborted {
-		result = FileCloseDelete(Files[f.OutputFile], !f.TextModified, f.TextModified)
+		result = FileCloseDelete(&Files[f.OutputFile], !f.TextModified, f.TextModified)
 	}
 	f.OutputFile = 0
 	return result
@@ -105,7 +105,7 @@ func closeAllFiles() {
 	if !LudwigAborted {
 		for fileIndex := 1; fileIndex <= MaxFiles; fileIndex++ {
 			if Files[fileIndex] != nil {
-				if !FileCloseDelete(Files[fileIndex], false, true) {
+				if !FileCloseDelete(&Files[fileIndex], false, true) {
 					return
 				}
 			}

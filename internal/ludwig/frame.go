@@ -214,7 +214,6 @@ func FrameKill(frameName string) bool {
 		if !LinesExtract(ptr1, ptr2) {
 			return false
 		}
-		LinesDestroy(&ptr1, &ptr2)
 	}
 
 	// Step 3b: Destroy the <eop> line
@@ -598,7 +597,6 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		if !LinesExtract(firstLine, firstLine) {
 			return false
 		}
-		LinesDestroy(&firstLine, &firstLine)
 		CurrentFrame.Dot.Col = dotCol
 
 	case 'S': // Set tab
@@ -918,9 +916,6 @@ func FrameParameter(tpar *TParObject) bool {
 		Nxt: nil,
 		Con: nil,
 	}
-	defer func() {
-		TparCleanObject(&request)
-	}()
 	if !TparGet1(tpar, CmdFrameParameters, &request) {
 		return false
 	}

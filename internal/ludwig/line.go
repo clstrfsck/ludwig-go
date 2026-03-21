@@ -83,30 +83,6 @@ func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObj
 	*lastLine = thisLine
 }
 
-// LinesDestroy destroys a linked list of lines
-func LinesDestroy(firstLine **LineHdrObject, lastLine **LineHdrObject) {
-	thisLine := *firstLine
-
-	for thisLine != nil {
-		if thisLine.Str != nil {
-			thisLine.Str = nil
-			thisLine.Marks = nil
-		}
-
-		nextLine := thisLine.FLink
-		thisLine = nextLine
-	}
-
-	*firstLine = nil
-	*lastLine = nil
-}
-
-// GroupsDestroy destroys a linked list of groups
-func GroupsDestroy(firstGroup **GroupObject, lastGroup **GroupObject) {
-	*firstGroup = nil
-	*lastGroup = nil
-}
-
 // LinesInject injects a linked list of lines into the data structure
 func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *LineHdrObject) bool {
 	// Scan the lines to be inserted, counting lines and checking space used
@@ -399,8 +375,6 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) bool {
 		firstGroup.BLink = nil
 		lastGroup.FLink = nil
 		endGroup.BLink = topGroup
-
-		GroupsDestroy(&firstGroup, &lastGroup)
 	}
 
 	return true

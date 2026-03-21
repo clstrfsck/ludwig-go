@@ -55,9 +55,7 @@ func CodeDiscard(codeHead **CodeHeader) {
 			if CompilerCode[source].Code != nil {
 				CodeDiscard(&CompilerCode[source].Code)
 			}
-			if CompilerCode[source].Tpar != nil {
-				TparCleanObject(CompilerCode[source].Tpar)
-			}
+			CompilerCode[source].Tpar = nil
 		}
 
 		for source := start + size; source <= CodeTop; source++ {
@@ -865,7 +863,6 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 
 	result = (interpStatus == success)
 l99:
-	TparCleanObject(&request)
 	CodeDiscard(&codeHead)
 	return result
 }

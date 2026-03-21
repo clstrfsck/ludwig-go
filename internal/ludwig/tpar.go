@@ -36,30 +36,6 @@ const (
 	varTypeLudwig
 )
 
-// discardTp recursively discards trailing parameter objects
-func discardTp(tp *TParObject) {
-	if tp.Nxt != nil {
-		discardTp(tp.Nxt)
-	} else if tp.Con != nil {
-		discardTp(tp.Con)
-	}
-	// In Go, we don't explicitly delete, garbage collector handles it
-	tp.Nxt = nil
-	tp.Con = nil
-}
-
-// TparCleanObject cleans up a trailing parameter object
-func TparCleanObject(tpO *TParObject) {
-	if tpO.Con != nil {
-		discardTp(tpO.Con)
-	}
-	if tpO.Nxt != nil {
-		discardTp(tpO.Nxt)
-	}
-	tpO.Con = nil
-	tpO.Nxt = nil
-}
-
 // tparDuplicateCon duplicates the con chain of a tpar
 func tparDuplicateCon(tpar *TParObject, tpO *TParObject) {
 	*tpO = *tpar

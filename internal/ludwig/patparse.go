@@ -812,7 +812,6 @@ func PatternParser(
 			}
 		}
 		*finish = currentState
-		TparCleanObject(&derefSpan)
 	}
 
 	// patternCompound handles compound patterns (with alternatives)
