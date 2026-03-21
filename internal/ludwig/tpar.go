@@ -210,7 +210,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			tmpTp.Nxt = nil
 			tmpTp.Con = nil
 			tmpTp.Len = endMark.Col - 1
-			tmpTp.Str.FillCopy(endMark.Line.Str, 1, endMark.Line.Used, 1, tpar.Len, ' ')
+			tmpTp.Str.FillCopy(endMark.Line.Str, 1, endMark.Line.Used, 1, tmpTp.Len, ' ')
 		}
 	} else {
 		ScreenMessage(MsgNoSuchSpan)
