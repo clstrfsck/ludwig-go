@@ -31,64 +31,6 @@ func TestSgn(t *testing.T) {
 	}
 }
 
-// TestChFillCopy tests the ChFillCopy function
-func TestChFillCopy(t *testing.T) {
-	t.Run("CopyFullSource", func(t *testing.T) {
-		src := NewStrObjectFrom("HELLO")
-		dst := NewBlankStrObject(MaxStrLen)
-
-		ChFillCopy(src, 1, 5, dst, 1, 5, ' ')
-
-		assert.Equal(t, "HELLO", dst.Slice(1, 5))
-	})
-
-	t.Run("CopyWithFill", func(t *testing.T) {
-		src := NewStrObjectFrom("HI")
-		dst := NewBlankStrObject(MaxStrLen)
-
-		ChFillCopy(src, 1, 2, dst, 1, 5, '*')
-
-		assert.Equal(t, "HI***", dst.Slice(1, 5))
-	})
-
-	t.Run("FillOnly", func(t *testing.T) {
-		src := NewBlankStrObject(MaxStrLen)
-		dst := NewBlankStrObject(MaxStrLen)
-
-		ChFillCopy(src, 1, 0, dst, 1, 5, '-')
-
-		assert.Equal(t, "-----", dst.Slice(1, 5))
-	})
-
-	t.Run("ZeroDestLen", func(t *testing.T) {
-		src := NewStrObjectFrom("HELLO")
-		dst := NewStrObjectFrom("XXXXX")
-
-		ChFillCopy(src, 1, 5, dst, 1, 0, ' ')
-
-		// Should not modify dst
-		assert.Equal(t, "XXXXX", dst.Slice(1, 5), "Expected unchanged")
-	})
-
-	t.Run("SourceLongerThanDest", func(t *testing.T) {
-		src := NewStrObjectFrom("HELLO")
-		dst := NewBlankStrObject(MaxStrLen)
-
-		ChFillCopy(src, 1, 5, dst, 1, 3, ' ')
-
-		assert.Equal(t, "HEL", dst.Slice(1, 3))
-	})
-
-	t.Run("CopyWithOffset", func(t *testing.T) {
-		src := NewStrObjectFrom("HELLO")
-		dst := NewBlankStrObject(MaxStrLen)
-
-		ChFillCopy(src, 2, 3, dst, 3, 4, '.')
-
-		assert.Equal(t, "ELL.", dst.Slice(3, 4))
-	})
-}
-
 // TestChCompareStr tests string comparison
 func TestChCompareStr(t *testing.T) {
 	t.Run("ExactMatch", func(t *testing.T) {
@@ -252,43 +194,6 @@ func TestChToUpper(t *testing.T) {
 			assert.Equal(t, tt.expected, result, "ChToUpper(%c)", tt.input)
 		})
 	}
-}
-
-// TestChApplyN tests applying a function to n characters
-func TestChApplyN(t *testing.T) {
-	t.Run("ApplyToUpper", func(t *testing.T) {
-		str := NewStrObjectFrom("hello world")
-
-		ChApplyN(str, ChToUpper, 5)
-
-		assert.Equal(t, "HELLO world", str.Slice(1, 11))
-	})
-
-	t.Run("ApplyToAll", func(t *testing.T) {
-		str := NewStrObjectFrom("hello")
-
-		ChApplyN(str, ChToUpper, 5)
-
-		assert.Equal(t, "HELLO", str.Slice(1, 5))
-	})
-
-	t.Run("ApplyZeroChars", func(t *testing.T) {
-		str := NewStrObjectFrom("hello")
-
-		ChApplyN(str, ChToUpper, 0)
-
-		assert.Equal(t, "hello", str.Slice(1, 5), "Expected unchanged")
-	})
-
-	t.Run("ApplyCustomFunction", func(t *testing.T) {
-		str := NewStrObjectFrom("12345")
-
-		// Custom function: add 1 to each character
-		addOne := func(ch byte) byte { return ch + 1 }
-		ChApplyN(str, addOne, 3)
-
-		assert.Equal(t, "23445", str.Slice(1, 5))
-	})
 }
 
 // TestChSearchStr tests string searching

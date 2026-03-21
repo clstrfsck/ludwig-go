@@ -1017,7 +1017,7 @@ func FrameParameter(tpar *TParObject) bool {
 		ScreenWritelnClel()
 		ScreenGetLineP(newValues, &request.Str, &request.Len, 1, 1)
 		if request.Len > 0 {
-			ChApplyN(request.Str, ChToUpper, request.Len)
+			request.Str.ApplyN(ChToUpper, request.Len, 1)
 			if !setparam(&request) {
 				ScreenBeep()
 			}
