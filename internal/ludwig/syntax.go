@@ -15,7 +15,6 @@
 package ludwig
 
 import (
-	"sort"
 	"strings"
 
 	"ludwig-go/internal/highlight"
@@ -288,7 +287,7 @@ func (b *LudwigBuffer) SetState(n int, s highlight.State) {
 	}
 }
 
-func (b *LudwigBuffer) SetMatch(n int, m highlight.LineMatch) {
+func (b *LudwigBuffer) SetMatch(n int, m highlight.LineMatchx) {
 	if line := b.lineAt(n); line != nil {
 		line.HlMatch = m
 	}
@@ -385,29 +384,22 @@ func syntaxDrawLine(line *LineHdrObject, offset, strlen int) {
 		return
 	}
 
-	// Collect and sort the match positions
-	positions := make([]int, 0, len(match))
-	for pos := range match {
-		positions = append(positions, pos)
-	}
-	sort.Ints(positions)
-
 	// Walk the line segment by segment, switching colors
 	col := offset // current rune column (0-based)
 	end := offset + strlen
 
-	for _, pos := range positions {
-		if pos >= end {
+	for _, entry := range match {
+		if entry.Position >= end {
 			break
 		}
-		newPair, found := syntaxColorLookup[match[pos]]
+		newPair, found := syntaxColorLookup[entry.Group]
 		if !found || newPair == 0 {
 			newPair = defaultPair
 		}
 
 		// Render any gap before this position
-		if pos > col {
-			segLen := pos - col
+		if entry.Position > col {
+			segLen := entry.Position - col
 			if col+segLen > end {
 				segLen = end - col
 			}

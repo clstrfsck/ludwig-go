@@ -1,7 +1,9 @@
 package highlight
 
 import (
+	"cmp"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -60,7 +62,7 @@ type LineStates interface {
 	LinesNum() int
 	State(lineN int) State
 	SetState(lineN int, s State)
-	SetMatch(lineN int, m LineMatch)
+	SetMatch(lineN int, m LineMatchx)
 	Lock()
 	Unlock()
 }
@@ -80,7 +82,12 @@ func NewHighlighter(def *Def) *Highlighter {
 
 // LineMatch represents the syntax highlighting matches for one line. Each index where the coloring is changed is marked with that
 // color's group (represented as one byte)
-type LineMatch map[int]Group
+type MatchEntry struct {
+	Position int
+	Group    Group
+}
+type LineMatchx []MatchEntry
+type LineMatchy map[int]Group
 
 func findIndex(regex *regexp.Regexp, skip *regexp.Regexp, str []byte) []int {
 	var strbytes []byte
@@ -110,7 +117,7 @@ func findAllIndex(regex *regexp.Regexp, str []byte) [][]int {
 	return matches
 }
 
-func (h *Highlighter) highlightRegion(highlights LineMatch, start int, canMatchEnd bool, lineNum int, line []byte, curRegion *region, statesOnly bool) LineMatch {
+func (h *Highlighter) highlightRegion(highlights LineMatchy, start int, canMatchEnd bool, lineNum int, line []byte, curRegion *region, statesOnly bool) LineMatchy {
 	lineLen := CharacterCount(line)
 	if start == 0 {
 		if !statesOnly {
@@ -204,7 +211,7 @@ func (h *Highlighter) highlightRegion(highlights LineMatch, start int, canMatchE
 	return highlights
 }
 
-func (h *Highlighter) highlightEmptyRegion(highlights LineMatch, start int, canMatchEnd bool, lineNum int, line []byte, statesOnly bool) LineMatch {
+func (h *Highlighter) highlightEmptyRegion(highlights LineMatchy, start int, canMatchEnd bool, lineNum int, line []byte, statesOnly bool) LineMatchy {
 	lineLen := CharacterCount(line)
 	if lineLen == 0 {
 		if canMatchEnd {
@@ -267,13 +274,13 @@ func (h *Highlighter) highlightEmptyRegion(highlights LineMatch, start int, canM
 // Use this function for simple syntax highlighting and use the other functions for
 // more advanced syntax highlighting. They are optimized for quick rehighlighting of the same
 // text with minor changes made
-func (h *Highlighter) HighlightString(input string) []LineMatch {
+func (h *Highlighter) HighlightString(input string) []LineMatchy {
 	lines := strings.Split(input, "\n")
-	var lineMatches []LineMatch
+	var lineMatches []LineMatchy
 
 	for i := range lines {
 		line := []byte(lines[i])
-		highlights := make(LineMatch)
+		highlights := make(LineMatchy)
 
 		if i == 0 || h.lastRegion == nil {
 			lineMatches = append(lineMatches, h.highlightEmptyRegion(highlights, 0, true, i, line, false))
@@ -321,16 +328,16 @@ func (h *Highlighter) HighlightMatches(input LineStates, startline, endline int)
 		}
 
 		line := input.LineBytes(i)
-		highlights := make(LineMatch)
+		highlights := make(LineMatchy)
 
-		var match LineMatch
+		var match LineMatchy
 		if i == 0 || input.State(i-1) == nil {
 			match = h.highlightEmptyRegion(highlights, 0, true, i, line, false)
 		} else {
 			match = h.highlightRegion(highlights, 0, true, i, line, input.State(i-1), false)
 		}
 
-		input.SetMatch(i, match)
+		input.SetMatch(i, matchyToMatchx(match))
 		input.Unlock()
 	}
 }
@@ -382,14 +389,14 @@ func (h *Highlighter) ReHighlightLine(input LineStates, lineN int) {
 	defer input.Unlock()
 
 	line := input.LineBytes(lineN)
-	highlights := make(LineMatch)
+	highlights := make(LineMatchy)
 
 	h.lastRegion = nil
 	if lineN > 0 {
 		h.lastRegion = input.State(lineN - 1)
 	}
 
-	var match LineMatch
+	var match LineMatchy
 	if lineN == 0 || h.lastRegion == nil {
 		match = h.highlightEmptyRegion(highlights, 0, true, lineN, line, false)
 	} else {
@@ -397,6 +404,17 @@ func (h *Highlighter) ReHighlightLine(input LineStates, lineN int) {
 	}
 	curState := h.lastRegion
 
-	input.SetMatch(lineN, match)
+	input.SetMatch(lineN, matchyToMatchx(match))
 	input.SetState(lineN, curState)
+}
+
+func matchyToMatchx(matchy LineMatchy) LineMatchx {
+	var matchx LineMatchx
+	for pos, group := range matchy {
+		matchx = append(matchx, MatchEntry{pos, group})
+	}
+	slices.SortFunc(matchx, func(a, b MatchEntry) int {
+		return cmp.Compare(a.Position, b.Position)
+	})
+	return matchx
 }

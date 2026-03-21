@@ -324,7 +324,7 @@ func TestFindAllIndex(t *testing.T) {
 }
 
 func TestLineMatch(t *testing.T) {
-	lm := make(LineMatch)
+	lm := make(LineMatchy)
 	lm[0] = 1
 	lm[5] = 2
 	lm[10] = 3
@@ -544,16 +544,16 @@ rules:
 
 // MockLineStates implements LineStates interface for testing
 type MockLineStates struct {
-	lines  [][]byte
-	states []State
-	matches []LineMatch
+	lines   [][]byte
+	states  []State
+	matches []LineMatchx
 }
 
 func NewMockLineStates(lines []string) *MockLineStates {
 	m := &MockLineStates{
-		lines:  make([][]byte, len(lines)),
-		states: make([]State, len(lines)),
-		matches: make([]LineMatch, len(lines)),
+		lines:   make([][]byte, len(lines)),
+		states:  make([]State, len(lines)),
+		matches: make([]LineMatchx, len(lines)),
 	}
 	for i, line := range lines {
 		m.lines[i] = []byte(line)
@@ -585,7 +585,7 @@ func (m *MockLineStates) SetState(lineN int, s State) {
 	}
 }
 
-func (m *MockLineStates) SetMatch(lineN int, match LineMatch) {
+func (m *MockLineStates) SetMatch(lineN int, match LineMatchx) {
 	if lineN >= 0 && lineN < len(m.matches) {
 		m.matches[lineN] = match
 	}
@@ -753,10 +753,10 @@ rules:
 	h := NewHighlighter(def)
 
 	tests := []struct {
-		name       string
-		lines      []string
-		startline  int
-		checkRan   bool
+		name      string
+		lines     []string
+		startline int
+		checkRan  bool
 	}{
 		{
 			name:      "from beginning",
