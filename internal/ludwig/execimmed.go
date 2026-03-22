@@ -253,15 +253,12 @@ func ExecuteImmed() {
 				}
 
 				// Read, compile, and execute the next lot of commands.
-				var i int
-				if FileRead(
+				var ok bool
+				if cmdSpan.MarkOne.Line, cmdSpan.MarkTwo.Line, _, ok = FileRead(
 					cmdFile,
 					cmdCount,
 					true,
-					&cmdSpan.MarkOne.Line,
-					&cmdSpan.MarkTwo.Line,
-					&i,
-				) {
+				); ok {
 					if cmdSpan.MarkOne.Line != nil {
 						cmdSpan.MarkTwo.Col = cmdSpan.MarkTwo.Line.Used + 1
 						if CodeCompile(&cmdSpan, true) {
