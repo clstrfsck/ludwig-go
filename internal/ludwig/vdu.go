@@ -61,16 +61,8 @@ var (
 
 func init() {
 	terminators = make(map[int]bool)
-	value := os.Getenv("LUD_REFRESH_DELAY")
-	if value == "" {
-		refreshDelay = 0
-	} else {
-		parsed, err := strconv.Atoi(value)
-		if err != nil || parsed < 0 {
-			refreshDelay = 0
-		} else {
-			refreshDelay = parsed
-		}
+	if v, err := strconv.Atoi(os.Getenv("LUD_REFRESH_DELAY")); err == nil && v > 0 {
+		refreshDelay = v
 	}
 }
 
