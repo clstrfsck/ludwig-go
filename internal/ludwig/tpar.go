@@ -440,14 +440,14 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 						tran.Len = 1
 					} else if tran.Len == 0 {
 						prompt := DfltPrompts[CmdAttrib[cmd].TparInfo[thisTp].PromptName]
-						ScreenGetLineP(prompt, &tran.Str, &tran.Len, CmdAttrib[cmd].TpCount, thisTp)
+						tran.Str, tran.Len = ScreenGetLineP(prompt, CmdAttrib[cmd].TpCount, thisTp)
 					} else {
 						if tran.Con != nil {
 							ScreenMessage(MsgPromptsAreOneLine)
 							return false
 						} else {
 							prompt := tran.Str.Slice(1, tran.Len)
-							ScreenGetLineP(prompt, &tran.Str, &tran.Len, CmdAttrib[cmd].TpCount, thisTp)
+							tran.Str, tran.Len = ScreenGetLineP(prompt, CmdAttrib[cmd].TpCount, thisTp)
 						}
 					}
 					tran.Dlm = '\x00'

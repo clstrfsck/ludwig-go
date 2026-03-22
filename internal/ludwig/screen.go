@@ -868,9 +868,7 @@ func ScreenPause() {
 		} else {
 			VduDisplayCrLf()
 		}
-		var buffer *StrObject
-		var outlen int
-		VduGetInput(PAUSE_MSG, &buffer, MaxStrLen, &outlen)
+		VduGetInput(PAUSE_MSG, MaxStrLen)
 		if ScrTopLine != nil {
 			if ScrTopLine.ScrRowNr == 1 {
 				ScreenDrawLine(ScrTopLine)
@@ -926,7 +924,7 @@ func changeFrameSize(frm *FrameObject, band int, halfScreen int) {
 // ScreenResize handles screen resize
 func ScreenResize() {
 	TtWinChanged = false
-	VduGetNewDimensions(&TerminalInfo.Width, &TerminalInfo.Height)
+	TerminalInfo.Width, TerminalInfo.Height = VduGetNewDimensions()
 	ScrMsgRow = TerminalInfo.Height + 1
 	VduClearScr()
 
@@ -1077,44 +1075,41 @@ func restorePromptLines(maxTp int) {
 // ScreenGetLineP gets a line from the user
 func ScreenGetLineP(
 	prompt string,
-	outbuf **StrObject,
-	outlen *int,
 	maxTp int,
 	thisTp int,
-) {
-	*outlen = 0
+) (*StrObject, int) {
 	maxTp = iabs(maxTp)
 
 	if TtControlC {
-		return
+		return nil, 0
 	}
 
 	if LudwigMode != LudwigScreen {
 		fmt.Print(prompt)
 		// Read from stdin (simplified version)
-		return
+		return nil, 0
 	}
 
 	computePromptPosition(thisTp, maxTp)
 	if PromptRegion[thisTp].LineNr != 0 {
 		VduMoveCurs(1, PromptRegion[thisTp].LineNr)
 	}
-	VduGetInput(prompt, outbuf, MaxStrLen, outlen)
+	outbuf, outlen := VduGetInput(prompt, MaxStrLen)
 
 	if TtControlC {
-		*outlen = 0
-		return
+		return nil, 0
 	}
 
-	if *outlen == 0 {
+	if outlen == 0 {
 		for index := thisTp + 1; index <= maxTp; index++ {
 			PromptRegion[index].LineNr = 0
 			PromptRegion[index].Redraw = nil
 		}
 	}
-	if thisTp == maxTp || *outlen == 0 {
+	if thisTp == maxTp || outlen == 0 {
 		restorePromptLines(maxTp)
 	}
+	return outbuf, outlen
 }
 
 // ScreenFreeBottomLine frees the bottom line of the screen
@@ -1214,9 +1209,9 @@ func ScreenVerify(prompt string) VerifyResponse {
 			var response *StrObject
 			var respLen int
 			if usePrompt {
-				ScreenGetLineP(prompt, &response, &respLen, 1, 1)
+				response, respLen = ScreenGetLineP(prompt, 1, 1)
 			} else {
-				ScreenGetLineP(YNAQM_MSG, &response, &respLen, 1, 1)
+				response, respLen = ScreenGetLineP(YNAQM_MSG, 1, 1)
 			}
 			if respLen == 0 {
 				key = 'N'
