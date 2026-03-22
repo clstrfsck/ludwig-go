@@ -926,7 +926,7 @@ func changeFrameSize(frm *FrameObject, band int, halfScreen int) {
 // ScreenResize handles screen resize
 func ScreenResize() {
 	TtWinChanged = false
-	VduGetNewDimensions(&TerminalInfo.Width, &TerminalInfo.Height)
+	TerminalInfo.Width, TerminalInfo.Height = VduGetNewDimensions()
 	ScrMsgRow = TerminalInfo.Height + 1
 	VduClearScr()
 

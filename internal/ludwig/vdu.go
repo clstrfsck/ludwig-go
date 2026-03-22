@@ -280,11 +280,11 @@ func VduInsertMode(turnOn bool) {
 }
 
 // VduGetText gets text input from the user
-func VduGetText(strLen int, str *StrObject, outlen *int) {
+func VduGetText(strLen int, str *StrObject) int {
 	// Fill str with spaces
 	str.Fill(' ', 1, MaxStrLen)
 
-	*outlen = 0
+	result := 0
 	_, curX := stdscr.CursorYX()
 	_, maxX := stdscr.MaxYX()
 	maxlen := maxX - curX
@@ -304,11 +304,12 @@ func VduGetText(strLen int, str *StrObject, outlen *int) {
 			}
 			stdscr.AddChar(nc.Char(key))
 			stdscr.Refresh()
-			*outlen++
-			str.Set(*outlen, byte(key))
-			strLen--
+			result += 1
+			str.Set(result, byte(key))
+			strLen -= 1
 		}
 	}
+	return result
 }
 
 // VduKeyboardInit initializes keyboard mappings
@@ -447,12 +448,11 @@ func VduFree() {
 }
 
 // VduGetNewDimensions gets the new screen dimensions after resize
-func VduGetNewDimensions(newX *int, newY *int) {
+func VduGetNewDimensions() (int, int) {
 	nc.EndWin()
 	stdscr.Refresh()
 	maxY, maxX := stdscr.MaxYX()
-	*newX = maxX
-	*newY = maxY
+	return maxX, maxY
 }
 
 // VduBold turns on bold attribute
