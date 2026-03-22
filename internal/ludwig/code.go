@@ -604,7 +604,7 @@ func scanSimpleCommand(
 			*tparam = nil
 		}
 	} else {
-		TparDuplicate(Lookup[ps.key].Tpar, tparam)
+		*tparam = TparDuplicate(Lookup[ps.key].Tpar)
 	}
 
 	if *lookupCode != nil {

@@ -57,20 +57,21 @@ func tparDuplicateCon(tpar *TParObject, tpO *TParObject) {
 }
 
 // TparDuplicate duplicates a trailing parameter list
-func TparDuplicate(fromTp *TParObject, toTp **TParObject) {
+func TparDuplicate(fromTp *TParObject) *TParObject {
 	if fromTp != nil {
-		*toTp = &TParObject{}
-		tparDuplicateCon(fromTp, *toTp)
+		toTp := &TParObject{}
+		tparDuplicateCon(fromTp, toTp)
 		fromTp = fromTp.Nxt
-		tmpTp := *toTp
+		tmpTp := toTp
 		for fromTp != nil {
 			tmpTp.Nxt = &TParObject{}
 			tmpTp = tmpTp.Nxt
 			tparDuplicateCon(fromTp, tmpTp)
 			fromTp = fromTp.Nxt
 		}
+		return toTp
 	} else {
-		*toTp = nil
+		return nil
 	}
 }
 
