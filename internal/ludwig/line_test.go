@@ -22,8 +22,7 @@ func createTestFrame() *FrameObject {
 // createTestFrameWithEOP creates a frame with an EOP group
 func createTestFrameWithEOP() (*FrameObject, *GroupObject) {
 	frame := createTestFrame()
-	var eopGroup *GroupObject
-	LineEOPCreate(frame, &eopGroup)
+	eopGroup := LineEOPCreate(frame)
 	frame.FirstGroup = eopGroup
 	frame.LastGroup = eopGroup
 	return frame, eopGroup
@@ -473,9 +472,7 @@ func TestLinesCreate(t *testing.T) {
 func TestLineEOPCreate(t *testing.T) {
 	t.Run("CreateEOPGroup", func(t *testing.T) {
 		frame := createTestFrame()
-		var group *GroupObject
-
-		LineEOPCreate(frame, &group)
+		group := LineEOPCreate(frame)
 
 		assert.NotNil(t, group, "group is nil")
 		assert.Equal(t, frame, group.Frame, "Group frame mismatch")
@@ -488,9 +485,7 @@ func TestLineEOPCreate(t *testing.T) {
 
 	t.Run("VerifyEOPLineInitialization", func(t *testing.T) {
 		frame := createTestFrame()
-		var group *GroupObject
-
-		LineEOPCreate(frame, &group)
+		group := LineEOPCreate(frame)
 
 		line := group.FirstLine
 		assert.Nil(t, line.FLink, "EOP line FLink should be nil")
@@ -798,8 +793,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 		frame := createTestFrame()
 		group := createTestGroup(frame, 1, 10)
 		// Add an EOP group after the main group
-		var eopGroup *GroupObject
-		LineEOPCreate(frame, &eopGroup)
+		eopGroup := LineEOPCreate(frame)
 		eopGroup.FirstLineNr = 11
 
 		linkGroups(group, eopGroup)
@@ -888,8 +882,7 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 		group2.FirstLine.BLink = group1.LastLine
 
 		// Add an EOP group at the end
-		var eopGroup *GroupObject
-		LineEOPCreate(frame, &eopGroup)
+		eopGroup := LineEOPCreate(frame)
 		eopGroup.FirstLineNr = 41
 		linkGroups(group2, eopGroup)
 		group2.LastLine.FLink = eopGroup.FirstLine
@@ -941,8 +934,7 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 		group3.FirstLine.BLink = group2.LastLine
 
 		// Add EOP after group3
-		var eopGroup *GroupObject
-		LineEOPCreate(frame, &eopGroup)
+		eopGroup := LineEOPCreate(frame)
 		eopGroup.FirstLineNr = 31
 		linkGroups(group3, eopGroup)
 		group3.LastLine.FLink = eopGroup.FirstLine

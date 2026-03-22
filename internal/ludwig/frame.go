@@ -51,8 +51,7 @@ func FrameEdit(frameName string) bool {
 	fptr := &FrameObject{}
 	sptr := &SpanObject{}
 
-	var gptr *GroupObject
-	LineEOPCreate(fptr, &gptr)
+	gptr := LineEOPCreate(fptr)
 
 	// Set up span object
 	sptr.BLink = oldp
