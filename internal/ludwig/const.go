@@ -24,7 +24,7 @@ const (
 
 const (
 	// MaxInt is the maximum integer value
-	MaxInt = math.MaxInt32
+	MaxInt = math.MaxInt
 
 	// OrdMaxChar is the max value of character
 	OrdMaxChar = 255

@@ -51,9 +51,9 @@ func NewBlankStrObject(size int) *StrObject {
 
 // NewStrObjectFrom creates a new StrObject from a string
 func NewStrObjectFrom(str string) *StrObject {
-	s := &StrObject{array: make([]byte, len(str))}
-	s.Assign(str)
-	return s
+	return &StrObject{
+		array: []byte(str),
+	}
 }
 
 // NewStrObjectCopy creates a new StrObject by copying srcLen characters from
@@ -93,8 +93,7 @@ func (s *StrObject) Set(index int, value byte) {
 
 // Assign sets the content from a string, reallocating if necessary
 func (s *StrObject) Assign(str string) {
-	thisLen := len(s.array)
-	if thisLen < len(str) {
+	if len(s.array) < len(str) {
 		s.array = make([]byte, len(str))
 	}
 	s.FillCopyBytes([]byte(str), 1, len(s.array), ' ')
@@ -165,13 +164,7 @@ func (s *StrObject) Fill(value byte, start, end int) {
 
 // FillN fills n characters starting at start with value
 func (s *StrObject) FillN(value byte, n, start int) {
-	if n <= 0 {
-		return
-	}
-	startIdx := s.adjustIndex(start, 0)
-	for i := startIdx; i < startIdx+n; i++ {
-		s.array[i] = value
-	}
+	s.Fill(value, start, start+n-1)
 }
 
 // FillCopy copies srcLen characters from src at srcIndex to dstLen positions at dstIndex,

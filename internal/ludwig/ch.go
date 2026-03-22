@@ -15,18 +15,9 @@
 package ludwig
 
 import (
+	"cmp"
 	"unicode"
 )
-
-// sgn returns the sign of a value: -1, 0, or 1
-func sgn(val int) int {
-	if val < 0 {
-		return -1
-	} else if val > 0 {
-		return 1
-	}
-	return 0
-}
 
 // ChCompareStr compares two string regions and returns their ordering.
 // Returns -1 if target < text, 0 if equal, 1 if target > text.
@@ -71,9 +62,9 @@ func ChCompareStr(
 		if !exactcase {
 			ch2 = ChToUpper(ch2)
 		}
-		diff = sgn(int(ch1) - int(ch2))
+		diff = cmp.Compare(int(ch1), int(ch2))
 	} else {
-		diff = sgn(len1 - len2)
+		diff = cmp.Compare(len1, len2)
 	}
 	return diff
 }

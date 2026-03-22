@@ -15,6 +15,7 @@
 package ludwig
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -26,15 +27,6 @@ const (
 // FrameEdit creates or edits a frame with the specified name.
 // This is the \ED command. If frame_name doesn't exist, then it is created.
 func FrameEdit(frameName string) bool {
-	const (
-		spnCreated  = 0x0001
-		frmCreated  = 0x0002
-		mrk1Created = 0x0004
-		mrk2Created = 0x0008
-		dotCreated  = 0x0010
-	)
-
-	created := 0
 	fname := frameName
 	if fname == "" {
 		fname = DefaultFrameName
@@ -58,9 +50,8 @@ func FrameEdit(frameName string) bool {
 	// No Span/Frame of that name exists, create one.
 	fptr := &FrameObject{}
 	sptr := &SpanObject{}
-	created |= frmCreated | spnCreated
 
-	var gptr *GroupObject
+	gptr := &GroupObject{}
 	LineEOPCreate(fptr, &gptr)
 
 	// Set up span object
@@ -81,67 +72,50 @@ func FrameEdit(frameName string) bool {
 	sptr.Code = nil
 
 	MarkCreate(gptr.FirstLine, 1, &sptr.MarkOne)
-	created |= mrk1Created
 	MarkCreate(gptr.LastLine, 1, &sptr.MarkTwo)
-	created |= mrk2Created
 	fptr.Dot = nil
 	MarkCreate(gptr.FirstLine, InitialMarginLeft, &fptr.Dot)
-	created |= dotCreated
 
-	if (created & dotCreated) != 0 {
-		// Initialize frame object
-		fptr.FirstGroup = gptr
-		fptr.LastGroup = gptr
-		fptr.Marks = InitialMarks
-		fptr.ScrHeight = InitialScrHeight
-		fptr.ScrWidth = InitialScrWidth
-		fptr.ScrOffset = InitialScrOffset
-		fptr.ScrDotLine = 1
-		fptr.Span = sptr
-		fptr.ReturnFrame = CurrentFrame
-		fptr.InputCount = 0
-		fptr.SpaceLimit = FileData.Space
-		fptr.SpaceLeft = FileData.Space
-		fptr.TextModified = false
-		fptr.MarginLeft = InitialMarginLeft
-		fptr.MarginRight = InitialMarginRight
-		fptr.MarginTop = InitialMarginTop
-		fptr.MarginBottom = InitialMarginBottom
-		fptr.TabStops = InitialTabStops
-		fptr.Options = InitialOptions
-		fptr.InputFile = 0
-		fptr.OutputFile = 0
-		fptr.GetTpar = TParObject{}
-		fptr.GetPatternPtr = nil
-		fptr.EqsTpar = TParObject{}
-		fptr.EqsPatternPtr = nil
-		fptr.Rep1Tpar = TParObject{}
-		fptr.RepPatternPtr = nil
-		fptr.Rep2Tpar = TParObject{}
-		fptr.VerifyTpar = TParObject{}
+	// Initialize frame object
+	fptr.FirstGroup = gptr
+	fptr.LastGroup = gptr
+	fptr.Marks = InitialMarks
+	fptr.ScrHeight = InitialScrHeight
+	fptr.ScrWidth = InitialScrWidth
+	fptr.ScrOffset = InitialScrOffset
+	fptr.ScrDotLine = 1
+	fptr.Span = sptr
+	fptr.ReturnFrame = CurrentFrame
+	fptr.InputCount = 0
+	fptr.SpaceLimit = FileData.Space
+	fptr.SpaceLeft = FileData.Space
+	fptr.TextModified = false
+	fptr.MarginLeft = InitialMarginLeft
+	fptr.MarginRight = InitialMarginRight
+	fptr.MarginTop = InitialMarginTop
+	fptr.MarginBottom = InitialMarginBottom
+	fptr.TabStops = InitialTabStops
+	fptr.Options = InitialOptions
+	fptr.InputFile = 0
+	fptr.OutputFile = 0
+	fptr.GetTpar = TParObject{}
+	fptr.GetPatternPtr = nil
+	fptr.EqsTpar = TParObject{}
+	fptr.EqsPatternPtr = nil
+	fptr.Rep1Tpar = TParObject{}
+	fptr.RepPatternPtr = nil
+	fptr.Rep2Tpar = TParObject{}
+	fptr.VerifyTpar = TParObject{}
 
-		LineChangeLength(gptr.LastLine, NameLen+len(endOfFile))
-		// Copy end-of-file message and frame name
-		if gptr.LastLine.Str != nil {
-			lineLen := gptr.LastLine.Len()
-			gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, lineLen, ' ')
-			eofLen := len(endOfFile) + 1
-			gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
-			gptr.LastLine.Used = 0 // Special feature of the NULL line!
-			CurrentFrame = fptr
-			return true
-		}
-	}
-
-	// Something terrible has happened - cleanup
-	if (created & mrk1Created) != 0 {
-		MarkDestroy(&sptr.MarkOne)
-	}
-	if (created & mrk2Created) != 0 {
-		MarkDestroy(&sptr.MarkTwo)
-	}
-
-	return false
+	LineChangeLength(gptr.LastLine, NameLen+len(endOfFile))
+	// Copy end-of-file message and frame name
+	lineLen := gptr.LastLine.Len()
+	gptr.LastLine.Str.FillCopyBytes([]byte(endOfFile), 1, lineLen, ' ')
+	eofLen := len(endOfFile) + 1
+	gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
+	gptr.LastLine.Used = 0 // Special feature of the NULL line!
+	CurrentFrame = fptr
+	return true
 }
 
 // FrameKill destroys the specified frame.
@@ -612,9 +586,6 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 
 	case 'W': // Regular width tabs
 		var temptab TabArray
-		for i := range temptab {
-			temptab[i] = false
-		}
 		var w int
 		if (!TparToInt(request, pos, &w)) || w <= 0 {
 			return false
@@ -633,9 +604,6 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 
 	case '(': // multi-columns specified
 		var temptab TabArray
-		for i := range temptab {
-			temptab[i] = false
-		}
 		temptab[0] = true
 		temptab[MaxStrLenP] = true
 		for {
@@ -880,25 +848,8 @@ func printOptions(options FrameOptions) {
 
 // printMargins prints margin values
 func printMargins(m1 int, m2 int) {
-	ScreenWriteStr(0, " (")
-	ScreenWriteInt(m1, 1)
-	ScreenWriteCh(0, ',')
-	ScreenWriteInt(m2, 1)
-	ScreenWriteCh(0, ')')
-	count := 6
-	if m1 > 99 {
-		count += 2
-	} else if m1 > 9 {
-		count++
-	}
-	if m2 > 99 {
-		count += 2
-	} else if m2 > 9 {
-		count++
-	}
-	if count < 14 {
-		ScreenWriteStr(0, strings.Repeat(" ", 14-count))
-	}
+	s := fmt.Sprintf(" (%d,%d)", m1, m2)
+	ScreenWriteStr(0, fmt.Sprintf("%-14s", s))
 }
 
 // FrameParameter handles the frame parameters command
