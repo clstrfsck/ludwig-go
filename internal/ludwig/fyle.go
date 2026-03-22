@@ -14,6 +14,18 @@
 
 package ludwig
 
+import "errors"
+
+var (
+	errNoFileOpen         = errors.New(MsgNoFileOpen)
+	errFileAlreadyOpen    = errors.New(MsgFileAlreadyOpen)
+	errNotOutputFile      = errors.New(MsgNotOutputFile)
+	errNotInputFile       = errors.New(MsgNotInputFile)
+	errNoMoreFilesAllowed = errors.New(MsgNoMoreFilesAllowed)
+	errNoOutput           = errors.New(MsgNoOutput)
+	errEmpty              = errors.New("")
+)
+
 const blankName = "                               "
 
 // FileName returns a file's name, in the specified width.
@@ -408,51 +420,48 @@ l98:
 	return true
 }
 
-func checkSlotAllocation(slot int, mustBeAllocated bool, status *string) bool {
+func checkSlotAllocation(slot int, mustBeAllocated bool) error {
 	if (slot == 0) == mustBeAllocated {
 		if mustBeAllocated {
-			*status = MsgNoFileOpen
+			return errNoFileOpen
 		} else {
-			*status = MsgFileAlreadyOpen
-		}
-		return false
-	}
-	return true
-}
-
-func checkSlotUsage(slot int, mustBeInUse bool, status *string) bool {
-	if checkSlotAllocation(slot, true, status) {
-		if (Files[slot] == nil) == mustBeInUse {
-			if mustBeInUse {
-				*status = MsgNoFileOpen
-			} else {
-				*status = MsgFileAlreadyOpen
-			}
-		} else {
-			return true
+			return errFileAlreadyOpen
 		}
 	}
-	return false
+	return nil
 }
 
-func checkSlotDirection(slot int, mustBeOutput bool, status *string) bool {
-	if checkSlotUsage(slot, true, status) {
-		if Files[slot].OutputFlag != mustBeOutput {
-			if mustBeOutput {
-				*status = MsgNotOutputFile
-			} else {
-				*status = MsgNotInputFile
-			}
+func checkSlotUsage(slot int, mustBeInUse bool) error {
+	if err := checkSlotAllocation(slot, true); err != nil {
+		return err
+	}
+	if (Files[slot] == nil) == mustBeInUse {
+		if mustBeInUse {
+			return errNoFileOpen
 		} else {
-			return true
+			return errFileAlreadyOpen
 		}
 	}
-	return false
+	return nil
 }
 
-func freeFile(slot int, status *string) bool {
-	if !checkSlotAllocation(slot, true, status) {
-		return false
+func checkSlotDirection(slot int, mustBeOutput bool) error {
+	if err := checkSlotUsage(slot, true); err != nil {
+		return err
+	}
+	if Files[slot].OutputFlag != mustBeOutput {
+		if mustBeOutput {
+			return errNotOutputFile
+		} else {
+			return errNotInputFile
+		}
+	}
+	return nil
+}
+
+func freeFile(slot int) error {
+	if err := checkSlotAllocation(slot, true); err != nil {
+		return err
 	}
 	if FilesFrames[slot] != nil {
 		if slot == FilesFrames[slot].OutputFile {
@@ -467,31 +476,27 @@ func freeFile(slot int, status *string) bool {
 	} else if slot == FgoFile {
 		FgoFile = 0
 	}
-	return true
+	return nil
 }
 
-func getFreeSlot(newSlot *int, fileSlot int, status *string) bool {
+func getFreeSlot(fileSlot int) (int, error) {
 	slot := 1
-	for slot < MaxFiles && (Files[slot] != nil || slot == fileSlot) {
-		slot++
+	for slot <= MaxFiles && (Files[slot] != nil || slot == fileSlot) {
+		slot += 1
 	}
-	if Files[slot] != nil {
-		*status = MsgNoMoreFilesAllowed
-		return false
+	if slot > MaxFiles {
+		return -1, errNoMoreFilesAllowed
 	}
-	*newSlot = slot
-	return true
+	return slot, nil
 }
 
-func getFileName(tparam *TParObject, fnm *string, command Commands) bool {
+func getFileName(tparam *TParObject, command Commands) (string, error) {
 	tpFileName := TParObject{}
-	tpFileName.Con = nil
-	tpFileName.Nxt = nil
 	if !TparGet1(tparam, command, &tpFileName) {
-		return false
+		// TparAnalyze has already output the message, so we return an empty one
+		return "", errEmpty
 	}
-	*fnm = tpFileName.Str.Slice(1, tpFileName.Len)
-	return true
+	return tpFileName.Str.Slice(1, tpFileName.Len), nil
 }
 
 // FileCommand executes file commands.
@@ -502,20 +507,20 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		command = CmdFileClose
 	}
 
-	var status string
+	var err error
 	fileSlot := 0
 	result := false
 
 	switch command {
 	case CmdFileInput:
-		if !checkSlotAllocation(CurrentFrame.InputFile, false, &status) {
+		if err = checkSlotAllocation(CurrentFrame.InputFile, false); err != nil {
 			goto l99
 		}
-		if !getFreeSlot(&fileSlot, fileSlot, &status) {
+		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		var fnm string
-		if !getFileName(tparam, &fnm, command) {
+		if fnm, err = getFileName(tparam, command); err != nil {
 			goto l99
 		}
 		var dummyFptr *FileObject
@@ -536,15 +541,15 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 
 	case CmdFileGlobalInput:
-		if !checkSlotAllocation(FgiFile, false, &status) {
+		if err = checkSlotAllocation(FgiFile, false); err != nil {
 			goto l99
 		}
-		if !getFreeSlot(&fileSlot, fileSlot, &status) {
+		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		if Files[fileSlot] == nil {
 			var fnm string
-			if !getFileName(tparam, &fnm, command) {
+			if fnm, err = getFileName(tparam, command); err != nil {
 				goto l99
 			}
 			var dummyFptr *FileObject
@@ -555,21 +560,21 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		FgiFile = fileSlot
 
 	case CmdFileEdit:
-		if !checkSlotAllocation(CurrentFrame.InputFile, false, &status) {
+		if err = checkSlotAllocation(CurrentFrame.InputFile, false); err != nil {
 			goto l99
 		}
-		if !checkSlotAllocation(CurrentFrame.OutputFile, false, &status) {
+		if err = checkSlotAllocation(CurrentFrame.OutputFile, false); err != nil {
 			goto l99
 		}
-		if !getFreeSlot(&fileSlot, fileSlot, &status) {
+		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		var fileSlot2 int
-		if !getFreeSlot(&fileSlot2, fileSlot, &status) {
+		if fileSlot2, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		var fnm string
-		if !getFileName(tparam, &fnm, command) {
+		if fnm, err = getFileName(tparam, command); err != nil {
 			goto l99
 		}
 		if !FileCreateOpen([]string{fnm}, ParseEdit, &Files[fileSlot], &Files[fileSlot2]) {
@@ -591,14 +596,14 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 
 	case CmdFileExecute:
-		if !checkSlotAllocation(CurrentFrame.InputFile, false, &status) {
+		if err = checkSlotAllocation(CurrentFrame.InputFile, false); err != nil {
 			goto l99
 		}
-		if !getFreeSlot(&fileSlot, fileSlot, &status) {
+		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		var fnm string
-		if !getFileName(tparam, &fnm, command) {
+		if fnm, err = getFileName(tparam, command); err != nil {
 			goto l99
 		}
 		var dummyFptr *FileObject
@@ -608,7 +613,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		CurrentFrame.InputFile = fileSlot
 		FilesFrames[fileSlot] = CurrentFrame
 		FilePage(CurrentFrame, &ExitAbort)
-		if !freeFile(fileSlot, &status) {
+		if err = freeFile(fileSlot); err != nil {
 			goto l99
 		}
 		if !FileCloseDelete(&Files[fileSlot], true, false) {
@@ -634,7 +639,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			}
 			ScreenFixup()
 		}
-		if !freeFile(fileSlot, &status) {
+		if err = freeFile(fileSlot); err != nil {
 			goto l99
 		}
 		if savedCmd == CmdFileGlobalInput || savedCmd == CmdFileGlobalOutput {
@@ -649,7 +654,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 		if savedCmd == CmdFileEdit {
 			fileSlot = CurrentFrame.OutputFile
-			if !freeFile(fileSlot, &status) {
+			if err = freeFile(fileSlot); err != nil {
 				goto l99
 			}
 			if !FileCloseDelete(&Files[fileSlot], !CurrentFrame.TextModified, CurrentFrame.TextModified) {
@@ -662,7 +667,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileKill:
 		fileSlot = CurrentFrame.OutputFile
-		if !freeFile(fileSlot, &status) {
+		if err = freeFile(fileSlot); err != nil {
 			goto l99
 		}
 		if !FileCloseDelete(&Files[fileSlot], true, true) {
@@ -671,7 +676,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileGlobalKill:
 		fileSlot = FgoFile
-		if !freeFile(fileSlot, &status) {
+		if err = freeFile(fileSlot); err != nil {
 			goto l99
 		}
 		if !FileCloseDelete(&Files[fileSlot], true, true) {
@@ -679,14 +684,14 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 
 	case CmdFileOutput:
-		if !checkSlotAllocation(CurrentFrame.OutputFile, false, &status) {
+		if err = checkSlotAllocation(CurrentFrame.OutputFile, false); err != nil {
 			goto l99
 		}
-		if !getFreeSlot(&fileSlot, fileSlot, &status) {
+		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		var fnm string
-		if !getFileName(tparam, &fnm, command) {
+		if fnm, err = getFileName(tparam, command); err != nil {
 			goto l99
 		}
 		if CurrentFrame.InputFile != 0 {
@@ -703,15 +708,15 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		FilesFrames[fileSlot] = CurrentFrame
 
 	case CmdFileGlobalOutput:
-		if !checkSlotAllocation(FgoFile, false, &status) {
+		if err = checkSlotAllocation(FgoFile, false); err != nil {
 			goto l99
 		}
-		if !getFreeSlot(&fileSlot, fileSlot, &status) {
+		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
 			goto l99
 		}
 		if Files[fileSlot] == nil {
 			var fnm string
-			if !getFileName(tparam, &fnm, command) {
+			if fnm, err = getFileName(tparam, command); err != nil {
 				goto l99
 			}
 			var dummyFptr *FileObject
@@ -722,7 +727,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		FgoFile = fileSlot
 
 	case CmdFileRead:
-		if !checkSlotAllocation(FgiFile, true, &status) {
+		if err = checkSlotAllocation(FgiFile, true); err != nil {
 			goto l99
 		}
 		linesToRead := count
@@ -745,7 +750,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 
 	case CmdFileWrite:
-		if !checkSlotAllocation(FgoFile, true, &status) {
+		if err = checkSlotAllocation(FgoFile, true); err != nil {
 			goto l99
 		}
 		if !fromSpan {
@@ -768,7 +773,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 
 	case CmdFileRewind:
-		if !checkSlotDirection(CurrentFrame.InputFile, false, &status) {
+		if err = checkSlotDirection(CurrentFrame.InputFile, false); err != nil {
 			goto l99
 		}
 		if !FileRewind(&Files[CurrentFrame.InputFile]) {
@@ -786,7 +791,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 
 	case CmdFileGlobalRewind:
-		if !checkSlotDirection(FgiFile, false, &status) {
+		if err = checkSlotDirection(FgiFile, false); err != nil {
 			goto l99
 		}
 		if !FileRewind(&Files[FgiFile]) {
@@ -795,7 +800,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileSave:
 		if CurrentFrame.OutputFile == 0 {
-			status = MsgNoOutput
+			err = errNoOutput
 			goto l99
 		}
 		if !CurrentFrame.TextModified {
@@ -845,8 +850,8 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 	result = true
 
 l99:
-	if status != "" {
-		ScreenMessage(status)
+	if err != nil && err != errEmpty {
+		ScreenMessage(err.Error())
 	}
 	return result
 }
