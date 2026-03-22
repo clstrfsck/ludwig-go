@@ -131,4 +131,5 @@ func SetRegularTabStops(width int) {
 
 func init() {
 	SetRegularTabStops(8)
+	KeyIntroducers = make(map[int]struct{})
 }

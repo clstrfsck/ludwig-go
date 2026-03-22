@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode"
@@ -480,8 +481,8 @@ func FilesysParse(
 				home = "."
 			}
 		}
-		initialize = home + "/.ludwigrc"
-		memory = home + "/.lud_memory"
+		initialize = filepath.Join(home, ".ludwigrc")
+		memory = filepath.Join(home, ".lud_memory")
 	} else {
 		initialize = ""
 		memory = ""

@@ -299,7 +299,11 @@ func findEnquiry(name string) (string, bool) {
 			}
 
 		case varTypeOpsys:
-			return os.LookupEnv(itemStr)
+			val, ok := os.LookupEnv(itemStr)
+			if len(val) > MaxStrLen {
+				val = val[:MaxStrLen]
+			}
+			return val, ok
 
 		case varTypeLudwig:
 			switch itemStr {

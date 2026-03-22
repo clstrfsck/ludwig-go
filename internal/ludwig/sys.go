@@ -111,16 +111,7 @@ func SysExpandFilename(filename *string) bool {
 
 // SysCopyFilename extracts the filename from src_path and appends to dst_path
 func SysCopyFilename(srcPath string, dstPath *string) bool {
-	// get the actual file name part of src_path
-	slash := strings.LastIndex(srcPath, "/")
-	if *dstPath != "" && *dstPath != "/" {
-		*dstPath += "/"
-	}
-	if slash == -1 {
-		*dstPath += srcPath
-	} else {
-		*dstPath += srcPath[slash+1:]
-	}
+	*dstPath = filepath.Join(*dstPath, filepath.Base(srcPath))
 	return true
 }
 
