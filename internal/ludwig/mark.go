@@ -88,36 +88,34 @@ func MarksSqueeze(
 	}
 
 	// Multi-line case
-	{
-		// Move marks in last line that are before the last column
-		for _, mark := range lastLine.Marks {
-			if mark.Col < lastColumn {
-				mark.Col = lastColumn
-			}
+	// Move marks in last line that are before the last column
+	for _, mark := range lastLine.Marks {
+		if mark.Col < lastColumn {
+			mark.Col = lastColumn
 		}
+	}
 
-		// Move marks from intermediate lines (first_line..last_line-1)
-		currentLine := firstLine
-		for currentLine != lastLine {
-			marks := currentLine.Marks
-			i := 0
-			for i < len(marks) {
-				mark := marks[i]
-				if mark.Col >= firstColumn {
-					// Move this mark to the last line
-					mark.Col = lastColumn
-					mark.Line = lastLine
-					lastLine.Marks = append([]*MarkObject{mark}, lastLine.Marks...)
-					// Remove from current list
-					marks = append(marks[:i], marks[i+1:]...)
-				} else {
-					i++
-				}
+	// Move marks from intermediate lines (first_line..last_line-1)
+	currentLine := firstLine
+	for currentLine != lastLine {
+		marks := currentLine.Marks
+		i := 0
+		for i < len(marks) {
+			mark := marks[i]
+			if mark.Col >= firstColumn {
+				// Move this mark to the last line
+				mark.Col = lastColumn
+				mark.Line = lastLine
+				lastLine.Marks = append([]*MarkObject{mark}, lastLine.Marks...)
+				// Remove from current list
+				marks = append(marks[:i], marks[i+1:]...)
+			} else {
+				i++
 			}
-			currentLine.Marks = marks
-			currentLine = currentLine.FLink
-			firstColumn = 1
 		}
+		currentLine.Marks = marks
+		currentLine = currentLine.FLink
+		firstColumn = 1
 	}
 	return true
 }
