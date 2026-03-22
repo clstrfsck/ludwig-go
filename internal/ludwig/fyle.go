@@ -481,10 +481,10 @@ func freeFile(slot int) error {
 
 func getFreeSlot(fileSlot int) (int, error) {
 	slot := 1
-	for slot < MaxFiles && (Files[slot] != nil || slot == fileSlot) {
+	for slot <= MaxFiles && (Files[slot] != nil || slot == fileSlot) {
 		slot += 1
 	}
-	if Files[slot] != nil {
+	if slot > MaxFiles {
 		return -1, errNoMoreFilesAllowed
 	}
 	return slot, nil
@@ -850,7 +850,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 	result = true
 
 l99:
-	if err != nil {
+	if err != nil && err != errEmpty {
 		ScreenMessage(err.Error())
 	}
 	return result
