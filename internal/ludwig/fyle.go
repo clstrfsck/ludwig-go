@@ -189,10 +189,10 @@ func FileCloseDelete(fp **FileObject, delet bool, msgs bool) bool {
 }
 
 // FileRead reads a series of lines from input file.
-func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, last **LineHdrObject, actualCnt *int) bool {
+func FileRead(fp *FileObject, count int, bestTry bool) (*LineHdrObject, *LineHdrObject, int, bool) {
 	if fp.OutputFlag {
 		ScreenMessage(MsgNotInputFile)
-		return false
+		return nil, nil, 0, false
 	}
 
 	var line *LineHdrObject
@@ -225,20 +225,20 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 	if fp.LineCount < count {
 		if !bestTry {
 			ScreenMessage(MsgNotEnoughInputLeft)
-			return false
+			return nil, nil, 0, false
 		}
 		count = fp.LineCount
 	}
 
 	// Break off the required lines.
-	*actualCnt = count
+	var first, last *LineHdrObject
 	if count == 0 {
-		*first = nil
-		*last = nil
+		first = nil
+		last = nil
 	} else if fp.LineCount == count {
 		// Give caller the whole list.
-		*first = fp.FirstLine
-		*last = fp.LastLine
+		first = fp.FirstLine
+		last = fp.LastLine
 		fp.FirstLine = nil
 		fp.LastLine = nil
 		fp.LineCount = 0
@@ -258,15 +258,15 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 		}
 
 		// Remove lines from list.
-		*first = fp.FirstLine
-		*last = line
+		first = fp.FirstLine
+		last = line
 		fp.FirstLine = line.FLink
 		line.FLink = nil
 		fp.FirstLine.BLink = nil
 		fp.LineCount -= count
 	}
 
-	return true
+	return first, last, count, true
 }
 
 // FileWrite writes a series of lines to an output file.
@@ -395,7 +395,8 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 	}
 	for (currentFrame.SpaceLeft*10 > currentFrame.SpaceLimit) && !TtControlC {
 		var i int
-		if !FileRead(Files[currentFrame.InputFile], 50, true, &firstLine, &lastLine, &i) {
+		var ok bool
+		if firstLine, lastLine, i, ok = FileRead(Files[currentFrame.InputFile], 50, true); !ok {
 			return false
 		}
 		currentFrame.InputCount += i
@@ -734,9 +735,8 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		if rept == LeadParamPIndef {
 			linesToRead = MaxInt
 		}
-		var first, last *LineHdrObject
-		var i int
-		if !FileRead(Files[FgiFile], linesToRead, rept == LeadParamPIndef, &first, &last, &i) {
+		first, last, _, ok := FileRead(Files[FgiFile], linesToRead, rept == LeadParamPIndef)
+		if !ok {
 			goto l99
 		}
 		if first != nil {
