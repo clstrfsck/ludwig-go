@@ -84,7 +84,8 @@ func SysExpandFilename(filename *string) bool {
 		return true
 	}
 	if strings.HasPrefix(*filename, "~") {
-		userPart, rest, _ := strings.Cut((*filename)[1:], "/")
+		afterTilde := filepath.Clean((*filename)[1:])
+		userPart, rest, _ := strings.Cut(afterTilde, string(filepath.Separator))
 		var dir string
 		if userPart == "" {
 			var err error

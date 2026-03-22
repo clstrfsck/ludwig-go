@@ -690,6 +690,7 @@ func FilesysParse(
 			if filename, found := SysReadFilename(memory); found {
 				input.Filename = filename
 			} else {
+				ScreenMessage(fmt.Sprintf("Error opening (%s) as input", memory))
 				return false
 			}
 		default:

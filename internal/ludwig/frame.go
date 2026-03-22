@@ -584,7 +584,7 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = false
 
 	case 'W': // Regular width tabs
-		if w, found := TparToInt(request, pos); !found || w <= 0 {
+		if w, found := TparToInt(request, pos); found && w > 1 {
 			var temptab TabArray
 			temptab[0] = true
 			temptab[MaxStrLenP] = true
