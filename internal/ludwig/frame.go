@@ -636,22 +636,6 @@ func FrameKill(frameName string) bool {
 	return true
 }
 
-func nextcharx(request *TParObject, pos *int) byte {
-	for (*pos < request.Len) && (request.Str.Get(*pos) == ' ') {
-		*pos++
-	}
-	var ch byte
-	if (*pos > request.Len) || (request.Str.Get(*pos) == ' ') {
-		ch = 0
-	} else {
-		ch = request.Str.Get(*pos)
-	}
-	if *pos <= request.Len {
-		*pos++
-	}
-	return ch
-}
-
 // setmemory sets the memory allocation for the current frame
 func setmemory(sz int, setInitial bool) bool {
 	if sz >= MaxSpace {
