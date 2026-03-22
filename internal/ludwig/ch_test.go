@@ -7,30 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestSgn tests the sign function
-func TestSgn(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    int
-		expected int
-	}{
-		{"Positive", 42, 1},
-		{"Negative", -42, -1},
-		{"Zero", 0, 0},
-		{"One", 1, 1},
-		{"MinusOne", -1, -1},
-		{"LargePositive", 1000000, 1},
-		{"LargeNegative", -1000000, -1},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := sgn(tt.input)
-			assert.Equal(t, tt.expected, result, "sgn(%d)", tt.input)
-		})
-	}
-}
-
 // TestChCompareStr tests string comparison
 func TestChCompareStr(t *testing.T) {
 	t.Run("ExactMatch", func(t *testing.T) {

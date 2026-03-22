@@ -26,20 +26,12 @@ type acceptSetPartitionType struct {
 
 // closureKill frees the equiv_list in a closure
 func closureKill(closure *NFAAttributeType) {
-	pointer1 := closure.EquivList
-	for pointer1 != nil {
-		pointer2 := pointer1.NextElt
-		pointer1 = pointer2
-	}
 	closure.EquivList = nil
 }
 
 // transitionKill frees a transition list
-func transitionKill(pointer1 **TransitionObject) {
-	for *pointer1 != nil {
-		pointer2 := (*pointer1).NextTransition
-		*pointer1 = pointer2
-	}
+func transitionKill(p **TransitionObject) {
+	*p = nil
 }
 
 // PatternDFATableKill destroys a DFA table and frees its memory
@@ -64,11 +56,6 @@ func PatternDFATableInitialize(patternPtr **DFATableObject, patternDefinition Pa
 		(*patternPtr).DFAStatesUsed = 0
 	} else {
 		*patternPtr = &DFATableObject{}
-		(*patternPtr).DFAStatesUsed = 0
-		for count := 0; count <= MaxDFAStateRange; count++ {
-			(*patternPtr).DFATable[count].Transitions = nil
-			(*patternPtr).DFATable[count].NFAAttributes.EquivList = nil
-		}
 	}
 	(*patternPtr).Definition = patternDefinition
 	return true
