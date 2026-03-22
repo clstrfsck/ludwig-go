@@ -804,7 +804,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdOpSysCommand:
 		if TparGet1(tparam, command, &request) {
-			if !OpsysCommand(&request, &firstLine, &lastLine, &i) {
+			var ok bool
+			if firstLine, lastLine, _, ok = OpsysCommand(&request); !ok {
 				goto l99
 			}
 			if firstLine != nil {

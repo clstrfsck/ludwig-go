@@ -16,10 +16,10 @@
 package ludwig
 
 // OpsysCommand executes a command in a subprocess and returns the output as lines
-func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObject, actualCnt *int) bool {
-	*first = nil
-	*last = nil
-	*actualCnt = 0
+func OpsysCommand(command *TParObject) (*LineHdrObject, *LineHdrObject, int, bool) {
+	var first *LineHdrObject
+	var last *LineHdrObject
+	var actualCnt int
 
 	var mbx FileObject
 	mbx.Valid = false
@@ -34,7 +34,7 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 	}
 
 	if !FilesysCreateOpen(&mbx, nil, false) {
-		return false
+		return nil, nil, 0, false
 	}
 
 	defer func() {
@@ -49,17 +49,17 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 			LineChangeLength(line, outlen)
 			line.Str.FillCopy(result, 1, outlen, 1, line.Len(), ' ')
 			line.Used = outlen
-			line.BLink = *last
-			if *last != nil {
+			line.BLink = last
+			if last != nil {
 				(*last).FLink = line
 			} else {
-				*first = line
+				first = line
 			}
-			*last = line
-			*actualCnt += 1
+			last = line
+			actualCnt += 1
 		} else if !mbx.Eof { // Something terrible has happened!
-			return false
+			return nil, nil, 0, false
 		}
 	}
-	return true
+	return first, last, actualCnt, true
 }
