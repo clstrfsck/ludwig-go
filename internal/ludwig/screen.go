@@ -1078,7 +1078,6 @@ func ScreenGetLineP(
 	maxTp int,
 	thisTp int,
 ) (*StrObject, int) {
-	outlen := 0
 	maxTp = iabs(maxTp)
 
 	if TtControlC {
