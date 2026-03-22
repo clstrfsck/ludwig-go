@@ -315,7 +315,7 @@ func VduGetText(strLen int, str *StrObject, outlen *int) {
 func VduKeyboardInit(
 	nrKeyNames *int,
 	keyNameList *[]KeyNameRecord,
-	keyIntroducers *[MaxSetRange + 1]bool,
+	keyIntroducers map[int]struct{},
 	terminalInfo *TerminalInfoType,
 ) {
 	*nrKeyNames = NumControlChars + NumNcursesKeys
@@ -384,9 +384,10 @@ func VduKeyboardInit(
 	}
 
 	// Clear key introducers
-	for i := range keyIntroducers {
-		keyIntroducers[i] = false
+	for k := range keyIntroducers {
+		delete(keyIntroducers, k)
 	}
+
 	*keyNameList = make([]KeyNameRecord, *nrKeyNames)
 	copy(*keyNameList, kl)
 }

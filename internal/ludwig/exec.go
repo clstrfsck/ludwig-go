@@ -355,7 +355,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdEqualColumn:
 		i = 1 // Start of column number, j receives column number
 		if TparGet1(tparam, command, &request) {
-			if TparToInt(&request, &i, &j) {
+			if j, found := TparToInt(&request, &i); found {
 				switch rept {
 				case LeadParamNone, LeadParamPlus:
 					cmdSuccess = (CurrentFrame.Dot.Col == j)
@@ -398,7 +398,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		if !TparGet1(tparam, command, &request) {
 			goto l99
 		}
-		if !TparToMark(&request, &j) {
+		var found bool
+		if j, found = TparToMark(&request); !found {
 			goto l99
 		}
 		if CurrentFrame.Marks[j] != nil {

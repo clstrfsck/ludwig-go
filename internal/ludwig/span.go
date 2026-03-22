@@ -205,18 +205,15 @@ func SpanIndex() bool {
 			ScreenWriteNameStr(0, p.Name, NameLen)
 			ScreenWriteln()
 			lineCount++
-			var fylNam string
 			if p.Frame.InputFile != 0 {
 				ScreenWriteStr(0, "  Input:  ")
-				FileName(Files[p.Frame.InputFile], 70, &fylNam)
-				ScreenWriteFileNameStr(0, fylNam)
+				ScreenWriteFileNameStr(0, FileName(Files[p.Frame.InputFile], 70))
 				ScreenWriteln()
 				lineCount++
 			}
 			if p.Frame.OutputFile != 0 {
 				ScreenWriteStr(0, "  Output: ")
-				FileName(Files[p.Frame.OutputFile], 70, &fylNam)
-				ScreenWriteFileNameStr(0, fylNam)
+				ScreenWriteFileNameStr(0, FileName(Files[p.Frame.OutputFile], 70))
 				ScreenWriteln()
 				lineCount++
 			}

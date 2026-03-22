@@ -75,37 +75,38 @@ func TparDuplicate(fromTp *TParObject, toTp **TParObject) {
 }
 
 // TparToMark converts a tpar string to a mark number
-func TparToMark(strng *TParObject, mark *int) bool {
+func TparToMark(strng *TParObject) (int, bool) {
 	if strng.Len == 0 {
 		ScreenMessage(MsgIllegalMarkNumber)
-		return false
+		return -1, false
 	}
 	mch := strng.Str.Get(1)
 	if mch >= '0' && mch <= '9' {
 		i := 1
-		if !TparToInt(strng, &i, mark) {
-			return false
+		mark, found := TparToInt(strng, &i)
+		if !found {
+			return -1, false
 		}
-		if (i <= strng.Len) || ((*mark < 1) || (*mark > MaxUserMarkNumber)) {
+		if (i <= strng.Len) || ((mark < 1) || (mark > MaxUserMarkNumber)) {
 			ScreenMessage(MsgIllegalMarkNumber)
-			return false
+			return -1, false
 		}
+		return mark, true
 	} else {
 		if (strng.Len > 1) || (mch != '=' && mch != '%') {
 			ScreenMessage(MsgIllegalMarkNumber)
-			return false
+			return -1, false
 		}
 		if mch == '=' {
-			*mark = MarkEquals
+			return MarkEquals, true
 		} else {
-			*mark = MarkModified
+			return MarkModified, true
 		}
 	}
-	return true
 }
 
 // TparToInt converts a tpar string to an integer
-func TparToInt(strng *TParObject, chpos *int, intVal *int) bool {
+func TparToInt(strng *TParObject, chpos *int) (int, bool) {
 	var ch byte
 	if *chpos > strng.Len {
 		ch = '\x00'
@@ -114,7 +115,7 @@ func TparToInt(strng *TParObject, chpos *int, intVal *int) bool {
 	}
 	if ch < '0' || ch > '9' {
 		ScreenMessage(MsgInvalidInteger)
-		return false
+		return 0, false
 	}
 	number := 0
 	for {
@@ -124,7 +125,7 @@ func TparToInt(strng *TParObject, chpos *int, intVal *int) bool {
 			number += digit
 		} else {
 			ScreenMessage(MsgInvalidInteger)
-			return false
+			return 0, false
 		}
 		*chpos++
 		if *chpos > strng.Len {
@@ -136,8 +137,7 @@ func TparToInt(strng *TParObject, chpos *int, intVal *int) bool {
 			break
 		}
 	}
-	*intVal = number
-	return true
+	return number, true
 }
 
 // tparSubstitute substitutes span content into tpar
@@ -225,8 +225,7 @@ func leftPadded(width int, value int) string {
 }
 
 // findEnquiry handles environment and system enquiries
-func findEnquiry(name string, result **StrObject, reslen *int) bool {
-	enquiryResult := false
+func findEnquiry(name string) (string, bool) {
 	variableType := varTypeUnknown
 	var item strings.Builder
 	length := len(name)
@@ -264,114 +263,90 @@ func findEnquiry(name string, result **StrObject, reslen *int) bool {
 
 		switch variableType {
 		case varTypeTerminal:
-			enquiryResult = true
 			switch itemStr {
 			case "NAME":
-				*reslen = len(TerminalInfo.Name)
-				*result = NewStrObjectFrom(TerminalInfo.Name)
+				return TerminalInfo.Name, true
 			case "HEIGHT":
-				s := leftPadded(EnquiryNumLen, TerminalInfo.Height)
-				*reslen = len(s)
-				*result = NewStrObjectFrom(s)
+				return leftPadded(EnquiryNumLen, TerminalInfo.Height), true
 			case "WIDTH":
-				s := leftPadded(EnquiryNumLen, TerminalInfo.Width)
-				*reslen = len(s)
-				*result = NewStrObjectFrom(s)
+				return leftPadded(EnquiryNumLen, TerminalInfo.Width), true
 			case "SPEED":
-				s := leftPadded(EnquiryNumLen, 0)
-				*reslen = len(s)
-				*result = NewStrObjectFrom(s)
-			default:
-				enquiryResult = false
+				return leftPadded(EnquiryNumLen, 0), true
 			}
 
 		case varTypeFrame:
-			enquiryResult = true
 			switch itemStr {
 			case "NAME":
-				*reslen = len(CurrentFrame.Span.Name)
-				*result = NewStrObjectFrom(CurrentFrame.Span.Name)
+				return CurrentFrame.Span.Name, true
 			case "INPUTFILE":
 				if CurrentFrame.InputFile == 0 {
-					*reslen = 0
+					return "", true
 				} else {
-					*reslen = len(Files[CurrentFrame.InputFile].Filename)
-					*result = NewStrObjectFrom(Files[CurrentFrame.InputFile].Filename)
+					return Files[CurrentFrame.InputFile].Filename, true
 				}
 			case "OUTPUTFILE":
 				if CurrentFrame.OutputFile == 0 {
-					*reslen = 0
+					return "", true
 				} else {
-					*reslen = len(Files[CurrentFrame.OutputFile].Filename)
-					*result = NewStrObjectFrom(Files[CurrentFrame.OutputFile].Filename)
+					return Files[CurrentFrame.OutputFile].Filename, true
 				}
 			case "MODIFIED":
-				*reslen = 1
 				if CurrentFrame.TextModified {
-					*result = NewStrObjectFrom("Y")
+					return "Y", true
 				} else {
-					*result = NewStrObjectFrom("N")
+					return "N", true
 				}
-			default:
-				enquiryResult = false
 			}
 
 		case varTypeOpsys:
-			env, found := os.LookupEnv(itemStr)
-			if found {
-				enquiryResult = true
-				*reslen = min(MaxStrLen, len(env))
-				*result = NewStrObjectFrom(env)
+			val, ok := os.LookupEnv(itemStr)
+			if len(val) > MaxStrLen {
+				val = val[:MaxStrLen]
 			}
+			return val, ok
 
 		case varTypeLudwig:
-			enquiryResult = true
 			switch itemStr {
 			case "VERSION":
-				*reslen = len(LudwigVersion)
-				*result = NewStrObjectFrom(LudwigVersion)
+				return LudwigVersion, true
 			case "OPSYS":
-				*result = NewStrObjectFrom(SystemName)
-				*reslen = len(SystemName)
+				return SystemName, true
 			case "COMMAND_INTRODUCER":
 				if !ChIsPrintable(rune(CommandIntroducer)) {
-					*reslen = 0
 					ScreenMessage(MsgNonprintableIntroducer)
+					return "", true
 				} else {
-					*reslen = 1
-					*result = NewStrObjectFrom(string(rune(CommandIntroducer)))
+					return string(rune(CommandIntroducer)), true
 				}
 			case "INSERT_MODE":
-				*reslen = 1
 				if (EditMode == ModeInsert) || ((EditMode == ModeCommand) && (PreviousMode == ModeInsert)) {
-					*result = NewStrObjectFrom("Y")
+					return "Y", true
 				} else {
-					*result = NewStrObjectFrom("N")
+					return "N", true
 				}
 			case "OVERTYPE_MODE":
-				*reslen = 1
 				if (EditMode == ModeOvertype) ||
 					((EditMode == ModeCommand) && (PreviousMode == ModeOvertype)) {
-					*result = NewStrObjectFrom("Y")
+					return "Y", true
 				} else {
-					*result = NewStrObjectFrom("N")
+					return "N", true
 				}
-			default:
-				enquiryResult = false
 			}
 
 		case varTypeUnknown:
 			// Nothing to do
 		}
 	}
-	return enquiryResult
+	return "", false
 }
 
 // tparEnquire performs environment enquiries
 func tparEnquire(tpar *TParObject) bool {
 	tpar.Dlm = '\x00'
 	name := tpar.Str.Slice(1, tpar.Len)
-	if findEnquiry(name, &tpar.Str, &tpar.Len) {
+	if result, found := findEnquiry(name); found {
+		tpar.Str.Assign(result)
+		tpar.Len = len(result)
 		return true
 	}
 	ScreenMessage(MsgUnknownItem)

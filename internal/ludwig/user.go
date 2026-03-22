@@ -21,97 +21,88 @@ func specialCommand(cmd Commands) bool {
 }
 
 // UserKeyCodeToName converts a key code to its name
-func UserKeyCodeToName(keyCode int, keyName *string) bool {
+func UserKeyCodeToName(keyCode int) (string, bool) {
 	for i := 1; i < len(KeyNameList); i++ {
 		if KeyNameList[i].KeyCode == keyCode {
-			*keyName = KeyNameList[i].KeyName
-			return true
+			return KeyNameList[i].KeyName, true
 		}
 	}
-	return false
+	return "", false
 }
 
 // UserKeyNameToCode converts a key name to its code
-func UserKeyNameToCode(keyName string, keyCode *int) bool {
+func UserKeyNameToCode(keyName string) (int, bool) {
 	for i := 1; i < len(KeyNameList); i++ {
 		if KeyNameList[i].KeyName == keyName {
-			*keyCode = KeyNameList[i].KeyCode
-			return true
+			return KeyNameList[i].KeyCode, true
 		}
 	}
-	return false
+	return -1, false
 }
 
 // UserKeyInitialize initializes terminal-defined key map table
 func UserKeyInitialize() {
-	var keyCode int
-	VduKeyboardInit(&NrKeyNames, &KeyNameList, &KeyIntroducers, &TerminalInfo)
+	VduKeyboardInit(&NrKeyNames, &KeyNameList, KeyIntroducers, &TerminalInfo)
 
-	if UserKeyNameToCode("UP-ARROW", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("UP-ARROW"); found {
 		Lookup[keyCode].Command = CmdUp
 	}
-	if UserKeyNameToCode("DOWN-ARROW", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("DOWN-ARROW"); found {
 		Lookup[keyCode].Command = CmdDown
 	}
-	if UserKeyNameToCode("RIGHT-ARROW", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("RIGHT-ARROW"); found {
 		Lookup[keyCode].Command = CmdRight
 	}
-	if UserKeyNameToCode("LEFT-ARROW", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("LEFT-ARROW"); found {
 		Lookup[keyCode].Command = CmdLeft
 	}
-	if UserKeyNameToCode("HOME", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("HOME"); found {
 		Lookup[keyCode].Command = CmdHome
 	}
-	if UserKeyNameToCode("BACK-TAB", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("BACK-TAB"); found {
 		Lookup[keyCode].Command = CmdBacktab
 	}
-	if UserKeyNameToCode("INSERT-CHAR", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("INSERT-CHAR"); found {
 		Lookup[keyCode].Command = CmdInsertChar
 	}
-	if UserKeyNameToCode("DELETE-CHAR", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("DELETE-CHAR"); found {
 		Lookup[keyCode].Command = CmdDeleteChar
 	}
-	if UserKeyNameToCode("INSERT-LINE", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("INSERT-LINE"); found {
 		Lookup[keyCode].Command = CmdInsertLine
 	}
-	if UserKeyNameToCode("DELETE-LINE", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("DELETE-LINE"); found {
 		Lookup[keyCode].Command = CmdDeleteLine
 	}
-	if UserKeyNameToCode("HELP", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("HELP"); found {
 		Lookup[keyCode].Command = CmdHelp
 		tpar := &TParObject{
 			Str: EmptyStrObject(),
 			Dlm: TpdPrompt,
-			Len: 0,
-			Con: nil,
-			Nxt: nil,
 		}
 		Lookup[keyCode].Tpar = tpar
 	}
-	if UserKeyNameToCode("FIND", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("FIND"); found {
 		Lookup[keyCode].Command = CmdGet
 		tpar := &TParObject{
 			Str: EmptyStrObject(),
 			Dlm: TpdPrompt,
-			Len: 0,
-			Con: nil,
-			Nxt: nil,
 		}
 		Lookup[keyCode].Tpar = tpar
 	}
-	if UserKeyNameToCode("PREV-SCREEN", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("PREV-SCREEN"); found {
 		Lookup[keyCode].Command = CmdWindowBackward
 	}
-	if UserKeyNameToCode("NEXT-SCREEN", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("NEXT-SCREEN"); found {
 		Lookup[keyCode].Command = CmdWindowForward
 	}
-	if UserKeyNameToCode("PAGE-UP", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("PAGE-UP"); found {
 		Lookup[keyCode].Command = CmdWindowBackward
 	}
-	if UserKeyNameToCode("PAGE-DOWN", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("PAGE-DOWN"); found {
 		Lookup[keyCode].Command = CmdWindowForward
 	}
-	if UserKeyNameToCode("WINDOW-RESIZE-EVENT", &keyCode) {
+	if keyCode, found := UserKeyNameToCode("WINDOW-RESIZE-EVENT"); found {
 		Lookup[keyCode].Command = CmdResizeWindow
 	}
 }
@@ -156,7 +147,8 @@ func UserKey(key *TParObject, strng *TParObject) bool {
 		keyCode = int(key.Str.Get(1))
 	} else {
 		keyName := key.Str.Slice(1, key.Len)
-		if !UserKeyNameToCode(keyName, &keyCode) {
+		var found bool
+		if keyCode, found = UserKeyNameToCode(keyName); !found {
 			ScreenMessage(MsgUnrecognizedKeyName)
 			return false
 		}
