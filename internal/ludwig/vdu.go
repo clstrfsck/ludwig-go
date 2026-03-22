@@ -234,13 +234,13 @@ func VduGetKey() int {
 }
 
 // VduGetInput gets a line of input from the user with a prompt
-func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
+func VduGetInput(prompt string, getLen int) (*StrObject, int) {
 	VduBold()
 	VduDisplayStr(prompt, true)
 	VduNormal()
 
 	// Fill get with spaces
-	*get = NewBlankStrObject(MaxStrLen)
+	get := NewBlankStrObject(MaxStrLen)
 
 	_, curX := stdscr.CursorYX()
 	_, maxX := stdscr.MaxYX()
@@ -250,13 +250,13 @@ func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 		getLen = maxlen
 	}
 
-	*outlen = 0
+	outlen := 0
 	key := VduGetKey()
 
 	for getLen > 0 && key != CR && key != NL {
-		if *outlen > 0 && (key == BS || key == DEL) {
-			getLen++
-			*outlen--
+		if outlen > 0 && (key == BS || key == DEL) {
+			getLen += 1
+			outlen -= 1
 			stdscr.AddChar(nc.Char(BS))
 			stdscr.AddChar(nc.Char(SPC))
 			stdscr.AddChar(nc.Char(BS))
@@ -264,14 +264,15 @@ func VduGetInput(prompt string, get **StrObject, getLen int, outlen *int) {
 			if key < 0 || key > OrdMaxChar || isControlChar(key) {
 				VduBeep()
 			} else {
-				getLen--
-				*outlen++
-				(*get).Set(*outlen, byte(key))
+				getLen -= 1
+				outlen += 1
+				get.Set(outlen, byte(key))
 				stdscr.AddChar(nc.Char(key))
 			}
 		}
 		key = VduGetKey()
 	}
+	return get, outlen
 }
 
 // VduInsertMode sets insert mode on or off

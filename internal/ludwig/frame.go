@@ -852,10 +852,7 @@ func printMargins(m1 int, m2 int) {
 
 // FrameParameter handles the frame parameters command
 func FrameParameter(tpar *TParObject) bool {
-	request := TParObject{
-		Nxt: nil,
-		Con: nil,
-	}
+	request := TParObject{}
 	if !TparGet1(tpar, CmdFrameParameters, &request) {
 		return false
 	}
@@ -963,7 +960,7 @@ func FrameParameter(tpar *TParObject) bool {
 		}
 		ScreenWriteln()
 		ScreenWritelnClel()
-		ScreenGetLineP(newValues, &request.Str, &request.Len, 1, 1)
+		request.Str, request.Len = ScreenGetLineP(newValues, 1, 1)
 		if request.Len > 0 {
 			request.Str.ApplyN(ChToUpper, request.Len, 1)
 			if !setparam(&request) {
