@@ -183,7 +183,7 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 		return false
 	}
 
-	var line, line2 *LineHdrObject
+	var line *LineHdrObject
 	for count > fp.LineCount && !fp.Eof {
 		buffer := NewBlankStrObject(MaxStrLen)
 		var outlen int
@@ -191,7 +191,7 @@ func FileRead(fp *FileObject, count int, bestTry bool, first **LineHdrObject, la
 			if outlen > 0 {
 				outlen = buffer.Length(' ', outlen)
 			}
-			LinesCreate(1, &line, &line2)
+			line, _ = LinesCreate(1)
 			LineChangeLength(line, outlen)
 			line.Str.FillCopy(buffer, 1, outlen, 1, line.Len(), ' ')
 			line.Used = outlen

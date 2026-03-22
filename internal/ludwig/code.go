@@ -107,8 +107,7 @@ func errorMsg(ps *parseState, errText string) {
 			if CurrentFrame.Marks[MarkEquals] != nil {
 				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 			}
-			var eLine *LineHdrObject
-			LinesCreate(1, &eLine, &eLine)
+			eLine, _ := LinesCreate(1)
 
 			str := NewBlankStrObject(MaxStrLen)
 			i := ps.currentPoint.Col
@@ -328,9 +327,9 @@ func scanLeadingParam(ps *parseState, repSym *LeadParam, repCount *int) bool {
 	return true
 }
 
-func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tparam **TParObject) bool {
+func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TParObject, bool) {
 	tc := CmdAttrib[command].TpCount
-	*tparam = nil
+	var result *TParObject
 
 	// Some commands only take trailing parameters when repcount is +ve
 	if tc < 0 {
@@ -343,12 +342,12 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 
 	if tc > 0 {
 		if !nextKey(ps) {
-			return false
+			return nil, false
 		}
 		parDelim := ps.key
 		if ps.key < 0 || ps.key > MaxSetRange || !ChIsPunctuation(rune(parDelim)) {
 			errorMsg(ps, "Illegal parameter delimiter")
-			return false
+			return nil, false
 		}
 
 		var tpl *TParObject
@@ -358,11 +357,11 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 				parString := *NewBlankStrObject(MaxStrLen)
 				for {
 					if !nextKey(ps) {
-						return false
+						return nil, false
 					}
 					if ps.key == 0 {
 						errorMsg(ps, "Missing trailing delimiter")
-						return false
+						return nil, false
 					}
 					parLength++
 					parString.Set(parLength, byte(ps.key))
@@ -373,27 +372,25 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 				parLength--
 				if ps.eoln && !CmdAttrib[command].TparInfo[tci].MlAllowed {
 					errorMsg(ps, "Missing trailing delimiter")
-					return false
+					return nil, false
 				}
 
 				tp := &TParObject{
 					Len: parLength,
 					Dlm: byte(parDelim),
 					Str: &parString,
-					Nxt: nil,
-					Con: nil,
 				}
 
-				if *tparam == nil {
+				if result == nil {
 					// 1st time through
-					*tparam = tp
+					result = tp
 					tpl = tp
 				} else {
 					if tpl != nil {
 						tpl.Con = tp
 						tpl = tp
 					} else {
-						(*tparam).Nxt = tp
+						result.Nxt = tp
 						tpl = tp
 					}
 				}
@@ -405,7 +402,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam, tpara
 			tpl = nil
 		}
 	}
-	return true
+	return result, true
 }
 
 func scanCommand(ps *parseState, fullScan bool) bool {
@@ -578,25 +575,20 @@ func scanSimpleCommand(
 	if Lookup[ps.key].Tpar == nil {
 		if CmdAttrib[command].TpCount != 0 {
 			if fullScan {
-				if !scanTrailingParam(ps, command, repSym, tparam) {
+				var found bool
+				if *tparam, found = scanTrailingParam(ps, command, repSym); !found {
 					return false
 				}
 			} else {
 				*tparam = &TParObject{
 					Str: EmptyStrObject(),
-					Len: 0,
 					Dlm: TpdPrompt,
-					Nxt: nil,
-					Con: nil,
 				}
 				tmpTp := *tparam
 				for i := 2; i <= CmdAttrib[command].TpCount; i++ {
 					tmpTp.Nxt = &TParObject{
 						Str: EmptyStrObject(),
-						Len: 0,
 						Dlm: TpdPrompt,
-						Nxt: nil,
-						Con: nil,
 					}
 					tmpTp = tmpTp.Nxt
 				}
@@ -605,7 +597,7 @@ func scanSimpleCommand(
 			*tparam = nil
 		}
 	} else {
-		TparDuplicate(Lookup[ps.key].Tpar, tparam)
+		*tparam = TparDuplicate(Lookup[ps.key].Tpar)
 	}
 
 	if *lookupCode != nil {

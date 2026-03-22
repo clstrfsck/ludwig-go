@@ -25,8 +25,7 @@ func createTestSpanStructure() (*FrameObject, *GroupObject, *LineHdrObject) {
 	}
 
 	// Create lines
-	var firstLine, lastLine *LineHdrObject
-	LinesCreate(5, &firstLine, &lastLine)
+	firstLine, lastLine := LinesCreate(5)
 
 	// Link lines to group
 	line := firstLine

@@ -51,8 +51,7 @@ func FrameEdit(frameName string) bool {
 	fptr := &FrameObject{}
 	sptr := &SpanObject{}
 
-	var gptr *GroupObject
-	LineEOPCreate(fptr, &gptr)
+	gptr := LineEOPCreate(fptr)
 
 	// Set up span object
 	sptr.BLink = oldp
@@ -469,9 +468,7 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		}
 
 	case 'I': // insert tabs
-		var firstLine *LineHdrObject
-		var lastLine *LineHdrObject
-		LinesCreate(1, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(1)
 		LineChangeLength(firstLine, MaxStrLen)
 		if setInitial {
 			for i := 1; i <= MaxStrLen; i++ {

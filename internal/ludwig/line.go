@@ -15,7 +15,7 @@
 package ludwig
 
 // LineEOPCreate creates a group containing only the EOP line
-func LineEOPCreate(inframe *FrameObject, group **GroupObject) {
+func LineEOPCreate(inframe *FrameObject) *GroupObject {
 	newLine := &LineHdrObject{}
 	newGroup := &GroupObject{}
 
@@ -27,11 +27,11 @@ func LineEOPCreate(inframe *FrameObject, group **GroupObject) {
 	newGroup.FirstLineNr = 1
 	newGroup.NrLines = 1
 
-	*group = newGroup
+	return newGroup
 }
 
 // LinesCreate creates a linked list of lines
-func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObject) {
+func LinesCreate(lineCount int) (*LineHdrObject, *LineHdrObject) {
 	var topLine *LineHdrObject
 	var prevLine *LineHdrObject
 	var thisLine *LineHdrObject
@@ -51,8 +51,7 @@ func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObj
 		prevLine = thisLine
 	}
 
-	*firstLine = topLine
-	*lastLine = thisLine
+	return topLine, thisLine
 }
 
 // LinesInject injects a linked list of lines into the data structure
