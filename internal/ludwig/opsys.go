@@ -45,9 +45,7 @@ func OpsysCommand(command *TParObject, first **LineHdrObject, last **LineHdrObje
 		result := NewBlankStrObject(MaxStrLen)
 		var outlen int
 		if FilesysRead(&mbx, result, &outlen) {
-			var line *LineHdrObject
-			var line2 *LineHdrObject
-			LinesCreate(1, &line, &line2)
+			line, _ := LinesCreate(1)
 			LineChangeLength(line, outlen)
 			line.Str.FillCopy(result, 1, outlen, 1, line.Len(), ' ')
 			line.Used = outlen

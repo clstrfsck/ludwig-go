@@ -59,8 +59,7 @@ func TextReturnCol(curLine *LineHdrObject, curCol int, splitting bool) int {
 
 // TextRealizeNull converts a null line into a real line
 func TextRealizeNull(oldNull *LineHdrObject) bool {
-	var newNull *LineHdrObject
-	LinesCreate(1, &newNull, &newNull)
+	newNull, _ := LinesCreate(1)
 	if LinesInject(newNull, newNull, oldNull) {
 		if MarksShift(oldNull, 1, MaxStrLenP, newNull, 1) {
 			newNull.Group.Frame.TextModified = true
@@ -224,8 +223,6 @@ func TextOvertype(
 // TextInsertTpar inserts a trailing parameter at a mark position
 func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObject) bool {
 	result := false
-	var firstLine *LineHdrObject
-	var lastLine *LineHdrObject
 
 	// Check for the simple case
 	if tp.Con == nil {
@@ -249,7 +246,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			ScreenMessage(MsgNoRoomOnLine)
 			return false
 		}
-		LinesCreate(lineCount, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(lineCount)
 		if beforeMark.Line.FLink == nil && !TextRealizeNull(beforeMark.Line) {
 			goto cleanup
 		}
@@ -605,7 +602,7 @@ func textInterMove(
 	if !copy {
 		linesRequired -= lineTwoNr - lineOneNr - 1
 	}
-	LinesCreate(linesRequired, &firstLine, &lastLine)
+	firstLine, lastLine = LinesCreate(linesRequired)
 
 	// Copy end of first line
 	textLen = 0
@@ -823,7 +820,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		}
 	}
 
-	LinesCreate(1, &newLine, &newLine)
+	newLine, _ = LinesCreate(1)
 
 	// Heuristic to decide which way to do the split
 	shift = newCol - beforeMark.Col

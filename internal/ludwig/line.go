@@ -31,7 +31,7 @@ func LineEOPCreate(inframe *FrameObject) *GroupObject {
 }
 
 // LinesCreate creates a linked list of lines
-func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObject) {
+func LinesCreate(lineCount int) (*LineHdrObject, *LineHdrObject) {
 	var topLine *LineHdrObject
 	var prevLine *LineHdrObject
 	var thisLine *LineHdrObject
@@ -51,8 +51,7 @@ func LinesCreate(lineCount int, firstLine **LineHdrObject, lastLine **LineHdrObj
 		prevLine = thisLine
 	}
 
-	*firstLine = topLine
-	*lastLine = thisLine
+	return topLine, thisLine
 }
 
 // LinesInject injects a linked list of lines into the data structure

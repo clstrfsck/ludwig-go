@@ -385,9 +385,7 @@ func TestLineChangeLength(t *testing.T) {
 
 func TestLinesCreate(t *testing.T) {
 	t.Run("CreateSingleLine", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-
-		LinesCreate(1, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(1)
 
 		assert.NotNil(t, firstLine, "firstLine is nil")
 		assert.NotNil(t, lastLine, "lastLine is nil")
@@ -397,9 +395,7 @@ func TestLinesCreate(t *testing.T) {
 	})
 
 	t.Run("CreateMultipleLines", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-
-		LinesCreate(5, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(5)
 
 		assert.NotNil(t, firstLine, "firstLine is nil")
 		assert.NotNil(t, lastLine, "lastLine is nil")
@@ -420,9 +416,7 @@ func TestLinesCreate(t *testing.T) {
 	})
 
 	t.Run("VerifyLinkage", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-
-		LinesCreate(10, &firstLine, &lastLine)
+		firstLine, _ := LinesCreate(10)
 
 		// Verify forward and backward linkage
 		line := firstLine
@@ -440,18 +434,15 @@ func TestLinesCreate(t *testing.T) {
 	})
 
 	t.Run("ZeroLines", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
-
-		LinesCreate(0, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(0)
 
 		assert.Nil(t, firstLine, "LinesCreate should return nil for zero lines")
 		assert.Nil(t, lastLine, "LinesCreate should return nil for zero lines")
 	})
 
 	t.Run("VerifyInitialization", func(t *testing.T) {
-		var firstLine, lastLine *LineHdrObject
 
-		LinesCreate(3, &firstLine, &lastLine)
+		firstLine, _ := LinesCreate(3)
 
 		line := firstLine
 		for line != nil {
@@ -522,8 +513,7 @@ func TestLinesInject_Basic(t *testing.T) {
 		beforeLine := eopGroup.FirstLine
 
 		// Create lines to inject
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(3, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(3)
 
 		// Set some content on lines for space tracking
 		line := firstLine
@@ -558,8 +548,7 @@ func TestLinesInject_Basic(t *testing.T) {
 		frame, eopGroup := createTestFrameWithEOP()
 		beforeLine := eopGroup.FirstLine
 
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(1, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(1)
 
 		result := LinesInject(firstLine, lastLine, beforeLine)
 
@@ -587,8 +576,7 @@ func TestLinesInject_Basic(t *testing.T) {
 		originalGroupCount := 1
 		originalNrLines := group.NrLines
 
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(5, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(5)
 
 		result := LinesInject(firstLine, lastLine, beforeLine)
 
@@ -643,8 +631,7 @@ func TestLinesInject_RequiringNewGroups(t *testing.T) {
 
 		// Create more lines than MaxGroupLines
 		lineCount := MaxGroupLines + 10
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(lineCount, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(lineCount)
 
 		result := LinesInject(firstLine, lastLine, beforeLine)
 
@@ -675,8 +662,7 @@ func TestLinesInject_RequiringNewGroups(t *testing.T) {
 
 		// Create exactly 2 * MaxGroupLines
 		lineCount := 2 * MaxGroupLines
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(lineCount, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(lineCount)
 
 		result := LinesInject(firstLine, lastLine, beforeLine)
 
@@ -994,8 +980,7 @@ func TestLinesInjectExtractIntegration(t *testing.T) {
 		beforeLine := eopGroup.FirstLine
 
 		// Create and inject lines
-		var firstLine, lastLine *LineHdrObject
-		LinesCreate(5, &firstLine, &lastLine)
+		firstLine, lastLine := LinesCreate(5)
 		LinesInject(firstLine, lastLine, beforeLine)
 
 		originalSpace := frame.SpaceLeft
@@ -1019,15 +1004,13 @@ func TestLinesInjectExtractIntegration(t *testing.T) {
 		beforeLine := eopGroup.FirstLine
 
 		// Operation 1: Inject 10 lines
-		var first1, last1 *LineHdrObject
-		LinesCreate(10, &first1, &last1)
+		first1, last1 := LinesCreate(10)
 		LinesInject(first1, last1, beforeLine)
 
 		validateFrameStructure(t, frame)
 
 		// Operation 2: Inject 5 more lines at beginning
-		var first2, last2 *LineHdrObject
-		LinesCreate(5, &first2, &last2)
+		first2, last2 := LinesCreate(5)
 		LinesInject(first2, last2, first1)
 
 		validateFrameStructure(t, frame)

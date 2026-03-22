@@ -107,8 +107,7 @@ func errorMsg(ps *parseState, errText string) {
 			if CurrentFrame.Marks[MarkEquals] != nil {
 				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 			}
-			var eLine *LineHdrObject
-			LinesCreate(1, &eLine, &eLine)
+			_, eLine := LinesCreate(1)
 
 			str := NewBlankStrObject(MaxStrLen)
 			i := ps.currentPoint.Col

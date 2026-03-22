@@ -584,7 +584,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdInsertLine:
 		if count != 0 {
-			LinesCreate(iabs(count), &firstLine, &lastLine)
+			firstLine, lastLine = LinesCreate(iabs(count))
 			cmdSuccess = LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
 			if cmdSuccess {
 				if count > 0 {
