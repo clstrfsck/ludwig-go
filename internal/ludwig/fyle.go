@@ -17,7 +17,7 @@ package ludwig
 const blankName = "                               "
 
 // FileName returns a file's name, in the specified width.
-func FileName(fp *FileObject, maxLen int, actFnm *string) {
+func FileName(fp *FileObject, maxLen int) string {
 	if maxLen < 5 {
 		maxLen = 5
 	}
@@ -31,9 +31,9 @@ func FileName(fp *FileObject, maxLen int, actFnm *string) {
 		headLen = maxLen - 3 - tailLen
 	}
 	if tailLen == 0 {
-		*actFnm = fp.Filename[:headLen]
+		return fp.Filename[:headLen]
 	} else {
-		*actFnm = fp.Filename[:headLen] + "---" + fp.Filename[len(fp.Filename)-tailLen:]
+		return fp.Filename[:headLen] + "---" + fp.Filename[len(fp.Filename)-tailLen:]
 	}
 }
 
@@ -99,9 +99,7 @@ func FileTable() {
 			} else {
 				room = FileNameLen
 			}
-			var compressedFnm string
-			FileName(Files[fileSlot], room, &compressedFnm)
-			ScreenWriteFileNameStr(1, compressedFnm)
+			ScreenWriteFileNameStr(1, FileName(Files[fileSlot], room))
 			ScreenWriteln()
 		}
 	}

@@ -48,7 +48,7 @@ var TtWinChanged bool
 // Keyboard interface
 var NrKeyNames int
 var KeyNameList []KeyNameRecord
-var KeyIntroducers [MaxSetRange + 1]bool
+var KeyIntroducers map[int]struct{}
 
 // Special frames
 var CurrentFrame *FrameObject

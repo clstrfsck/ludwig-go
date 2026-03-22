@@ -393,7 +393,6 @@ func setcmdintr(request *TParObject, pos *int) bool {
 		}
 		keyNameStr := keyName.String()
 
-		var keyCode int
 		if len(keyNameStr) == 1 {
 			if ChIsPunctuation(rune(keyNameStr[0])) {
 				CommandIntroducer = int(keyNameStr[0])
@@ -401,8 +400,8 @@ func setcmdintr(request *TParObject, pos *int) bool {
 				return true
 			}
 			ScreenMessage(MsgInvalidCmdIntroducer)
-		} else if UserKeyNameToCode(keyNameStr, &keyCode) {
-			if KeyIntroducers[keyCode] {
+		} else if keyCode, found := UserKeyNameToCode(keyNameStr); found {
+			if _, found := KeyIntroducers[keyCode]; found {
 				ScreenMessage(MsgInvalidCmdIntroducer)
 			} else {
 				CommandIntroducer = keyCode
@@ -585,34 +584,35 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = false
 
 	case 'W': // Regular width tabs
-		var temptab TabArray
-		var w int
-		if (!TparToInt(request, pos, &w)) || w <= 0 {
+		if w, found := TparToInt(request, pos); !found || w <= 0 {
+			var temptab TabArray
+			temptab[0] = true
+			temptab[MaxStrLenP] = true
+			for i := 1; i <= MaxStrLen; i++ {
+				if i%w == 1 {
+					temptab[i] = true
+				}
+			}
+			if setInitial {
+				InitialTabStops = temptab
+			}
+			CurrentFrame.TabStops = temptab
+		} else {
 			return false
 		}
-		temptab[0] = true
-		temptab[MaxStrLenP] = true
-		for i := 1; i <= MaxStrLen; i++ {
-			if i%w == 1 {
-				temptab[i] = true
-			}
-		}
-		if setInitial {
-			InitialTabStops = temptab
-		}
-		CurrentFrame.TabStops = temptab
 
 	case '(': // multi-columns specified
 		var temptab TabArray
 		temptab[0] = true
 		temptab[MaxStrLenP] = true
 		for {
-			var j int
-			if !TparToInt(request, pos, &j) {
+			n, found := TparToInt(request, pos)
+			if !found {
+				ScreenMessage(MsgBadFormatInTabTable)
 				return false
 			}
-			if j >= 1 && j <= MaxStrLen {
-				temptab[j] = true
+			if n >= 1 && n <= MaxStrLen {
+				temptab[n] = true
 			} else {
 				ScreenMessage(MsgOutOfRangeTabValue)
 				return false
@@ -642,14 +642,16 @@ func setTabs(request *TParObject, pos *int, setInitial bool) bool {
 func getMar(ch *byte, pos *int, request *TParObject, loBnd int, hiBnd int, margin *int) bool {
 	if *ch >= '0' && *ch <= '9' {
 		*pos--
-		if !TparToInt(request, pos, margin) {
+		m, found := TparToInt(request, pos)
+		if !found {
 			return false
 		}
-		if *margin < loBnd || *margin > hiBnd {
+		if m < loBnd || m > hiBnd {
 			ScreenMessage(MsgMarginOutOfRange)
 			return false
 		}
 		*ch = nextchar(request, pos)
+		*margin = m
 	}
 	return true
 }
@@ -760,21 +762,20 @@ func setparam(request *TParObject) bool {
 			return false
 		}
 		ok := false
-		var temp int
 		switch ch {
 		case 'O':
 			ok = setOptions(request, &pos, setInitial)
 		case 'S':
-			if TparToInt(request, &pos, &temp) {
-				ok = setmemory(temp, setInitial)
+			if mem, found := TparToInt(request, &pos); found {
+				ok = setmemory(mem, setInitial)
 			}
 		case 'H':
-			if TparToInt(request, &pos, &temp) {
-				ok = FrameSetHeight(temp, setInitial)
+			if height, found := TparToInt(request, &pos); found {
+				ok = FrameSetHeight(height, setInitial)
 			}
 		case 'W':
-			if TparToInt(request, &pos, &temp) {
-				ok = setwidth(temp, setInitial)
+			if width, found := TparToInt(request, &pos); found {
+				ok = setwidth(width, setInitial)
 			}
 		case 'C':
 			ok = setcmdintr(request, &pos)
@@ -913,8 +914,7 @@ func FrameParameter(tpar *TParObject) bool {
 		ScreenWritelnClel()
 		if LudwigMode == LudwigScreen {
 			ScreenWriteStr(3, "Command introducer                 C = ")
-			var keyName string
-			if UserKeyCodeToName(CommandIntroducer, &keyName) {
+			if keyName, found := UserKeyCodeToName(CommandIntroducer); found {
 				ScreenWriteStr(0, keyName)
 			} else {
 				ScreenWriteCh(0, byte(CommandIntroducer))

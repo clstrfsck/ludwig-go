@@ -59,13 +59,8 @@ func SysIsTTY() bool {
 }
 
 // SysGetEnv retrieves an environment variable
-func SysGetEnv(environ string, result *string) bool {
-	env := os.Getenv(environ)
-	if env == "" {
-		return false
-	}
-	*result = env
-	return true
+func SysGetEnv(environ string) (string, bool) {
+	return os.LookupEnv(environ)
 }
 
 // SysInitSig initializes signal handlers
@@ -88,35 +83,23 @@ func SysExpandFilename(filename *string) bool {
 	if *filename == "" {
 		return true
 	}
-	if (*filename)[0] == '~' {
-		slash := strings.Index(*filename, "/")
-		// If there are no slashes, we just assume the users directory
-		if slash == -1 {
-			slash = len(*filename)
-		}
-		username := (*filename)[1:slash]
-		filepart := ""
-		if slash < len(*filename) {
-			filepart = (*filename)[slash:]
-		}
+	if strings.HasPrefix(*filename, "~") {
+		userPart, rest, _ := strings.Cut((*filename)[1:], "/")
 		var dir string
-		if username == "" {
-			dir = os.Getenv("HOME")
-			if dir == "" {
-				dir = ""
+		if userPart == "" {
+			var err error
+			dir, err = os.UserHomeDir()
+			if err != nil {
+				return false
 			}
 		} else {
-			u, err := user.Lookup(username)
+			u, err := user.Lookup(userPart)
 			if err != nil {
 				return false
 			}
 			dir = u.HomeDir
 		}
-		// Append slash if none
-		if dir != "" && dir[len(dir)-1] != '/' {
-			dir += "/"
-		}
-		*filename = dir + filepart
+		*filename = filepath.Join(dir, rest)
 	}
 	absPath, err := filepath.Abs(*filename)
 	if err != nil {
@@ -204,19 +187,19 @@ func SysWriteFilename(memory string, filename string) bool {
 }
 
 // SysReadFilename reads a filename from a memory file
-func SysReadFilename(memory string, filename *string) bool {
+func SysReadFilename(memory string) (string, bool) {
 	f, err := os.Open(memory)
 	if err != nil {
-		return false
+		return "", false
 	}
 	defer f.Close()
 
 	line, err := bufio.NewReader(f).ReadString('\n')
 	if err != nil && err != io.EOF {
-		return false
+		return "", false
 	}
-	*filename = strings.TrimRight(line, "\r\n")
-	return *filename != ""
+	filename := strings.TrimRight(line, "\r\n")
+	return filename, filename != ""
 }
 
 // SysReapChildren reaps zombie child processes

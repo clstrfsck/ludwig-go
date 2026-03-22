@@ -472,9 +472,13 @@ func FilesysParse(
 	var memory string
 
 	if parseType == ParseCommand {
-		var home string
-		if !SysGetEnv("HOME", &home) {
-			home = "."
+		home, err := os.UserHomeDir()
+		if err != nil {
+			if envHome, found := SysGetEnv("HOME"); found {
+				home = envHome
+			} else {
+				home = "."
+			}
 		}
 		initialize = home + "/.ludwigrc"
 		memory = home + "/.lud_memory"
@@ -618,7 +622,9 @@ func FilesysParse(
 		if len(file) > 0 {
 			input.Filename = file[0]
 		} else if memory != "" {
-			if SysReadFilename(memory, &input.Filename) && SysFileExists(input.Filename) {
+			filename, found := SysReadFilename(memory)
+			if found && SysFileExists(filename) {
+				input.Filename = filename
 				checkInput = true
 			} else {
 				if parseType == ParseCommand {
@@ -676,10 +682,16 @@ func FilesysParse(
 		}
 
 	case ParseInput:
-		if len(file) == 1 {
+		switch {
+		case len(file) == 1:
 			input.Filename = file[0]
-		} else if memory == "" || !SysReadFilename(memory, &input.Filename) {
-			input.Filename = ""
+		case memory != "":
+			if filename, found := SysReadFilename(memory); found {
+				input.Filename = filename
+			} else {
+				return false
+			}
+		default:
 			return false
 		}
 		input.Create = false
