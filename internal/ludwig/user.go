@@ -133,7 +133,7 @@ func UserCommandIntroducer() bool {
 
 	if cmdSuccess {
 		CurrentFrame.TextModified = true
-		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
 	return cmdSuccess
 }

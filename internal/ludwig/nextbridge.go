@@ -127,7 +127,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		newCol -= 1
-		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 	} else if count < 0 {
 		newCol = CurrentFrame.Dot.Col - 1
 		if !bridge {
@@ -145,9 +145,9 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		newCol += 2
-		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 	} else {
-		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 		return true
 	}
 

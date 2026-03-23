@@ -83,8 +83,8 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 		}
 	}
 
-	markCopy(firstMark, &mrk1)
-	markCopy(lastMark, &mrk2)
+	MarkCreate(firstMark.Line, firstMark.Col, &mrk1)
+	MarkCreate(lastMark.Line, lastMark.Col, &mrk2)
 
 	lineNrFirst := LineToNumber(mrk1.Line)
 	lineNrLast := LineToNumber(mrk2.Line)

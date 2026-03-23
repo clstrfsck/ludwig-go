@@ -119,7 +119,7 @@ func ExecuteImmed() {
 					}
 					if cmdSuccess {
 						CurrentFrame.TextModified = true
-						markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+						MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 						MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col-inputLen, &CurrentFrame.Marks[MarkEquals])
 					} else {
 						// IF, FOR SOME REASON, THAT FAILED, CORRECT THE VDU IMAGE OF

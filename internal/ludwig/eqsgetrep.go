@@ -429,9 +429,13 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 	var okay bool
 	result := false
 
-	markCopy(CurrentFrame.Dot, &oldDot)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot)
 	if CurrentFrame.Marks[MarkEquals] != nil {
-		markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals)
+		MarkCreate(
+			CurrentFrame.Marks[MarkEquals].Line,
+			CurrentFrame.Marks[MarkEquals].Col,
+			&oldEquals,
+		)
 	}
 	if tpar.Dlm == TpdSmart {
 		if !eqsgetrepPatternBuild(tpar, &CurrentFrame.RepPatternPtr) {
@@ -518,17 +522,21 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				goto l99
 			}
 		}
-		markCopy(CurrentFrame.Dot, &oldDot)
-		markCopy(CurrentFrame.Marks[MarkEquals], &oldEquals)
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot)
+		MarkCreate(
+			CurrentFrame.Marks[MarkEquals].Line,
+			CurrentFrame.Marks[MarkEquals].Col,
+			&oldEquals,
+		)
 		CurrentFrame.TextModified = true
-		markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 		count--
 	}
 l1:
-	markCopy(oldDot, &CurrentFrame.Dot)
+	MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
 	MarkDestroy(&oldDot)
 	if oldEquals != nil {
-		markCopy(oldEquals, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(oldEquals.Line, oldEquals.Col, &CurrentFrame.Marks[MarkEquals])
 		MarkDestroy(&oldEquals)
 	} else if CurrentFrame.Marks[MarkEquals] != nil {
 		MarkDestroy(&CurrentFrame.Marks[MarkEquals])

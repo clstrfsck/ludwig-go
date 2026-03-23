@@ -121,9 +121,9 @@ func previousWord(dot *MarkObject) bool {
 func NewwordAdvanceWord(rept LeadParam, count int) bool {
 	result := false
 	var newDot *MarkObject
-	markCopy(CurrentFrame.Dot, &newDot)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newDot)
 	if rept == LeadParamMarker {
-		markCopy(CurrentFrame.Marks[count], &newDot)
+		MarkCreate(CurrentFrame.Marks[count].Line, CurrentFrame.Marks[count].Col, &newDot)
 		rept = LeadParamNInt
 		count = 0
 	}
@@ -139,7 +139,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		markCopy(newDot, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 
 	case LeadParamMinus, LeadParamNInt:
 		count = -count
@@ -152,7 +152,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		markCopy(newDot, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 
 	case LeadParamPIndef:
 		if newDot.Line.Used == 0 { // Fail if we are on a blank line
@@ -170,7 +170,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 			newDot.Col = newDot.Line.Used
 		}
 		for nextWord(newDot) {
-			markCopy(newDot, &CurrentFrame.Dot)
+			MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 		}
 		// now on last word of paragraph
 		//*** next statement should be more sophisticated
@@ -185,9 +185,9 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 		if !currentWord(newDot) {
 			goto l98
 		}
-		markCopy(newDot, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 		for previousWord(newDot) {
-			markCopy(newDot, &CurrentFrame.Dot)
+			MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 		}
 
 	default:
@@ -210,22 +210,22 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	var newLineNr int
 	var oldDotCol int
 
-	markCopy(CurrentFrame.Dot, &oldPos)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
 
 	// First Step: Get to the beginning of the word if we are in the middle of it
 	if !NewwordAdvanceWord(LeadParamPInt, 0) {
 		goto l99
 	}
 	// ASSERTION: We are on the beginning of a word
-	markCopy(CurrentFrame.Dot, &here)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &here)
 	if !NewwordAdvanceWord(rept, count) {
 		// Put Dot back and bail out
-		markCopy(oldPos, &CurrentFrame.Dot)
+		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
 		goto l99
 	}
 	// OK. We now wipe out everything from Dot to here
 	oldDotCol = CurrentFrame.Dot.Col
-	markCopy(CurrentFrame.Dot, &theOtherMark)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &theOtherMark)
 	lineNr = LineToNumber(theOtherMark.Line)
 	newLineNr = LineToNumber(here.Line)
 	if (lineNr > newLineNr) || ((lineNr == newLineNr) && (theOtherMark.Col > here.Col)) {
@@ -349,9 +349,9 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 	result := false
 	var newDot *MarkObject
 
-	markCopy(CurrentFrame.Dot, &newDot)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newDot)
 	if rept == LeadParamMarker {
-		markCopy(CurrentFrame.Marks[count], &newDot)
+		MarkCreate(CurrentFrame.Marks[count].Line, CurrentFrame.Marks[count].Col, &newDot)
 		rept = LeadParamNInt
 		count = 0
 	}
@@ -367,7 +367,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		markCopy(newDot, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 
 	case LeadParamMinus, LeadParamNInt:
 		count = -count
@@ -384,7 +384,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 				goto l98
 			}
 		}
-		markCopy(newDot, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 
 	case LeadParamPIndef:
 		MarkCreate(CurrentFrame.LastGroup.LastLine, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
@@ -428,7 +428,7 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	var lineNr int
 	var newLineNr int
 
-	markCopy(CurrentFrame.Dot, &oldPos)
+	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
 	// Get to the beginning of the paragraph
 	if !NewwordAdvanceParagraph(LeadParamPInt, 0) {
 		goto l99
@@ -436,7 +436,7 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	MarkCreate(CurrentFrame.Dot.Line, 1, &here)
 	if !NewwordAdvanceParagraph(rept, count) {
 		// Something wrong so put dot back and abort
-		markCopy(oldPos, &CurrentFrame.Dot)
+		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
 		goto l99
 	}
 
