@@ -232,7 +232,7 @@ func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
 		}
 		if dotLine.FLink == nil {
 			TextRealizeNull(dotLine)
-			*eopLineNr++
+			(*eopLineNr)++
 			dotLine = dotLine.BLink
 			if counter == 1 {
 				newEql.Line = dotLine

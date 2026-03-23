@@ -273,7 +273,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				exp = MaxStrLen - *outlen
 			}
 			for ; exp > 0; exp-- {
-				*outlen++
+				(*outlen)++
 				outputBuffer.Set(*outlen, ' ')
 			}
 		} else if unicode.IsPrint(r) {
@@ -285,7 +285,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				break
 			}
 			for _, b := range runeBytes {
-				*outlen++
+				(*outlen)++
 				outputBuffer.Set(*outlen, b)
 			}
 		}

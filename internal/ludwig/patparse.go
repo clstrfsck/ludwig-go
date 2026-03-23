@@ -215,7 +215,7 @@ func PatternParser(
 			newNfa := *statesUsed
 			nfaTable[*statesUsed].Fail = false
 			nfaTable[*statesUsed].Indefinite = false
-			*statesUsed++
+			(*statesUsed)++
 			return newNfa
 		}
 		ScreenMessage(MsgPatPatternTooComplex)
@@ -267,7 +267,7 @@ func PatternParser(
 	patternGetch := func(parseCount *int, ch *byte, inString *TParObject) bool {
 		result := true
 		if *parseCount < inString.Len {
-			*parseCount++
+			(*parseCount)++
 			*ch = inString.Str.Get(*parseCount)
 			patternDefinition.Length++
 			if patternDefinition.Length > MaxStrLen {
@@ -293,7 +293,7 @@ func PatternParser(
 			auxBool = patternGetch(parseCount, ch, inString)
 		}
 		if auxBool {
-			*parseCount--
+			(*parseCount)--
 		}
 		return result
 	}
@@ -329,7 +329,7 @@ func PatternParser(
 				*rangeEnd = 0
 				*rangeIndefinite = true
 			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				*parseCount--
+				(*parseCount)--
 				patternGetnumb(parseCount, rangeStart, patCh, inString)
 				*rangeEnd = *rangeStart
 			case PatternLRangeDelim:
@@ -338,7 +338,7 @@ func PatternParser(
 					panic(localException{})
 				}
 				if *patCh >= '0' && *patCh <= '9' {
-					*parseCount--
+					(*parseCount)--
 					_ = patternGetnumb(parseCount, rangeStart, patCh, inString)
 					_ = patternGetch(parseCount, patCh, inString)
 				} else {
@@ -354,7 +354,7 @@ func PatternParser(
 					panic(localException{})
 				}
 				if *patCh >= '0' && *patCh <= '9' {
-					*parseCount--
+					(*parseCount)--
 					_ = patternGetnumb(parseCount, rangeEnd, patCh, inString)
 					_ = patternGetch(parseCount, patCh, inString)
 				} else {

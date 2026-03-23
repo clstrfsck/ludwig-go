@@ -85,7 +85,7 @@ func patternGetInputElt(
 			*markFlag = false // will test for a mark next time through
 			*ch = line.Str.Get(*column)
 			if *column <= length {
-				*column++
+				(*column)++
 			}
 		}
 	}
