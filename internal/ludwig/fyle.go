@@ -297,15 +297,19 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 			VduFlush()
 		}
 	}
+	defer func() {
+		if current.TextModified && !fromSpan {
+			ScreenClearMsgs(false)
+		}
+	}()
 
 	firstLine := current.FirstGroup.FirstLine
 	lastLine := current.LastGroup.LastLine.BLink
-	result := false
 
 	if firstLine != nil && lastLine != nil {
 		if current.TextModified {
 			if !FileWrite(firstLine, lastLine, Files[current.OutputFile]) {
-				goto l98
+				return false
 			}
 		}
 		MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
@@ -317,7 +321,7 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 		}
 	}
 
-	result = true
+	result := true
 	if current.TextModified {
 		if current.InputFile != 0 {
 			if Files[current.InputFile] != nil {
@@ -330,18 +334,13 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 							buflen = buffer.TrimmedLen(' ', outlen)
 						}
 						if !FilesysWrite(Files[current.OutputFile], buffer, buflen) {
-							result = false
-							goto l98
+							return false
 						}
 					}
 				}
 				result = Files[current.InputFile].Eof
 			}
 		}
-	}
-l98:
-	if current.TextModified && !fromSpan {
-		ScreenClearMsgs(false)
 	}
 	return result
 }
@@ -381,9 +380,16 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		LinesExtract(firstLine, lastLine)
 	}
 
+	defer func() {
+		SetupSyntaxHighlighting(currentFrame)
+		if currentFrame.InputFile != 0 {
+			FileFixEOP(Files[currentFrame.InputFile].Eof, currentFrame.LastGroup.LastLine)
+		}
+	}()
+
 	// Page in the new lines
 	if currentFrame.InputFile == 0 {
-		goto l98
+		return true
 	}
 	for (currentFrame.SpaceLeft*10 > currentFrame.SpaceLimit) && !TtControlC {
 		var i int
@@ -394,7 +400,7 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		currentFrame.InputCount += i
 
 		if firstLine == nil {
-			goto l98
+			return true
 		}
 		LinesInject(firstLine, lastLine, currentFrame.LastGroup.LastLine)
 
@@ -402,11 +408,6 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		if currentFrame.Dot.Line.FLink == nil {
 			MarkCreate(firstLine, currentFrame.Dot.Col, &currentFrame.Dot)
 		}
-	}
-l98:
-	SetupSyntaxHighlighting(currentFrame)
-	if currentFrame.InputFile != 0 {
-		FileFixEOP(Files[currentFrame.InputFile].Eof, currentFrame.LastGroup.LastLine)
 	}
 	return true
 }
@@ -500,23 +501,28 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	var err error
 	fileSlot := 0
-	result := false
+
+	defer func() {
+		if err != nil && err != errEmpty {
+			ScreenMessage(err.Error())
+		}
+	}()
 
 	switch command {
 	case CmdFileInput:
 		if err = checkSlotAllocation(CurrentFrame.InputFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		var fnm string
 		if fnm, err = getFileName(tparam, command); err != nil {
-			goto l99
+			return false
 		}
 		var dummyFptr *FileObject
 		if !FileCreateOpen([]string{fnm}, ParseInput, &Files[fileSlot], &dummyFptr) {
-			goto l99
+			return false
 		}
 		CurrentFrame.InputFile = fileSlot
 		FilesFrames[fileSlot] = CurrentFrame
@@ -533,43 +539,43 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileGlobalInput:
 		if err = checkSlotAllocation(FgiFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		if Files[fileSlot] == nil {
 			var fnm string
 			if fnm, err = getFileName(tparam, command); err != nil {
-				goto l99
+				return false
 			}
 			var dummyFptr *FileObject
 			if !FileCreateOpen([]string{fnm}, ParseInput, &Files[fileSlot], &dummyFptr) {
-				goto l99
+				return false
 			}
 		}
 		FgiFile = fileSlot
 
 	case CmdFileEdit:
 		if err = checkSlotAllocation(CurrentFrame.InputFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if err = checkSlotAllocation(CurrentFrame.OutputFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		var fileSlot2 int
 		if fileSlot2, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		var fnm string
 		if fnm, err = getFileName(tparam, command); err != nil {
-			goto l99
+			return false
 		}
 		if !FileCreateOpen([]string{fnm}, ParseEdit, &Files[fileSlot], &Files[fileSlot2]) {
-			goto l99
+			return false
 		}
 		CurrentFrame.InputFile = fileSlot
 		FilesFrames[fileSlot] = CurrentFrame
@@ -588,27 +594,27 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileExecute:
 		if err = checkSlotAllocation(CurrentFrame.InputFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		var fnm string
 		if fnm, err = getFileName(tparam, command); err != nil {
-			goto l99
+			return false
 		}
 		var dummyFptr *FileObject
 		if !FileCreateOpen([]string{fnm}, ParseExecute, &Files[fileSlot], &dummyFptr) {
-			goto l99
+			return false
 		}
 		CurrentFrame.InputFile = fileSlot
 		FilesFrames[fileSlot] = CurrentFrame
 		FilePage(CurrentFrame, &ExitAbort)
 		if err = freeFile(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		if !FileCloseDelete(&Files[fileSlot], true, false) {
-			goto l99
+			return false
 		}
 
 	case CmdFileClose:
@@ -626,30 +632,30 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 		if savedCmd == CmdFileOutput || savedCmd == CmdFileEdit {
 			if !FileWindthru(CurrentFrame, fromSpan) {
-				goto l99
+				return false
 			}
 			ScreenFixup()
 		}
 		if err = freeFile(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		if savedCmd == CmdFileGlobalInput || savedCmd == CmdFileGlobalOutput {
 			if !FileCloseDelete(&Files[fileSlot], false, true) {
-				goto l99
+				return false
 			}
 		} else {
 			if !FileCloseDelete(&Files[fileSlot], !CurrentFrame.TextModified,
 				CurrentFrame.TextModified || !Files[fileSlot].OutputFlag) {
-				goto l99
+				return false
 			}
 		}
 		if savedCmd == CmdFileEdit {
 			fileSlot = CurrentFrame.OutputFile
 			if err = freeFile(fileSlot); err != nil {
-				goto l99
+				return false
 			}
 			if !FileCloseDelete(&Files[fileSlot], !CurrentFrame.TextModified, CurrentFrame.TextModified) {
-				goto l99
+				return false
 			}
 		}
 		if savedCmd == CmdFileOutput || savedCmd == CmdFileEdit {
@@ -659,40 +665,40 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 	case CmdFileKill:
 		fileSlot = CurrentFrame.OutputFile
 		if err = freeFile(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		if !FileCloseDelete(&Files[fileSlot], true, true) {
-			goto l99
+			return false
 		}
 
 	case CmdFileGlobalKill:
 		fileSlot = FgoFile
 		if err = freeFile(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		if !FileCloseDelete(&Files[fileSlot], true, true) {
-			goto l99
+			return false
 		}
 
 	case CmdFileOutput:
 		if err = checkSlotAllocation(CurrentFrame.OutputFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		var fnm string
 		if fnm, err = getFileName(tparam, command); err != nil {
-			goto l99
+			return false
 		}
 		if CurrentFrame.InputFile != 0 {
 			if !FileCreateOpen([]string{fnm}, ParseOutput, &Files[CurrentFrame.InputFile], &Files[fileSlot]) {
-				goto l99
+				return false
 			}
 		} else {
 			var dummyFptr *FileObject
 			if !FileCreateOpen([]string{fnm}, ParseOutput, &dummyFptr, &Files[fileSlot]) {
-				goto l99
+				return false
 			}
 		}
 		CurrentFrame.OutputFile = fileSlot
@@ -700,26 +706,26 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileGlobalOutput:
 		if err = checkSlotAllocation(FgoFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if fileSlot, err = getFreeSlot(fileSlot); err != nil {
-			goto l99
+			return false
 		}
 		if Files[fileSlot] == nil {
 			var fnm string
 			if fnm, err = getFileName(tparam, command); err != nil {
-				goto l99
+				return false
 			}
 			var dummyFptr *FileObject
 			if !FileCreateOpen([]string{fnm}, ParseOutput, &dummyFptr, &Files[fileSlot]) {
-				goto l99
+				return false
 			}
 		}
 		FgoFile = fileSlot
 
 	case CmdFileRead:
 		if err = checkSlotAllocation(FgiFile, true); err != nil {
-			goto l99
+			return false
 		}
 		linesToRead := count
 		if rept == LeadParamPIndef {
@@ -727,7 +733,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 		first, last, _, ok := FileRead(Files[FgiFile], linesToRead, rept == LeadParamPIndef)
 		if !ok {
-			goto l99
+			return false
 		}
 		if first != nil {
 			LinesInject(first, last, CurrentFrame.Dot.Line)
@@ -739,7 +745,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileWrite:
 		if err = checkSlotAllocation(FgoFile, true); err != nil {
-			goto l99
+			return false
 		}
 		if !fromSpan {
 			ScreenMessage(MsgWritingFile)
@@ -749,11 +755,11 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		}
 		var first, last *LineHdrObject
 		if !ExecComputeLineRange(CurrentFrame, rept, int(count), &first, &last) {
-			goto l99
+			return false
 		}
 		if first != nil {
 			if !FileWrite(first, last, Files[FgoFile]) {
-				goto l99
+				return false
 			}
 		}
 		if !fromSpan {
@@ -762,10 +768,10 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileRewind:
 		if err = checkSlotDirection(CurrentFrame.InputFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if !FileRewind(&Files[CurrentFrame.InputFile]) {
-			goto l99
+			return false
 		}
 		if !fromSpan {
 			ScreenMessage(MsgLoadingFile)
@@ -780,16 +786,16 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 
 	case CmdFileGlobalRewind:
 		if err = checkSlotDirection(FgiFile, false); err != nil {
-			goto l99
+			return false
 		}
 		if !FileRewind(&Files[FgiFile]) {
-			goto l99
+			return false
 		}
 
 	case CmdFileSave:
 		if CurrentFrame.OutputFile == 0 {
 			err = errNoOutput
-			goto l99
+			return false
 		}
 		if !CurrentFrame.TextModified {
 			if !fromSpan {
@@ -798,8 +804,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 					VduFlush()
 				}
 			}
-			result = true
-			goto l99
+			return true
 		}
 		if !fromSpan {
 			ScreenMessage(MsgSavingFile)
@@ -812,7 +817,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		last := CurrentFrame.LastGroup.LastLine.BLink
 		if last != nil {
 			if !FileWrite(first, last, Files[CurrentFrame.OutputFile]) {
-				goto l99
+				return false
 			}
 		}
 		var dummyFptr *FileObject
@@ -820,7 +825,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			dummyFptr = Files[CurrentFrame.InputFile]
 		}
 		if !FilesysSave(dummyFptr, Files[CurrentFrame.OutputFile], linesWritten) {
-			goto l99
+			return false
 		}
 		var nrLines int
 		if last == nil {
@@ -835,11 +840,5 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 		CurrentFrame.TextModified = false
 	}
 
-	result = true
-
-l99:
-	if err != nil && err != errEmpty {
-		ScreenMessage(err.Error())
-	}
-	return result
+	return true
 }

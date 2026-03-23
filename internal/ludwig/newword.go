@@ -119,9 +119,10 @@ func previousWord(dot *MarkObject) bool {
 
 // NewwordAdvanceWord advances cursor by word count
 func NewwordAdvanceWord(rept LeadParam, count int) bool {
-	result := false
 	var newDot *MarkObject
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newDot)
+	defer MarkDestroy(&newDot)
+
 	if rept == LeadParamMarker {
 		MarkCreate(CurrentFrame.Marks[count].Line, CurrentFrame.Marks[count].Col, &newDot)
 		rept = LeadParamNInt
@@ -136,7 +137,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 		for count > 0 {
 			count--
 			if !nextWord(newDot) {
-				goto l98
+				return false
 			}
 		}
 		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
@@ -144,27 +145,27 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 	case LeadParamMinus, LeadParamNInt:
 		count = -count
 		if !currentWord(newDot) {
-			goto l98
+			return false
 		}
 		for count > 0 {
 			count--
 			if !previousWord(newDot) {
-				goto l98
+				return false
 			}
 		}
 		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 
 	case LeadParamPIndef:
 		if newDot.Line.Used == 0 { // Fail if we are on a blank line
-			goto l98
+			return false
 		}
 		if newDot.Col > newDot.Line.Used+2 {
 			// check that we aren't past the last word in the para
 			if newDot.Line.FLink == nil { // no more lines => end of para
-				goto l98
+				return false
 			}
 			if newDot.Line.FLink.Used == 0 { // next line blank => end of para
-				goto l98
+				return false
 			}
 			// In the middle of a paragraph so go it end of line
 			newDot.Col = newDot.Line.Used
@@ -183,7 +184,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 
 	case LeadParamNIndef:
 		if !currentWord(newDot) {
-			goto l98
+			return false
 		}
 		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
 		for previousWord(newDot) {
@@ -192,12 +193,9 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 
 	default:
 		// marker Handled above
-		goto l98
+		return false
 	}
-	result = true
-l98:
-	MarkDestroy(&newDot)
-	return result
+	return true
 }
 
 // NewwordDeleteWord deletes words (same words as advance word advances over)
@@ -211,17 +209,22 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	var oldDotCol int
 
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
+	defer func() {
+		MarkDestroy(&oldPos)
+		MarkDestroy(&here)
+		MarkDestroy(&theOtherMark)
+	}()
 
 	// First Step: Get to the beginning of the word if we are in the middle of it
 	if !NewwordAdvanceWord(LeadParamPInt, 0) {
-		goto l99
+		return false
 	}
 	// ASSERTION: We are on the beginning of a word
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &here)
 	if !NewwordAdvanceWord(rept, count) {
 		// Put Dot back and bail out
 		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
-		goto l99
+		return false
 	}
 	// OK. We now wipe out everything from Dot to here
 	oldDotCol = CurrentFrame.Dot.Col
@@ -254,16 +257,6 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	}
 	if lineNr != newLineNr {
 		result = TextSplitLine(CurrentFrame.Dot, oldDotCol, &here)
-	}
-l99:
-	if oldPos != nil {
-		MarkDestroy(&oldPos)
-	}
-	if here != nil {
-		MarkDestroy(&here)
-	}
-	if theOtherMark != nil {
-		MarkDestroy(&theOtherMark)
 	}
 	return result
 }
@@ -346,10 +339,10 @@ func nextParagraph(dot *MarkObject) bool {
 
 // NewwordAdvanceParagraph advances cursor by paragraph count
 func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
-	result := false
 	var newDot *MarkObject
-
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newDot)
+	defer MarkDestroy(&newDot)
+
 	if rept == LeadParamMarker {
 		MarkCreate(CurrentFrame.Marks[count].Line, CurrentFrame.Marks[count].Col, &newDot)
 		rept = LeadParamNInt
@@ -364,7 +357,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 		for count > 0 {
 			count--
 			if !nextParagraph(newDot) {
-				goto l98
+				return false
 			}
 		}
 		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
@@ -372,16 +365,16 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 	case LeadParamMinus, LeadParamNInt:
 		count = -count
 		if !currentParagraph(newDot) {
-			goto l98
+			return false
 		}
 		for count > 0 {
 			count--
 			if newDot.Line.BLink == nil {
-				goto l98
+				return false
 			}
 			MarkCreate(newDot.Line.BLink, 1, &newDot)
 			if !currentParagraph(newDot) {
-				goto l98
+				return false
 			}
 		}
 		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
@@ -395,7 +388,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 			newLine = newLine.BLink
 		}
 		if newLine.Used == 0 {
-			goto l98
+			return false
 		}
 		// OK we know that there is a paragraph behind us, so goto
 		// the top of the file and go down to the first paragraph
@@ -413,10 +406,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 		// Others handled elsewhere (marker) or ignored.
 		break
 	}
-	result = true
-l98:
-	MarkDestroy(&newDot)
-	return result
+	return true
 }
 
 // NewwordDeleteParagraph deletes paragraphs
@@ -429,15 +419,21 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	var newLineNr int
 
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
+	defer func() {
+		MarkDestroy(&oldPos)
+		MarkDestroy(&here)
+		MarkDestroy(&theOtherMark)
+	}()
+
 	// Get to the beginning of the paragraph
 	if !NewwordAdvanceParagraph(LeadParamPInt, 0) {
-		goto l99
+		return false
 	}
 	MarkCreate(CurrentFrame.Dot.Line, 1, &here)
 	if !NewwordAdvanceParagraph(rept, count) {
 		// Something wrong so put dot back and abort
 		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
-		goto l99
+		return false
 	}
 
 	// Now delete all the lines between marks dot and here
@@ -469,15 +465,5 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 		)
 	}
 
-l99:
-	if oldPos != nil {
-		MarkDestroy(&oldPos)
-	}
-	if here != nil {
-		MarkDestroy(&here)
-	}
-	if theOtherMark != nil {
-		MarkDestroy(&theOtherMark)
-	}
 	return result
 }
