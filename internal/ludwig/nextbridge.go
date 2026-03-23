@@ -34,7 +34,7 @@ func searchForward(contained Predicate, line *LineHdrObject, col int) (*LineHdrO
 			if contained(rune(line.Str.Get(i))) {
 				return line, i
 			}
-			i += 1
+			i++
 		}
 		// Match a space at EOL
 		if contained(' ') && i == line.Used+1 {
@@ -85,7 +85,7 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	for i < len(runes) {
 		ch1 := runes[i]
 		ch2 := ch1
-		i += 1
+		i++
 		if i+2 < len(runes) && runes[i] == '.' && runes[i+1] == '.' {
 			ch2 = runes[i+2]
 			i += 3
@@ -113,33 +113,33 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	if count > 0 {
 		newCol = CurrentFrame.Dot.Col
 		if !bridge {
-			newCol += 1
+			newCol++
 		}
 		for {
 			newLine, newCol = searchForward(predicate, newLine, newCol)
 			if newLine == nil {
 				return false
 			}
-			newCol += 1
-			count -= 1
+			newCol++
+			count--
 			if count == 0 {
 				break
 			}
 		}
-		newCol -= 1
+		newCol--
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 	} else if count < 0 {
 		newCol = CurrentFrame.Dot.Col - 1
 		if !bridge {
-			newCol -= 1
+			newCol--
 		}
 		for {
 			newLine, newCol = searchBackward(predicate, newLine, newCol, bridge)
 			if newLine == nil {
 				return false
 			}
-			newCol -= 1
-			count += 1
+			newCol--
+			count++
 			if count == 0 {
 				break
 			}

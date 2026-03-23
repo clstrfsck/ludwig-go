@@ -119,7 +119,7 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 		uniq := 0
 		fyle.Tnm = fyle.Filename + "-lw"
 		for SysFileExists(fyle.Tnm) {
-			uniq += 1
+			uniq++
 			fyle.Tnm = fyle.Filename + "-lw" + strconv.Itoa(uniq)
 		}
 		f, err := os.OpenFile(fyle.Tnm, os.O_RDWR|os.O_CREATE, 0600)
@@ -273,7 +273,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				exp = MaxStrLen - *outlen
 			}
 			for ; exp > 0; exp-- {
-				*outlen += 1
+				*outlen++
 				outputBuffer.Set(*outlen, ' ')
 			}
 		} else if unicode.IsPrint(r) {
@@ -285,7 +285,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 				break
 			}
 			for _, b := range runeBytes {
-				*outlen += 1
+				*outlen++
 				outputBuffer.Set(*outlen, b)
 			}
 		}
@@ -294,7 +294,7 @@ func FilesysRead(fyle *FileObject, outputBuffer *StrObject, outlen *int) bool {
 			break
 		}
 	}
-	fyle.LCounter += 1
+	fyle.LCounter++
 	return true
 }
 
@@ -323,7 +323,7 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 				if buffer.Get(i) != ' ' {
 					break
 				}
-				i += 1
+				i++
 			}
 			tabs = (i - 1) / tabWidth
 			offset = tabs * (tabWidth - 1)
@@ -350,7 +350,7 @@ func FilesysWrite(fyle *FileObject, buffer *StrObject, bufsiz int) bool {
 	if err != nil || count != len(filesysNL) {
 		return false
 	}
-	fyle.LCounter += 1
+	fyle.LCounter++
 	return true
 }
 
@@ -495,7 +495,7 @@ func FilesysParse(
 		if !strings.HasPrefix(arg, "-") {
 			break
 		}
-		optind += 1
+		optind++
 
 		for _, c := range arg[1:] {
 			optarg := ""
@@ -507,23 +507,23 @@ func FilesysParse(
 			case 'b':
 				val, err := strconv.Atoi(optarg)
 				if err != nil {
-					errors += 1
+					errors++
 				} else {
 					versions = val
 					purge = false
-					optind += 1
+					optind++
 				}
 			case 'B':
 				if val, err := strconv.Atoi(optarg); err != nil {
-					errors += 1
+					errors++
 				} else {
 					versions = val
 					purge = true
-					optind += 1
+					optind++
 				}
 			case 'c':
 				if readOnlyFlag {
-					errors += 1
+					errors++
 				} else {
 					createFlag = true
 				}
@@ -533,12 +533,12 @@ func FilesysParse(
 				highlighting = false
 			case 'i':
 				initialize = optarg
-				optind += 1
+				optind++
 			case 'I':
 				initialize = ""
 			case 'm':
 				memory = optarg
-				optind += 1
+				optind++
 			case 'M':
 				memory = ""
 			case 'o':
@@ -549,17 +549,17 @@ func FilesysParse(
 				fileData.OldCmds = false
 			case 'r':
 				if createFlag {
-					errors += 1
+					errors++
 				} else {
 					readOnlyFlag = true
 				}
 			case 's':
 				if val, err := strconv.Atoi(optarg); err != nil {
-					errors += 1
+					errors++
 				} else {
 					space = val
 					spaceFlag = true
-					optind += 1
+					optind++
 				}
 			case 't':
 				entab = true
@@ -567,10 +567,10 @@ func FilesysParse(
 				entab = false
 			case 'w':
 				if val, err := strconv.Atoi(optarg); err != nil || val < 2 || val > 8 {
-					errors += 1
+					errors++
 				} else {
 					tabWidth = val
-					optind += 1
+					optind++
 				}
 			case '?', 'u':
 				usageFlag = true
@@ -606,7 +606,7 @@ func FilesysParse(
 			return false
 		}
 		file = append(file, argv[optind])
-		optind += 1
+		optind++
 	}
 
 	if len(file) == 2 {

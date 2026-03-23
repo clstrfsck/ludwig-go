@@ -37,7 +37,7 @@ func newTparParser(request *TParObject) *tparParser {
 // nextChar gets the next non-space character from a tpar
 func (p *tparParser) nextChar() byte {
 	for (p.pos < p.request.Len) && (p.request.Str.Get(p.pos) == ' ') {
-		p.pos += 1
+		p.pos++
 	}
 	var ch byte
 	if (p.pos > p.request.Len) || (p.request.Str.Get(p.pos) == ' ') {
@@ -46,7 +46,7 @@ func (p *tparParser) nextChar() byte {
 		ch = p.request.Str.Get(p.pos)
 	}
 	if p.pos <= p.request.Len {
-		p.pos += 1
+		p.pos++
 	}
 	return ch
 }
@@ -122,7 +122,7 @@ func (p *tparParser) setCmdIntr() bool {
 				terminate = true
 			} else {
 				keyName.WriteByte(p.request.Str.Get(p.pos))
-				p.pos += 1
+				p.pos++
 			}
 		}
 		keyNameStr := keyName.String()
@@ -231,7 +231,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 				legal = legal && (lastMargin == lmLeft)
 				lastMargin = lmRight
 			}
-			i += 1
+			i++
 		}
 		legal = legal && (lastMargin == lmRight)
 		if !legal {
@@ -258,7 +258,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 				}
 				CurrentFrame.MarginRight = i
 			}
-			i += 1
+			i++
 		}
 		for j := CurrentFrame.Dot.Line.Used + 1; j <= MaxStrLen; j++ {
 			if setInitial {
@@ -442,7 +442,7 @@ func (p *tparParser) getMargins(loBnd int, hiBnd int, lower *int, upper *int, lr
 // getMar gets a margin value from the tpar
 func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 	if *ch >= '0' && *ch <= '9' {
-		p.pos -= 1
+		p.pos--
 		m, found := p.toInt()
 		if !found {
 			return false
@@ -837,7 +837,7 @@ func printOptions(options FrameOptions) {
 		count += len(s)
 	} else {
 		ScreenWriteCh(0, ')')
-		count += 1
+		count++
 	}
 	// Pad to 14 characters
 	if count < 14 {

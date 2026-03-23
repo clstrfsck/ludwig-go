@@ -420,7 +420,7 @@ func lineMatchToMatchEntries(matchy LineMatch) MatchEntries {
 			Position: pos,
 			Group:    group,
 		}
-		i += 1
+		i++
 	}
 	slices.SortFunc(entries, func(a, b MatchEntry) int {
 		return cmp.Compare(a.Position, b.Position)
