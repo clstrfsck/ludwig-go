@@ -158,11 +158,6 @@ func init() {
 	}
 }
 
-// Helper function to check if a value is in a set
-func setContains(set [MaxSetRange + 1]bool, val byte) bool {
-	return set[val]
-}
-
 // Helper function to set union
 func setUnion(a, b *big.Int) *big.Int {
 	s := new(big.Int)
@@ -447,7 +442,7 @@ func PatternParser(
 		}
 
 		for (*patCh != PatternComma && *patCh != PatternRParen && *patCh != PatternBar) && !endOfInput {
-			if !setContains(syntaxSet, *patCh) {
+			if !syntaxSet[*patCh] {
 				ScreenMessage(MsgPatIllegalSymbol)
 				panic(localException{})
 			}
@@ -477,7 +472,7 @@ func PatternParser(
 					panic(otherException{})
 				}
 
-				if setContains(quotedSet, derefSpan.Dlm) {
+				if quotedSet[derefSpan.Dlm] {
 					// Insert quote at beginning: shift string right and add delimiters
 					for i := derefSpan.Len; i >= 1; i-- {
 						derefSpan.Str.Set(i+1, derefSpan.Str.Get(i))
@@ -506,7 +501,7 @@ func PatternParser(
 				'{', '}', '<', '>', '^':
 
 				leadingParam = NullParam
-				if setContains(delimitedSet, *patCh) {
+				if delimitedSet[*patCh] {
 					patternRangeDelimgen(&rangePatch, &rangeStart, &rangeEnd, &rangeIndefinite, &leadingParam)
 					if !patternGetch(parseCount, patCh, inString) {
 						ScreenMessage(MsgPatPrematurePatternEnd)
@@ -745,9 +740,9 @@ func PatternParser(
 						nfaTable[currentState].NextState = patternNewNFA()
 						currentState = nfaTable[currentState].NextState
 
-					} else if setContains(chAndPosSet, *patCh) {
+					} else if chAndPosSet[*patCh] {
 						nfaTable[currentState].EpsilonOut = false
-						if setContains(positionalsSet, *patCh) {
+						if positionalsSet[*patCh] {
 							if negate {
 								ScreenMessage(MsgPatIllegalParameter)
 								panic(localException{})
