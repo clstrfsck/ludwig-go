@@ -160,32 +160,30 @@ func nextKey(ps *parseState) bool {
 }
 
 func nextNonBl(ps *parseState) bool {
-l1:
 	for {
-		if !nextKey(ps) {
-			return false
-		}
-		if ps.fromSpan {
-			if (ps.key == '<') && (ps.currentPoint.Col <= ps.currentPoint.Line.Used) {
-				if ps.currentPoint.Line.Str.Get(ps.currentPoint.Col) == '>' {
+		for {
+			if !nextKey(ps) {
+				return false
+			}
+			if ps.fromSpan {
+				pscp := &ps.currentPoint
+				if ps.key == '<' && pscp.Col <= pscp.Line.Used && pscp.Line.Str.Get(pscp.Col) == '>' {
 					ps.key = 0
 				}
 			}
+			if ps.key != ' ' {
+				break
+			}
 		}
-		if ps.key != ' ' {
-			break
+		if ps.key != '!' {
+			return true
 		}
-	}
-	if ps.key == '!' { // Comment - throw away rest of line
-		if ps.fromSpan {
-			ps.currentPoint.Col = ps.currentPoint.Line.Used + 1
-			goto l1
-		} else {
+		if !ps.fromSpan {
 			ps.status = MsgCommentsIllegal
 			return false
 		}
+		ps.currentPoint.Col = ps.currentPoint.Line.Used + 1
 	}
-	return true
 }
 
 func generate(
@@ -610,11 +608,17 @@ func scanSimpleCommand(
 
 // CodeCompile compiles a span into executable code
 func CodeCompile(span *SpanObject, fromSpan bool) bool {
-	result := false
 	var ps parseState
 	ps.status = ""
 	ps.eoln = false
 	ps.fromSpan = fromSpan
+
+	defer func() {
+		if ps.status != "" {
+			ExitAbort = true
+			ScreenMessage(ps.status)
+		}
+	}()
 
 	if fromSpan {
 		ps.startPoint = *span.MarkOne
@@ -631,25 +635,25 @@ func CodeCompile(span *SpanObject, fromSpan bool) bool {
 	ps.verifyCount = 0
 
 	if !nextNonBl(&ps) {
-		goto l99
+		return false
 	}
 	if ps.key == 0 {
 		errorMsg(&ps, "Span contains no commands")
-		goto l99
+		return false
 	}
 
 	if fromSpan {
 		for ps.key != 0 {
 			if !scanCommand(&ps, true) {
-				goto l99
+				return false
 			}
 		}
 	} else if !scanCommand(&ps, false) {
-		goto l99
+		return false
 	}
 
 	if !generate(&ps, LeadParamPInt, 1, CmdExitSuccess, nil, 0, nil) {
-		goto l99
+		return false
 	}
 
 	// Fill in code header
@@ -663,14 +667,7 @@ func CodeCompile(span *SpanObject, fromSpan bool) bool {
 	CodeList.FLink.BLink = span.Code
 	CodeList.FLink = span.Code
 	CodeTop = ps.codeBase + ps.pc
-	result = true
-
-l99:
-	if ps.status != "" {
-		ExitAbort = true
-		ScreenMessage(ps.status)
-	}
-	return result
+	return true
 }
 
 type labelsType struct {
@@ -684,13 +681,13 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 	const maxLevel = 100
 	labels := make([]labelsType, maxLevel+1)
 
-	result := false
 	request := TParObject{
 		Nxt: nil,
 		Con: nil,
 	}
 
 	codeHead.Ref++
+	defer CodeDiscard(&codeHead)
 
 	if rept == LeadParamPIndef {
 		count = -1
@@ -715,7 +712,7 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 		for pc != 0 {
 			if pc > codeHead.Len {
 				ScreenMessage(DbgPcOutOfRange)
-				goto l99
+				return false
 			}
 
 			interpStatus = success
@@ -786,7 +783,7 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 				case CmdExtended:
 					if currCode == nil {
 						ScreenMessage(DbgCodePtrIsNil)
-						goto l99
+						return false
 					}
 					CodeInterpret(currRep, currCnt, currCode, true)
 
@@ -801,7 +798,7 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 								request = CurrentFrame.VerifyTpar
 								if request.Len == 0 {
 									ScreenMessage(MsgNoDefaultStr)
-									goto l99
+									return false
 								}
 							} else {
 								CurrentFrame.VerifyTpar = request
@@ -823,7 +820,7 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 
 				case CmdNoop:
 					ScreenMessage(DbgIllegalInstruction)
-					goto l99
+					return false
 				}
 			} else {
 				// Call execute command
@@ -851,8 +848,5 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 		}
 	}
 
-	result = (interpStatus == success)
-l99:
-	CodeDiscard(&codeHead)
-	return result
+	return (interpStatus == success)
 }
