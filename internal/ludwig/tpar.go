@@ -128,7 +128,7 @@ func TparToInt(strng *TParObject, chpos *int) (int, bool) {
 			ScreenMessage(MsgInvalidInteger)
 			return 0, false
 		}
-		*chpos++
+		(*chpos)++
 		if *chpos > strng.Len {
 			ch = '\x00'
 		} else {

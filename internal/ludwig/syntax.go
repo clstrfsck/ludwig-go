@@ -342,7 +342,7 @@ func SyntaxApplyDirty(frame *FrameObject) {
 			line := ScrTopLine
 			for idx+1 > scrTopLineNum && line.FLink != nil {
 				line = line.FLink
-				scrTopLineNum += 1
+				scrTopLineNum++
 			}
 			for line != nil {
 				ScreenDrawLine(line)

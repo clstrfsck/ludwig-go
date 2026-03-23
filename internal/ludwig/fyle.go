@@ -214,7 +214,7 @@ func FileRead(fp *FileObject, count int, bestTry bool) (*LineHdrObject, *LineHdr
 				fp.FirstLine = line
 			}
 			fp.LastLine = line
-			fp.LineCount += 1
+			fp.LineCount++
 		} else if !fp.Eof {
 			// Something drastically wrong with the input!
 			// As a TEMPORARY measure, ignore.
@@ -473,7 +473,7 @@ func freeFile(slot int) error {
 func getFreeSlot(fileSlot int) (int, error) {
 	slot := 1
 	for slot <= MaxFiles && (Files[slot] != nil || slot == fileSlot) {
-		slot += 1
+		slot++
 	}
 	if slot > MaxFiles {
 		return -1, errNoMoreFilesAllowed
