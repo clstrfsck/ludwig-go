@@ -24,6 +24,443 @@ const (
 	newValues = "  New Values: "
 )
 
+type tparParser struct {
+	request *TParObject
+	pos     int
+}
+
+// newTparParser returns a newly initialised parser
+func newTparParser(request *TParObject) *tparParser {
+	return &tparParser{request: request, pos: 1}
+}
+
+// nextChar gets the next non-space character from a tpar
+func (p *tparParser) nextChar() byte {
+	for (p.pos < p.request.Len) && (p.request.Str.Get(p.pos) == ' ') {
+		p.pos += 1
+	}
+	var ch byte
+	if (p.pos > p.request.Len) || (p.request.Str.Get(p.pos) == ' ') {
+		ch = 0
+	} else {
+		ch = p.request.Str.Get(p.pos)
+	}
+	if p.pos <= p.request.Len {
+		p.pos += 1
+	}
+	return ch
+}
+
+// toInt returns the next int, true, or 0, false
+func (p *tparParser) toInt() (int, bool) {
+	return TparToInt(p.request, &p.pos)
+}
+
+// setOptions sets options on CurrentFrame and InitialOptions if requested
+func (p *tparParser) setOptions(setInitial bool) bool {
+	ok := false
+	ch := p.nextChar()
+	if ch == '(' {
+		for {
+			seton := true
+			ch = p.nextChar()
+			if ch == '-' {
+				seton = false
+				ch = p.nextChar()
+			}
+			if setInitial {
+				setOpt(ch, seton, &InitialOptions)
+			}
+			ok = setOpt(ch, seton, &CurrentFrame.Options)
+			ch = p.nextChar()
+			if ch != ',' && ch != ')' {
+				ScreenMessage(MsgSyntaxErrorInOptions)
+				return false
+			}
+			if !ok || ch == ')' {
+				break
+			}
+		}
+	} else {
+		// single option
+		seton := true
+		if ch == '-' {
+			seton = false
+			ch = p.nextChar()
+		}
+		if setInitial {
+			setOpt(ch, seton, &InitialOptions)
+		}
+		ok = setOpt(ch, seton, &CurrentFrame.Options)
+	}
+	return ok
+}
+
+func (p *tparParser) setMode() bool {
+	ch := p.nextChar()
+	switch ch {
+	case 'I':
+		EditMode = ModeInsert
+	case 'O':
+		EditMode = ModeOvertype
+	case 'C':
+		EditMode = ModeCommand
+	default:
+		ScreenMessage(MsgModeError)
+		// FIXME: Original always returns true, but this should probably fail.
+		// return false
+	}
+	return true
+}
+
+func (p *tparParser) setCmdIntr() bool {
+	if LudwigMode == LudwigScreen {
+		var keyName strings.Builder
+		terminate := false
+		for p.pos <= p.request.Len && !terminate {
+			if p.request.Str.Get(p.pos) == ',' {
+				terminate = true
+			} else {
+				keyName.WriteByte(p.request.Str.Get(p.pos))
+				p.pos += 1
+			}
+		}
+		keyNameStr := keyName.String()
+
+		if len(keyNameStr) == 1 {
+			if ChIsPunctuation(rune(keyNameStr[0])) {
+				CommandIntroducer = int(keyNameStr[0])
+				VduNewIntroducer(CommandIntroducer)
+				return true
+			}
+			ScreenMessage(MsgInvalidCmdIntroducer)
+		} else if keyCode, found := UserKeyNameToCode(keyNameStr); found {
+			if _, found := KeyIntroducers[keyCode]; found {
+				ScreenMessage(MsgInvalidCmdIntroducer)
+			} else {
+				CommandIntroducer = keyCode
+				VduNewIntroducer(CommandIntroducer)
+				return true
+			}
+		} else {
+			ScreenMessage(MsgUnrecognizedKeyName)
+		}
+	} else {
+		ScreenMessage(MsgScreenModeOnly)
+	}
+	return false
+}
+
+// setTabs sets tab stops for the current frame
+func (p *tparParser) setTabs(setInitial bool) bool {
+	ch := p.nextChar()
+	switch ch {
+	case 'D': // default tabs
+		if setInitial {
+			InitialTabStops = DefaultTabStops
+		}
+		CurrentFrame.TabStops = DefaultTabStops
+
+	case 'T': // template match
+		if CurrentFrame.Dot.Line.Used > 0 {
+			ts := CurrentFrame.Dot.Line.Str.Get(1) != ' '
+			if setInitial {
+				InitialTabStops[1] = ts
+			}
+			CurrentFrame.TabStops[1] = ts
+		}
+		for i := 2; i <= CurrentFrame.Dot.Line.Used; i++ {
+			chi := CurrentFrame.Dot.Line.Str.Get(i)
+			chim1 := CurrentFrame.Dot.Line.Str.Get(i - 1)
+			if setInitial {
+				InitialTabStops[i] = (chi != ' ') && (chim1 == ' ')
+			}
+			CurrentFrame.TabStops[i] = (chi != ' ') && (chim1 == ' ')
+		}
+		for i := CurrentFrame.Dot.Line.Used; i <= MaxStrLen; i++ {
+			if setInitial {
+				InitialTabStops[i] = false
+			}
+			CurrentFrame.TabStops[i] = false
+		}
+
+	case 'I': // insert tabs
+		firstLine, lastLine := LinesCreate(1)
+		LineChangeLength(firstLine, MaxStrLen)
+		if setInitial {
+			for i := 1; i <= MaxStrLen; i++ {
+				if InitialTabStops[i] {
+					firstLine.Str.Set(i, 'T')
+				}
+			}
+			firstLine.Str.Set(InitialMarginLeft, 'L')
+			firstLine.Str.Set(InitialMarginRight, 'R')
+		} else {
+			for i := 1; i < MaxStrLen; i++ {
+				if CurrentFrame.TabStops[i] {
+					firstLine.Str.Set(i, 'T')
+				}
+			}
+			firstLine.Str.Set(CurrentFrame.MarginLeft, 'L')
+			firstLine.Str.Set(CurrentFrame.MarginRight, 'R')
+		}
+		// Calculate used length
+		firstLine.Used = firstLine.Str.Length(' ', MaxStrLen)
+		LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
+		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+		CurrentFrame.TextModified = true
+		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+
+	case 'R': // Template Ruler
+		i := 1
+		legal := true
+		const (
+			lmNone = iota
+			lmLeft
+			lmRight
+		)
+		lastMargin := lmNone
+		for i <= CurrentFrame.Dot.Line.Used && legal {
+			chi := ChToUpper(CurrentFrame.Dot.Line.Str.Get(i))
+			legal = (chi == 'T') || (chi == 'L') || (chi == 'R') || (chi == ' ')
+			switch chi {
+			case 'L':
+				legal = legal && (lastMargin == lmNone)
+				lastMargin = lmLeft
+			case 'R':
+				legal = legal && (lastMargin == lmLeft)
+				lastMargin = lmRight
+			}
+			i += 1
+		}
+		legal = legal && (lastMargin == lmRight)
+		if !legal {
+			ScreenMessage(MsgInvalidRuler)
+			return false
+		}
+
+		i = 1
+		for i <= CurrentFrame.Dot.Line.Used {
+			chi := ChToUpper(CurrentFrame.Dot.Line.Str.Get(i))
+			if setInitial {
+				InitialTabStops[i] = (chi != ' ')
+			}
+			CurrentFrame.TabStops[i] = (chi != ' ')
+			switch chi {
+			case 'L':
+				if setInitial {
+					InitialMarginLeft = i
+				}
+				CurrentFrame.MarginLeft = i
+			case 'R':
+				if setInitial {
+					InitialMarginRight = i
+				}
+				CurrentFrame.MarginRight = i
+			}
+			i += 1
+		}
+		for j := CurrentFrame.Dot.Line.Used + 1; j <= MaxStrLen; j++ {
+			if setInitial {
+				InitialTabStops[j] = false
+			}
+			CurrentFrame.TabStops[j] = false
+		}
+
+		firstLine := CurrentFrame.Dot.Line
+		dotCol := CurrentFrame.Dot.Col
+		if !MarksSqueeze(firstLine, 1, firstLine.FLink, 1) {
+			return false
+		}
+		if !LinesExtract(firstLine, firstLine) {
+			return false
+		}
+		CurrentFrame.Dot.Col = dotCol
+
+	case 'S': // Set tab
+		if CurrentFrame.Dot.Col == MaxStrLenP {
+			ScreenMessage(MsgOutOfRangeTabValue)
+			return false
+		}
+		if setInitial {
+			InitialTabStops[CurrentFrame.Dot.Col] = true
+		}
+		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = true
+
+	case 'C': // Clear tab
+		if CurrentFrame.Dot.Col == MaxStrLenP {
+			ScreenMessage(MsgOutOfRangeTabValue)
+			return false
+		}
+		if setInitial {
+			InitialTabStops[CurrentFrame.Dot.Col] = false
+		}
+		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = false
+
+	case 'W': // Regular width tabs
+		if w, found := p.toInt(); found && w > 1 {
+			var temptab TabArray
+			temptab[0] = true
+			temptab[MaxStrLenP] = true
+			for i := 1; i <= MaxStrLen; i++ {
+				if i%w == 1 {
+					temptab[i] = true
+				}
+			}
+			if setInitial {
+				InitialTabStops = temptab
+			}
+			CurrentFrame.TabStops = temptab
+		} else {
+			return false
+		}
+
+	case '(': // multi-columns specified
+		var temptab TabArray
+		temptab[0] = true
+		temptab[MaxStrLenP] = true
+		for {
+			n, found := p.toInt()
+			if !found {
+				ScreenMessage(MsgBadFormatInTabTable)
+				return false
+			}
+			if n >= 1 && n <= MaxStrLen {
+				temptab[n] = true
+			} else {
+				ScreenMessage(MsgOutOfRangeTabValue)
+				return false
+			}
+			ch = p.nextChar()
+			if ch != ',' && ch != ')' {
+				ScreenMessage(MsgBadFormatInTabTable)
+				return false
+			}
+			if ch == ')' {
+				break
+			}
+		}
+		if setInitial {
+			InitialTabStops = temptab
+		}
+		CurrentFrame.TabStops = temptab
+
+	default:
+		ScreenMessage(MsgInvalidTOption)
+		return false
+	}
+	return true
+}
+
+// setLRMargin sets the left and right margins
+func (p *tparParser) setLRMargin(setInitial bool) bool {
+	var tl, tr int
+	if setInitial {
+		tl = InitialMarginLeft
+		tr = InitialMarginRight
+	} else {
+		tl = CurrentFrame.MarginLeft
+		tr = CurrentFrame.MarginRight
+	}
+	if !p.getMargins(1, MaxStrLen, &tl, &tr, true) {
+		return false
+	}
+	if tl < tr {
+		if setInitial {
+			InitialMarginLeft = tl
+			InitialMarginRight = tr
+		}
+		CurrentFrame.MarginLeft = tl
+		CurrentFrame.MarginRight = tr
+	} else {
+		ScreenMessage(MsgLeftMarginGeRight)
+		return false
+	}
+	return true
+}
+
+// setTBMargin sets the top and bottom margins
+func (p *tparParser) setTBMargin(setInitial bool) bool {
+	var tt, tb int
+	if setInitial {
+		tt = InitialMarginTop
+		tb = InitialMarginBottom
+	} else {
+		tt = CurrentFrame.MarginTop
+		tb = CurrentFrame.MarginBottom
+	}
+	if !p.getMargins(0, CurrentFrame.ScrHeight, &tt, &tb, false) {
+		return false
+	}
+	if tt+tb >= CurrentFrame.ScrHeight {
+		ScreenMessage(MsgMarginOutOfRange)
+		return false
+	}
+	if setInitial {
+		InitialMarginTop = tt
+		InitialMarginBottom = tb
+	}
+	CurrentFrame.MarginTop = tt
+	CurrentFrame.MarginBottom = tb
+	return true
+}
+
+// getMargins gets left/right or top/bottom margins from the tpar
+func (p *tparParser) getMargins(loBnd int, hiBnd int, lower *int, upper *int, lr bool) bool {
+	ch := p.nextChar()
+	if ch != '(' {
+		ScreenMessage(MsgMarginSyntaxError)
+		return false
+	}
+	ch = p.nextChar()
+	if ch == '.' {
+		if lr {
+			*lower = CurrentFrame.Dot.Col
+		} else {
+			*lower = CurrentFrame.Dot.Line.ScrRowNr
+		}
+		ch = p.nextChar()
+	} else if !p.getMar(&ch, loBnd, hiBnd, lower) {
+		return false
+	}
+	if ch == ',' {
+		ch = p.nextChar()
+		if ch == '.' {
+			if lr {
+				*upper = CurrentFrame.Dot.Col
+			} else {
+				*upper = CurrentFrame.ScrHeight - CurrentFrame.Dot.Line.ScrRowNr
+			}
+			ch = p.nextChar()
+		} else if !p.getMar(&ch, loBnd, hiBnd, upper) {
+			return false
+		}
+	}
+	if ch != ')' {
+		ScreenMessage(MsgMarginSyntaxError)
+		return false
+	}
+	return true
+}
+
+// getMar gets a margin value from the tpar
+func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
+	if *ch >= '0' && *ch <= '9' {
+		p.pos -= 1
+		m, found := p.toInt()
+		if !found {
+			return false
+		}
+		if m < loBnd || m > hiBnd {
+			ScreenMessage(MsgMarginOutOfRange)
+			return false
+		}
+		*ch = p.nextChar()
+		*margin = m
+	}
+	return true
+}
+
 // FrameEdit creates or edits a frame with the specified name.
 // This is the \ED command. If frame_name doesn't exist, then it is created.
 func FrameEdit(frameName string) bool {
@@ -199,23 +636,6 @@ func FrameKill(frameName string) bool {
 	return true
 }
 
-// nextchar gets the next non-space character from a tpar
-func nextchar(request *TParObject, pos *int) byte {
-	for (*pos < request.Len) && (request.Str.Get(*pos) == ' ') {
-		*pos++
-	}
-	var ch byte
-	if (*pos > request.Len) || (request.Str.Get(*pos) == ' ') {
-		ch = 0
-	} else {
-		ch = request.Str.Get(*pos)
-	}
-	if *pos <= request.Len {
-		*pos++
-	}
-	return ch
-}
-
 // setmemory sets the memory allocation for the current frame
 func setmemory(sz int, setInitial bool) bool {
 	if sz >= MaxSpace {
@@ -337,453 +757,46 @@ func setOpt(ch byte, seton bool, options *FrameOptions) bool {
 	return true
 }
 
-// setOptions sets frame options
-func setOptions(request *TParObject, pos *int, setInitial bool) bool {
-	ok := false
-	ch := nextchar(request, pos)
-	if ch == '(' {
-		for {
-			seton := true
-			ch = nextchar(request, pos)
-			if ch == '-' {
-				seton = false
-				ch = nextchar(request, pos)
-			}
-			if setInitial {
-				setOpt(ch, seton, &InitialOptions)
-			}
-			ok = setOpt(ch, seton, &CurrentFrame.Options)
-			ch = nextchar(request, pos)
-			if ch != ',' && ch != ')' {
-				ScreenMessage(MsgSyntaxErrorInOptions)
-				return false
-			}
-			if !ok || ch == ')' {
-				break
-			}
-		}
-	} else {
-		// single option
-		seton := true
-		if ch == '-' {
-			seton = false
-			ch = nextchar(request, pos)
-		}
-		if setInitial {
-			setOpt(ch, seton, &InitialOptions)
-		}
-		ok = setOpt(ch, seton, &CurrentFrame.Options)
-	}
-	return ok
-}
-
-// setcmdintr sets the command introducer key
-func setcmdintr(request *TParObject, pos *int) bool {
-	if LudwigMode == LudwigScreen {
-		var keyName strings.Builder
-		terminate := false
-		for *pos <= request.Len && !terminate {
-			if request.Str.Get(*pos) == ',' {
-				terminate = true
-			} else {
-				keyName.WriteByte(request.Str.Get(*pos))
-				*pos++
-			}
-		}
-		keyNameStr := keyName.String()
-
-		if len(keyNameStr) == 1 {
-			if ChIsPunctuation(rune(keyNameStr[0])) {
-				CommandIntroducer = int(keyNameStr[0])
-				VduNewIntroducer(CommandIntroducer)
-				return true
-			}
-			ScreenMessage(MsgInvalidCmdIntroducer)
-		} else if keyCode, found := UserKeyNameToCode(keyNameStr); found {
-			if _, found := KeyIntroducers[keyCode]; found {
-				ScreenMessage(MsgInvalidCmdIntroducer)
-			} else {
-				CommandIntroducer = keyCode
-				VduNewIntroducer(CommandIntroducer)
-				return true
-			}
-		} else {
-			ScreenMessage(MsgUnrecognizedKeyName)
-		}
-	} else {
-		ScreenMessage(MsgScreenModeOnly)
-	}
-	return false
-}
-
-// setMode sets the editing mode
-func setMode(request *TParObject, pos *int) bool {
-	ch := nextchar(request, pos)
-	switch ch {
-	case 'I':
-		EditMode = ModeInsert
-	case 'O':
-		EditMode = ModeOvertype
-	case 'C':
-		EditMode = ModeCommand
-	default:
-		ScreenMessage(MsgModeError)
-		// FIXME: Original always returns true, but this should probably fail.
-		// return false
-	}
-	return true
-}
-
-// setTabs sets tab stops for the current frame
-func setTabs(request *TParObject, pos *int, setInitial bool) bool {
-	ch := nextchar(request, pos)
-	switch ch {
-	case 'D': // default tabs
-		if setInitial {
-			InitialTabStops = DefaultTabStops
-		}
-		CurrentFrame.TabStops = DefaultTabStops
-
-	case 'T': // template match
-		if CurrentFrame.Dot.Line.Used > 0 {
-			ts := CurrentFrame.Dot.Line.Str.Get(1) != ' '
-			if setInitial {
-				InitialTabStops[1] = ts
-			}
-			CurrentFrame.TabStops[1] = ts
-		}
-		for i := 2; i <= CurrentFrame.Dot.Line.Used; i++ {
-			chi := CurrentFrame.Dot.Line.Str.Get(i)
-			chim1 := CurrentFrame.Dot.Line.Str.Get(i - 1)
-			if setInitial {
-				InitialTabStops[i] = (chi != ' ') && (chim1 == ' ')
-			}
-			CurrentFrame.TabStops[i] = (chi != ' ') && (chim1 == ' ')
-		}
-		for i := CurrentFrame.Dot.Line.Used; i <= MaxStrLen; i++ {
-			if setInitial {
-				InitialTabStops[i] = false
-			}
-			CurrentFrame.TabStops[i] = false
-		}
-
-	case 'I': // insert tabs
-		firstLine, lastLine := LinesCreate(1)
-		LineChangeLength(firstLine, MaxStrLen)
-		if setInitial {
-			for i := 1; i <= MaxStrLen; i++ {
-				if InitialTabStops[i] {
-					firstLine.Str.Set(i, 'T')
-				}
-			}
-			firstLine.Str.Set(InitialMarginLeft, 'L')
-			firstLine.Str.Set(InitialMarginRight, 'R')
-		} else {
-			for i := 1; i < MaxStrLen; i++ {
-				if CurrentFrame.TabStops[i] {
-					firstLine.Str.Set(i, 'T')
-				}
-			}
-			firstLine.Str.Set(CurrentFrame.MarginLeft, 'L')
-			firstLine.Str.Set(CurrentFrame.MarginRight, 'R')
-		}
-		// Calculate used length
-		firstLine.Used = firstLine.Str.Length(' ', MaxStrLen)
-		LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
-		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
-		CurrentFrame.TextModified = true
-		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-
-	case 'R': // Template Ruler
-		i := 1
-		legal := true
-		const (
-			lmNone = iota
-			lmLeft
-			lmRight
-		)
-		lastMargin := lmNone
-		for i <= CurrentFrame.Dot.Line.Used && legal {
-			chi := ChToUpper(CurrentFrame.Dot.Line.Str.Get(i))
-			legal = (chi == 'T') || (chi == 'L') || (chi == 'R') || (chi == ' ')
-			switch chi {
-			case 'L':
-				legal = legal && (lastMargin == lmNone)
-				lastMargin = lmLeft
-			case 'R':
-				legal = legal && (lastMargin == lmLeft)
-				lastMargin = lmRight
-			}
-			i++
-		}
-		legal = legal && (lastMargin == lmRight)
-		if !legal {
-			ScreenMessage(MsgInvalidRuler)
-			return false
-		}
-
-		i = 1
-		for i <= CurrentFrame.Dot.Line.Used {
-			chi := ChToUpper(CurrentFrame.Dot.Line.Str.Get(i))
-			if setInitial {
-				InitialTabStops[i] = (chi != ' ')
-			}
-			CurrentFrame.TabStops[i] = (chi != ' ')
-			switch chi {
-			case 'L':
-				if setInitial {
-					InitialMarginLeft = i
-				}
-				CurrentFrame.MarginLeft = i
-			case 'R':
-				if setInitial {
-					InitialMarginRight = i
-				}
-				CurrentFrame.MarginRight = i
-			}
-			i++
-		}
-		for j := CurrentFrame.Dot.Line.Used + 1; j <= MaxStrLen; j++ {
-			if setInitial {
-				InitialTabStops[j] = false
-			}
-			CurrentFrame.TabStops[j] = false
-		}
-
-		firstLine := CurrentFrame.Dot.Line
-		dotCol := CurrentFrame.Dot.Col
-		if !MarksSqueeze(firstLine, 1, firstLine.FLink, 1) {
-			return false
-		}
-		if !LinesExtract(firstLine, firstLine) {
-			return false
-		}
-		CurrentFrame.Dot.Col = dotCol
-
-	case 'S': // Set tab
-		if CurrentFrame.Dot.Col == MaxStrLenP {
-			ScreenMessage(MsgOutOfRangeTabValue)
-			return false
-		}
-		if setInitial {
-			InitialTabStops[CurrentFrame.Dot.Col] = true
-		}
-		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = true
-
-	case 'C': // Clear tab
-		if CurrentFrame.Dot.Col == MaxStrLenP {
-			ScreenMessage(MsgOutOfRangeTabValue)
-			return false
-		}
-		if setInitial {
-			InitialTabStops[CurrentFrame.Dot.Col] = false
-		}
-		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = false
-
-	case 'W': // Regular width tabs
-		if w, found := TparToInt(request, pos); found && w > 1 {
-			var temptab TabArray
-			temptab[0] = true
-			temptab[MaxStrLenP] = true
-			for i := 1; i <= MaxStrLen; i++ {
-				if i%w == 1 {
-					temptab[i] = true
-				}
-			}
-			if setInitial {
-				InitialTabStops = temptab
-			}
-			CurrentFrame.TabStops = temptab
-		} else {
-			return false
-		}
-
-	case '(': // multi-columns specified
-		var temptab TabArray
-		temptab[0] = true
-		temptab[MaxStrLenP] = true
-		for {
-			n, found := TparToInt(request, pos)
-			if !found {
-				ScreenMessage(MsgBadFormatInTabTable)
-				return false
-			}
-			if n >= 1 && n <= MaxStrLen {
-				temptab[n] = true
-			} else {
-				ScreenMessage(MsgOutOfRangeTabValue)
-				return false
-			}
-			ch = nextchar(request, pos)
-			if ch != ',' && ch != ')' {
-				ScreenMessage(MsgBadFormatInTabTable)
-				return false
-			}
-			if ch == ')' {
-				break
-			}
-		}
-		if setInitial {
-			InitialTabStops = temptab
-		}
-		CurrentFrame.TabStops = temptab
-
-	default:
-		ScreenMessage(MsgInvalidTOption)
-		return false
-	}
-	return true
-}
-
-// getMar gets a margin value from the tpar
-func getMar(ch *byte, pos *int, request *TParObject, loBnd int, hiBnd int, margin *int) bool {
-	if *ch >= '0' && *ch <= '9' {
-		*pos--
-		m, found := TparToInt(request, pos)
-		if !found {
-			return false
-		}
-		if m < loBnd || m > hiBnd {
-			ScreenMessage(MsgMarginOutOfRange)
-			return false
-		}
-		*ch = nextchar(request, pos)
-		*margin = m
-	}
-	return true
-}
-
-// getMargins gets left/right or top/bottom margins from the tpar
-func getMargins(loBnd int, hiBnd int, request *TParObject, pos *int, lower *int, upper *int, lr bool) bool {
-	ch := nextchar(request, pos)
-	if ch != '(' {
-		ScreenMessage(MsgMarginSyntaxError)
-		return false
-	}
-	ch = nextchar(request, pos)
-	if ch == '.' {
-		if lr {
-			*lower = CurrentFrame.Dot.Col
-		} else {
-			*lower = CurrentFrame.Dot.Line.ScrRowNr
-		}
-		ch = nextchar(request, pos)
-	} else if !getMar(&ch, pos, request, loBnd, hiBnd, lower) {
-		return false
-	}
-	if ch == ',' {
-		ch = nextchar(request, pos)
-		if ch == '.' {
-			if lr {
-				*upper = CurrentFrame.Dot.Col
-			} else {
-				*upper = CurrentFrame.ScrHeight - CurrentFrame.Dot.Line.ScrRowNr
-			}
-			ch = nextchar(request, pos)
-		} else if !getMar(&ch, pos, request, loBnd, hiBnd, upper) {
-			return false
-		}
-	}
-	if ch != ')' {
-		ScreenMessage(MsgMarginSyntaxError)
-		return false
-	}
-	return true
-}
-
-// setLRMargin sets the left and right margins
-func setLRMargin(request *TParObject, pos *int, setInitial bool) bool {
-	var tl, tr int
-	if setInitial {
-		tl = InitialMarginLeft
-		tr = InitialMarginRight
-	} else {
-		tl = CurrentFrame.MarginLeft
-		tr = CurrentFrame.MarginRight
-	}
-	if !getMargins(1, MaxStrLen, request, pos, &tl, &tr, true) {
-		return false
-	}
-	if tl < tr {
-		if setInitial {
-			InitialMarginLeft = tl
-			InitialMarginRight = tr
-		}
-		CurrentFrame.MarginLeft = tl
-		CurrentFrame.MarginRight = tr
-	} else {
-		ScreenMessage(MsgLeftMarginGeRight)
-		return false
-	}
-	return true
-}
-
-// setTBMargin sets the top and bottom margins
-func setTBMargin(request *TParObject, pos *int, setInitial bool) bool {
-	var tt, tb int
-	if setInitial {
-		tt = InitialMarginTop
-		tb = InitialMarginBottom
-	} else {
-		tt = CurrentFrame.MarginTop
-		tb = CurrentFrame.MarginBottom
-	}
-	if !getMargins(0, CurrentFrame.ScrHeight, request, pos, &tt, &tb, false) {
-		return false
-	}
-	if tt+tb >= CurrentFrame.ScrHeight {
-		ScreenMessage(MsgMarginOutOfRange)
-		return false
-	}
-	if setInitial {
-		InitialMarginTop = tt
-		InitialMarginBottom = tb
-	}
-	CurrentFrame.MarginTop = tt
-	CurrentFrame.MarginBottom = tb
-	return true
-}
-
 // setparam parses and sets frame parameters
 func setparam(request *TParObject) bool {
-	pos := 1
-	ch := nextchar(request, &pos)
+	p := newTparParser(request)
+	ch := p.nextChar()
 	for ch != 0 {
 		setInitial := false
 		if ch == '$' { // setting an initial value for a new frame
 			setInitial = true
-			ch = nextchar(request, &pos)
+			ch = p.nextChar()
 		}
-		if nextchar(request, &pos) != '=' {
+		if p.nextChar() != '=' {
 			ScreenMessage(MsgOptionsSyntaxError)
 			return false
 		}
 		ok := false
 		switch ch {
 		case 'O':
-			ok = setOptions(request, &pos, setInitial)
+			ok = p.setOptions(setInitial)
 		case 'S':
-			if mem, found := TparToInt(request, &pos); found {
+			if mem, found := p.toInt(); found {
 				ok = setmemory(mem, setInitial)
 			}
 		case 'H':
-			if height, found := TparToInt(request, &pos); found {
+			if height, found := p.toInt(); found {
 				ok = FrameSetHeight(height, setInitial)
 			}
 		case 'W':
-			if width, found := TparToInt(request, &pos); found {
+			if width, found := p.toInt(); found {
 				ok = setwidth(width, setInitial)
 			}
 		case 'C':
-			ok = setcmdintr(request, &pos)
+			ok = p.setCmdIntr()
 		case 'T':
-			ok = setTabs(request, &pos, setInitial)
+			ok = p.setTabs(setInitial)
 		case 'M':
-			ok = setLRMargin(request, &pos, setInitial)
+			ok = p.setLRMargin(setInitial)
 		case 'V':
-			ok = setTBMargin(request, &pos, setInitial)
+			ok = p.setTBMargin(setInitial)
 		case 'K':
-			ok = setMode(request, &pos)
+			ok = p.setMode()
 		default:
 			ScreenMessage(MsgInvalidParameterCode)
 			return false
@@ -791,9 +804,9 @@ func setparam(request *TParObject) bool {
 		if !ok {
 			return false
 		}
-		ch = nextchar(request, &pos)
+		ch = p.nextChar()
 		if ch == ',' || ch == 0 {
-			ch = nextchar(request, &pos)
+			ch = p.nextChar()
 		} else {
 			ScreenMessage(MsgSyntaxErrorInParamCmd)
 			return false
@@ -836,7 +849,7 @@ func printOptions(options FrameOptions) {
 		count += len(s)
 	} else {
 		ScreenWriteCh(0, ')')
-		count++
+		count += 1
 	}
 	// Pad to 14 characters
 	if count < 14 {
