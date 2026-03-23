@@ -165,7 +165,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 			} else if CurrentFrame.Dot.Col <= CurrentFrame.Dot.Line.Used {
 				d := CurrentFrame.Dot
 				d.Line.Str.FillN(' ', d.Line.Used+1-d.Col, d.Col)
-				d.Line.Used = d.Line.Str.Length(' ', d.Col)
+				d.Line.Used = d.Line.Str.TrimmedLen(' ', d.Col)
 			}
 
 			// Update the screen

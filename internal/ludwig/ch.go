@@ -193,7 +193,7 @@ func ChSearchStr(
 
 	// Search for the target
 	for i := 1; i <= len2-len1+1; i++ {
-		if s.Equals(target, len1, i, st1) {
+		if s.EqualAt(target, len1, i, st1) {
 			if backwards {
 				*foundLoc = len2 - (i + len1) + 1
 			} else {

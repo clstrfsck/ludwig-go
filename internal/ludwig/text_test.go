@@ -913,7 +913,7 @@ func TestTextInsertTpar(t *testing.T) {
 
 		// Set some initial content on the line
 		line.Str.Assign("Hello World")
-		line.Used = line.Str.Length(' ', MaxStrLen)
+		line.Used = line.Str.TrimmedLen(' ', MaxStrLen)
 
 		var mark *MarkObject
 		MarkCreate(line, 7, &mark) // Mark after space
@@ -928,7 +928,7 @@ func TestTextInsertTpar(t *testing.T) {
 			Con: nil,
 		}
 		tpar1.Str.Assign("Line1")
-		tpar1.Len = tpar1.Str.Length(' ', MaxStrLen)
+		tpar1.Len = tpar1.Str.TrimmedLen(' ', MaxStrLen)
 
 		// Second tpar - middle line
 		tpar2 := &TParObject{
@@ -939,7 +939,7 @@ func TestTextInsertTpar(t *testing.T) {
 			Con: nil,
 		}
 		tpar2.Str.Assign("Line2")
-		tpar2.Len = tpar2.Str.Length(' ', MaxStrLen)
+		tpar2.Len = tpar2.Str.TrimmedLen(' ', MaxStrLen)
 
 		// Third tpar - last line (the tail)
 		tpar3 := &TParObject{
@@ -950,7 +950,7 @@ func TestTextInsertTpar(t *testing.T) {
 			Con: nil,
 		}
 		tpar3.Str.Assign("Line3")
-		tpar3.Len = tpar3.Str.Length(' ', MaxStrLen)
+		tpar3.Len = tpar3.Str.TrimmedLen(' ', MaxStrLen)
 
 		// Link them: tpar1.Con -> tpar2, tpar2.Con -> tpar3
 		tpar1.Con = tpar2
