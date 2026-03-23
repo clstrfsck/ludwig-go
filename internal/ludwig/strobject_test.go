@@ -151,7 +151,7 @@ func TestEquals(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := s1.EqualAt(s2, tt.n, tt.srcOffset, tt.dstOffset)
-			assert.Equal(t, tt.want, got, "Equals(n=%d, src=%d, dst=%d) mismatch", tt.n, tt.srcOffset, tt.dstOffset)
+			assert.Equal(t, tt.want, got, "EqualAt(n=%d, src=%d, dst=%d) mismatch", tt.n, tt.srcOffset, tt.dstOffset)
 		})
 	}
 }
