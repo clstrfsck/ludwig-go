@@ -15,7 +15,7 @@
 package ludwig
 
 // CharcmdInsert handles character insertion commands
-func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
+func CharcmdInsert(rept LeadParam, count int, fromSpan bool) (result bool) {
 	cmdStatus := false
 	if rept == LeadParamMinus {
 		rept = LeadParamNInt
@@ -34,13 +34,29 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
 	var eqlCol int
 	var key int
 
+	defer func() {
+		if TtControlC {
+			cmdStatus = false
+			CurrentFrame.Dot.Col = oldDotCol
+			var tempMark *MarkObject
+			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col+inserted, &tempMark)
+			TextRemove(CurrentFrame.Dot, tempMark)
+			MarkDestroy(&tempMark)
+		} else if cmdStatus {
+			CurrentFrame.TextModified = true
+			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
+		}
+		result = cmdStatus || !fromSpan
+	}()
+
 	for {
 		cmdValid := count <= maximum
 		if cmdValid {
 			maximum -= count
 			inserted += count
 			if !TextInsert(true, 1, BlankString, count, CurrentFrame.Dot) {
-				goto l9
+				return
 			}
 			if rept == LeadParamNInt {
 				eqlCol = CurrentFrame.Dot.Col - count
@@ -51,7 +67,7 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
 			cmdStatus = true
 		}
 		if fromSpan {
-			goto l9
+			return
 		}
 		if cmdValid {
 			ScreenFixup()
@@ -60,7 +76,7 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
 		}
 		key = VduGetKey()
 		if TtControlC {
-			goto l9
+			return
 		}
 		rept = LeadParamNone
 		count = 1
@@ -75,23 +91,7 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) bool {
 		}
 	}
 	VduTakeBackKey(key)
-
-l9:
-	if TtControlC {
-		cmdStatus = false
-		CurrentFrame.Dot.Col = oldDotCol
-		var tempMark *MarkObject
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col+inserted, &tempMark)
-		TextRemove(CurrentFrame.Dot, tempMark)
-		MarkDestroy(&tempMark)
-	} else {
-		if cmdStatus {
-			CurrentFrame.TextModified = true
-			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
-		}
-	}
-	return cmdStatus || !fromSpan
+	return
 }
 
 func joinLines() bool {
@@ -115,7 +115,7 @@ func joinLines() bool {
 }
 
 // CharcmdDelete handles character deletion commands
-func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
+func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 	cmdStatus := false
 	oldDotCol := CurrentFrame.Dot.Col
 	oldStr := NewStrObjectCopy(
@@ -126,6 +126,36 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 	)
 	deleted := 0
 	var key int
+
+	defer func() {
+		if TtControlC {
+			cmdStatus = false
+			CurrentFrame.Dot.Col = 1
+			TextOvertype(false, 1, oldStr, oldStr.Len(), CurrentFrame.Dot)
+			CurrentFrame.Dot.Col = oldDotCol
+		} else if cmdStatus {
+			oldDotCol = CurrentFrame.Dot.Col
+			count = MaxStrLenP - oldDotCol
+			if deleted > count {
+				deleted = count
+			}
+			line := CurrentFrame.Dot.Line
+			MarksSqueeze(line, oldDotCol, line, oldDotCol+deleted)
+			MarksShift(
+				line,
+				oldDotCol+deleted,
+				MaxStrLenP-(oldDotCol+deleted)+1,
+				line,
+				oldDotCol,
+			)
+			CurrentFrame.TextModified = true
+			MarkCreate(line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+			if CurrentFrame.Marks[MarkEquals] != nil {
+				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+			}
+		}
+		result = cmdStatus || !fromSpan
+	}()
 
 	for {
 		cmdValid := true
@@ -143,7 +173,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 				CurrentFrame.Dot.Col -= count
 			} else if !fromSpan && count == 1 && dotCol == 1 && joinLines() {
 				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
-				return true
+				return
 			} else {
 				cmdValid = false
 			}
@@ -199,7 +229,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 		}
 
 		if fromSpan {
-			goto l9
+			return
 		}
 		if cmdValid {
 			ScreenFixup()
@@ -208,7 +238,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 		}
 		key = VduGetKey()
 		if TtControlC {
-			goto l9
+			return
 		}
 		rept = LeadParamNone
 		count = 1
@@ -229,39 +259,11 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) bool {
 		}
 	}
 	VduTakeBackKey(key)
-
-l9:
-	if TtControlC {
-		cmdStatus = false
-		CurrentFrame.Dot.Col = 1
-		TextOvertype(false, 1, oldStr, oldStr.Len(), CurrentFrame.Dot)
-		CurrentFrame.Dot.Col = oldDotCol
-	} else if cmdStatus {
-		oldDotCol = CurrentFrame.Dot.Col
-		count = MaxStrLenP - oldDotCol
-		if deleted > count {
-			deleted = count
-		}
-		line := CurrentFrame.Dot.Line
-		MarksSqueeze(line, oldDotCol, line, oldDotCol+deleted)
-		MarksShift(
-			line,
-			oldDotCol+deleted,
-			MaxStrLenP-(oldDotCol+deleted)+1,
-			line,
-			oldDotCol,
-		)
-		CurrentFrame.TextModified = true
-		MarkCreate(line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-		if CurrentFrame.Marks[MarkEquals] != nil {
-			MarkDestroy(&CurrentFrame.Marks[MarkEquals])
-		}
-	}
-	return cmdStatus || !fromSpan
+	return
 }
 
 // CharcmdRubout handles rubout commands
-func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
+func CharcmdRubout(rept LeadParam, count int, fromSpan bool) (result bool) {
 	var cmdStatus bool
 	if EditMode == ModeInsert {
 		if rept == LeadParamPIndef {
@@ -270,13 +272,27 @@ func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
 			rept = LeadParamNInt
 		}
 		cmdStatus = CharcmdDelete(rept, -count, fromSpan)
+		return cmdStatus || !fromSpan
 	} else {
-		cmdStatus = false
 		oldDotCol := CurrentFrame.Dot.Col
 		dotUsed := CurrentFrame.Dot.Line.Used
 		oldStr := NewStrObjectCopy(CurrentFrame.Dot.Line.Str, 1, dotUsed, dotUsed)
 		var key int
 		var eqlCol int
+
+		defer func() {
+			if TtControlC {
+				cmdStatus = false
+				CurrentFrame.Dot.Col = 1
+				TextOvertype(false, 1, oldStr, dotUsed, CurrentFrame.Dot)
+				CurrentFrame.Dot.Col = oldDotCol
+			} else if cmdStatus {
+				CurrentFrame.TextModified = true
+				MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+				MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
+			}
+			result = cmdStatus || !fromSpan
+		}()
 
 		for {
 			if rept == LeadParamPIndef {
@@ -287,13 +303,13 @@ func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
 				eqlCol = CurrentFrame.Dot.Col
 				CurrentFrame.Dot.Col -= count
 				if !TextOvertype(true, 1, BlankString, count, CurrentFrame.Dot) {
-					goto l9
+					return
 				}
 				CurrentFrame.Dot.Col -= count
 				cmdStatus = true
 			}
 			if fromSpan {
-				goto l9
+				return
 			}
 			if cmdValid {
 				ScreenFixup()
@@ -302,7 +318,7 @@ func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
 			}
 			key = VduGetKey()
 			if TtControlC {
-				goto l9
+				return
 			}
 			rept = LeadParamNone
 			count = 1
@@ -317,18 +333,6 @@ func CharcmdRubout(rept LeadParam, count int, fromSpan bool) bool {
 			}
 		}
 		VduTakeBackKey(key)
-
-	l9:
-		if TtControlC {
-			cmdStatus = false
-			CurrentFrame.Dot.Col = 1
-			TextOvertype(false, 1, oldStr, dotUsed, CurrentFrame.Dot)
-			CurrentFrame.Dot.Col = oldDotCol
-		} else if cmdStatus {
-			CurrentFrame.TextModified = true
-			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
-		}
+		return
 	}
-	return cmdStatus || !fromSpan
 }
