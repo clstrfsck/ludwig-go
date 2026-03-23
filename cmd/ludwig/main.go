@@ -513,18 +513,16 @@ func startUp(argv []string) bool {
 	const frameNameOops = "OOPS"
 	const frameNameHeap = "HEAP"
 
-	result := false
-
 	for _, arg := range argv {
 		if len(arg) > FileNameLen {
 			ScreenMessage(MsgParameterTooLong)
-			goto l99
+			return false
 		}
 	}
 
 	// Open the files.
 	if !FileCreateOpen(argv[1:], ParseCommand, &Files[1], &Files[2]) {
-		goto l99
+		return false
 	}
 	SetRegularTabStops(FileData.TabWidth)
 
@@ -558,10 +556,10 @@ func startUp(argv []string) bool {
 	// Save pointers to COMMAND & OOPS  frames for use in later frame routines.
 
 	if !FrameEdit(frameNameOops) {
-		goto l99
+		return false
 	}
 	if !FrameSetHeight(InitialScrHeight, true) {
-		goto l99
+		return false
 	}
 	FrameOops = CurrentFrame
 	CurrentFrame = nil
@@ -569,21 +567,19 @@ func startUp(argv []string) bool {
 	FrameOops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
 	FrameOops.Options.Set(OptSpecialFrame)
 	if !FrameEdit(frameNameCmd) {
-		goto l99
+		return false
 	}
 	FrameCmd = CurrentFrame
 	CurrentFrame = nil
 	FrameCmd.Options.Set(OptSpecialFrame)
 	if !FrameEdit(frameNameHeap) {
-		goto l99
+		return false
 	}
 	FrameHeap = CurrentFrame
 	CurrentFrame = nil
 	FrameHeap.Options.Set(OptSpecialFrame)
-	{
-		if !FrameEdit(DefaultFrameName) {
-			goto l99
-		}
+	if !FrameEdit(DefaultFrameName) {
+		return false
 	}
 
 	if LudwigMode == LudwigScreen {
@@ -617,7 +613,7 @@ func startUp(argv []string) bool {
 		}
 	}
 	if !FilePage(CurrentFrame, &ExitAbort) {
-		goto l99
+		return false
 	}
 	if LudwigMode != LudwigBatch {
 		ScreenClearMsgs(false)
@@ -635,8 +631,6 @@ func startUp(argv []string) bool {
 		tparam := &TParObject{
 			Len: len(FileData.Initial),
 			Dlm: TpdExact,
-			Nxt: nil,
-			Con: nil,
 			Str: NewStrObjectFrom(FileData.Initial),
 		}
 		if !Execute(CmdFileExecute, LeadParamNone, 1, tparam, true) {
@@ -652,9 +646,7 @@ func startUp(argv []string) bool {
 
 	// Set the Abort Flag now.  This will suppress spurious start-up messages
 	LudwigAborted = true
-	result = true
-l99:
-	return result
+	return true
 }
 
 func main() {

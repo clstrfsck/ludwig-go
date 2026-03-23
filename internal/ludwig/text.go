@@ -216,8 +216,6 @@ func TextOvertype(
 
 // TextInsertTpar inserts a trailing parameter at a mark position
 func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObject) bool {
-	result := false
-
 	// Check for the simple case
 	if tp.Con == nil {
 		if !TextInsert(true, 1, tp.Str, tp.Len, beforeMark) {
@@ -245,10 +243,10 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			TextRealizeNull(beforeMark.Line)
 		}
 		if !TextSplitLine(beforeMark, 1, equalsMark) {
-			goto cleanup
+			return false
 		}
 		if !TextInsert(true, 1, tp.Str, tp.Len, *equalsMark) {
-			goto cleanup
+			return false
 		}
 		(*equalsMark).Col -= tp.Len
 		tmpTp = tp.Con
@@ -271,9 +269,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			return false
 		}
 	}
-	result = true
-cleanup:
-	return result
+	return true
 }
 
 // textIntraRemove removes text within a single line
@@ -762,10 +758,9 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	var equalsCol int
 	var equalsLine *LineHdrObject
 
-	result := false
 	if beforeMark.Line.FLink == nil {
 		ScreenMessage(MsgCantSplitNullLine)
-		goto cleanup
+		return false
 	}
 	if newCol == 0 {
 		newCol = TextReturnCol(beforeMark.Line, beforeMark.Col, true)
@@ -776,7 +771,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	} else {
 		if (newCol + length) > MaxStrLenP {
 			ScreenMessage(MsgNoRoomOnLine)
-			goto cleanup
+			return false
 		}
 	}
 
@@ -849,19 +844,19 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 				saveCol = beforeMark.Col
 				beforeMark.Col = 1
 				if !TextOvertype(true, 1, BlankString, newCol-1, beforeMark) {
-					goto cleanup
+					return false
 				}
 				beforeMark.Col = saveCol
 			}
 		} else {
 			if !TextInsert(true, 1, BlankString, shift, beforeMark) {
-				goto cleanup
+				return false
 			}
 			if newCol > 1 {
 				saveCol = beforeMark.Col
 				beforeMark.Col = 1
 				if !TextOvertype(true, 1, BlankString, newCol-1, beforeMark) {
-					goto cleanup
+					return false
 				}
 				beforeMark.Col = saveCol
 			}
@@ -870,7 +865,5 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	MarkCreate(beforeMark.Line, beforeMark.Col, &beforeMark.Line.Group.Frame.Marks[MarkModified])
 	beforeMark.Line.Group.Frame.TextModified = true
 	MarkCreate(equalsLine, equalsCol, equalsMark)
-	result = true
-cleanup:
-	return result
+	return true
 }
