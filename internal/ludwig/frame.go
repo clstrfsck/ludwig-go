@@ -231,7 +231,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 				legal = legal && (lastMargin == lmLeft)
 				lastMargin = lmRight
 			}
-			i++
+			i += 1
 		}
 		legal = legal && (lastMargin == lmRight)
 		if !legal {
@@ -258,7 +258,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 				}
 				CurrentFrame.MarginRight = i
 			}
-			i++
+			i += 1
 		}
 		for j := CurrentFrame.Dot.Line.Used + 1; j <= MaxStrLen; j++ {
 			if setInitial {
@@ -849,7 +849,7 @@ func printOptions(options FrameOptions) {
 		count += len(s)
 	} else {
 		ScreenWriteCh(0, ')')
-		count++
+		count += 1
 	}
 	// Pad to 14 characters
 	if count < 14 {
