@@ -41,7 +41,6 @@ func ExecComputeLineRange(
 	firstLine **LineHdrObject,
 	lastLine **LineHdrObject,
 ) bool {
-	result := false
 	*firstLine = frame.Dot.Line
 	*lastLine = frame.Dot.Line
 
@@ -53,20 +52,20 @@ func ExecComputeLineRange(
 			for lineNr := 1; lineNr < count; lineNr++ {
 				*lastLine = (*lastLine).FLink
 				if *lastLine == nil {
-					goto l99
+					return false
 				}
 			}
 			if (*lastLine).FLink == nil {
-				goto l99
+				return false
 			}
 		} else {
 			lineNr := LineToNumber(*firstLine)
 			*lastLine = LineFromNumber(frame, lineNr+count-1)
 			if *lastLine == nil {
-				goto l99
+				return false
 			}
 			if (*lastLine).FLink == nil {
-				goto l99
+				return false
 			}
 		}
 
@@ -74,19 +73,19 @@ func ExecComputeLineRange(
 		count = -count
 		*lastLine = frame.Dot.Line.BLink
 		if *lastLine == nil {
-			goto l99
+			return false
 		}
 		if count <= 20 {
 			for lineNr := 1; lineNr <= count; lineNr++ {
 				*firstLine = (*firstLine).BLink
 				if *firstLine == nil {
-					goto l99
+					return false
 				}
 			}
 		} else {
 			lineNr := LineToNumber(*lastLine)
 			if count > lineNr {
-				goto l99
+				return false
 			}
 			lineNr = lineNr - count + 1
 			*firstLine = LineFromNumber(frame, lineNr)
@@ -128,9 +127,7 @@ func ExecComputeLineRange(
 		}
 	}
 
-	result = true
-l99:
-	return result
+	return true
 }
 
 // Execute executes a command with the specified parameters
