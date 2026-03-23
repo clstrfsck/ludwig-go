@@ -99,8 +99,8 @@ func (s *StrObject) Assign(str string) {
 	s.FillCopyBytes([]byte(str), 1, len(s.array), ' ')
 }
 
-// Equals compares n characters starting at srcOffset with another StrObject starting at dstOffset
-func (s *StrObject) Equals(other *StrObject, n, srcOffset, dstOffset int) bool {
+// EqualAt compares n characters starting at srcOffset with another StrObject starting at dstOffset
+func (s *StrObject) EqualAt(other *StrObject, n, srcOffset, dstOffset int) bool {
 	if n == 0 {
 		return true
 	}
