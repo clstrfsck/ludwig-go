@@ -218,10 +218,10 @@ func (s *StrObject) Len() int {
 	return len(s.array)
 }
 
-// Length returns the position of the last character that is not equal to value,
-// searching backwards from the 'from' position.
+// TrimmedLen returns the position of the last character that is not equal to
+// value, searching backwards from the 'from' position.
 // Note that 'from' is adjusted to start within the array bounds.
-func (s *StrObject) Length(value byte, from int) int {
+func (s *StrObject) TrimmedLen(value byte, from int) int {
 	from = min(from, len(s.array))
 	if from > 0 {
 		lastIdx := s.adjustIndex(from, 0)
@@ -251,7 +251,7 @@ func (s *StrObject) String() string {
 
 // TrimmedString returns the string up to the last non-space character
 func (s *StrObject) TrimmedString() string {
-	length := s.Length(' ', len(s.array))
+	length := s.TrimmedLen(' ', len(s.array))
 	if length == 0 {
 		return ""
 	}
@@ -277,7 +277,7 @@ func (s *StrObject) Bytes() []byte {
 func (s *StrObject) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 's', 'v':
-		length := s.Length(' ', len(s.array))
+		length := s.TrimmedLen(' ', len(s.array))
 		_, _ = f.Write(s.array[:length])
 	case 'q':
 		fmt.Fprintf(f, "%q", s.array)

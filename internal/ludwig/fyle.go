@@ -201,7 +201,7 @@ func FileRead(fp *FileObject, count int, bestTry bool) (*LineHdrObject, *LineHdr
 		var outlen int
 		if FilesysRead(fp, buffer, &outlen) {
 			if outlen > 0 {
-				outlen = buffer.Length(' ', outlen)
+				outlen = buffer.TrimmedLen(' ', outlen)
 			}
 			line, _ = LinesCreate(1)
 			LineChangeLength(line, outlen)
@@ -327,7 +327,7 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 					for FilesysRead(Files[current.InputFile], buffer, &outlen) {
 						buflen := 0
 						if outlen > 0 {
-							buflen = buffer.Length(' ', outlen)
+							buflen = buffer.TrimmedLen(' ', outlen)
 						}
 						if !FilesysWrite(Files[current.OutputFile], buffer, buflen) {
 							result = false

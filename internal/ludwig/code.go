@@ -124,7 +124,7 @@ func errorMsg(ps *parseState, errText string) {
 			LineChangeLength(eLine, i)
 			// "i" can't be zero here, so e_line->str != nullptr
 			eLine.Str.Copy(str, 1, i, 1)
-			eLine.Used = str.Length(' ', i)
+			eLine.Used = str.TrimmedLen(' ', i)
 			LinesInject(eLine, eLine, ps.currentPoint.Line)
 			MarkCreate(eLine, ps.currentPoint.Col, &CurrentFrame.Dot)
 		}

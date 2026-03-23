@@ -110,7 +110,7 @@ var InitialMarginBottom int
 var InitialTabStops TabArray
 var InitialOptions FrameOptions
 
-// Useful constants
+// Useful constants - should not be mutated
 var BlankString = NewBlankStrObject(MaxStrLen)
 var InitialVerify VerifyArray
 var DefaultTabStops TabArray

@@ -205,7 +205,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 			firstLine.Str.Set(CurrentFrame.MarginRight, 'R')
 		}
 		// Calculate used length
-		firstLine.Used = firstLine.Str.Length(' ', MaxStrLen)
+		firstLine.Used = firstLine.Str.TrimmedLen(' ', MaxStrLen)
 		LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
 		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true

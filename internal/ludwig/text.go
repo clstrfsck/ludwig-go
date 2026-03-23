@@ -116,7 +116,7 @@ func TextInsert(
 
 		// Re-compute length of line, to remove trailing spaces
 		if tailLen == 0 {
-			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len())
+			dstLine.Used = dstLine.Str.TrimmedLen(' ', dstLine.Len())
 		} else {
 			dstLine.Used += insertLen
 		}
@@ -186,7 +186,7 @@ func TextOvertype(
 
 		// Re-compute length of line, to remove trailing spaces
 		if newCol > dstLine.Used {
-			dstLine.Used = dstLine.Str.Length(' ', dstLine.Len())
+			dstLine.Used = dstLine.Str.TrimmedLen(' ', dstLine.Len())
 		}
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 
@@ -259,7 +259,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			if tmpTp.Len == 0 {
 				tmpLine.Used = 0
 			} else {
-				tmpLine.Used = tmpLine.Str.Length(' ', tmpTp.Len)
+				tmpLine.Used = tmpLine.Str.TrimmedLen(' ', tmpTp.Len)
 			}
 			tmpTp = tmpTp.Con
 			tmpLine = tmpLine.FLink
@@ -307,7 +307,7 @@ func textIntraRemove(markOne *MarkObject, size int) {
 			ln.Str.Set(colOne+i, ' ')
 		}
 	}
-	ln.Used = ln.Str.Length(' ', oldUsed)
+	ln.Used = ln.Str.TrimmedLen(' ', oldUsed)
 	SyntaxMarkLineDirty(ln.Group.Frame, ln)
 
 	// Update screen if necessary
@@ -633,7 +633,7 @@ func textInterMove(
 			}
 		}
 		if i != 0 {
-			nextDstLine.Used = nextDstLine.Str.Length(' ', colTwo-1+textLen)
+			nextDstLine.Used = nextDstLine.Str.TrimmedLen(' ', colTwo-1+textLen)
 		} else {
 			nextDstLine.Used = colTwo - 1
 		}
@@ -655,9 +655,9 @@ func textInterMove(
 	if i > 0 {
 		LineChangeLength(lastLine, lastLine.Used+i)
 		lastLine.Str.Copy(dstLine.Str, dstCol, i, lastLineLength+1)
-		lastLine.Used = lastLine.Str.Length(' ', lastLineLength+i)
+		lastLine.Used = lastLine.Str.TrimmedLen(' ', lastLineLength+i)
 	} else if lastLineLength > 0 {
-		lastLine.Used = lastLine.Str.Length(' ', lastLineLength)
+		lastLine.Used = lastLine.Str.TrimmedLen(' ', lastLineLength)
 	}
 
 	// Special case for NULL line
@@ -703,7 +703,7 @@ func textInterMove(
 		}
 	} else if dstCol <= dstLine.Used {
 		dstLine.Str.Fill(' ', dstCol, dstLine.Used)
-		dstLine.Used = dstLine.Str.Length(' ', dstCol)
+		dstLine.Used = dstLine.Str.TrimmedLen(' ', dstCol)
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
 			ScreenDrawLine(dstLine)
@@ -805,7 +805,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 			newLine.Str.FillN(' ', newCol-1, 1)
 			newLine.Str.Copy(beforeMark.Line.Str, beforeMark.Col, length, newCol)
 			beforeMark.Line.Str.Fill(' ', beforeMark.Col, beforeMark.Col+length-1)
-			beforeMark.Line.Used = beforeMark.Line.Str.Length(' ', beforeMark.Line.Used)
+			beforeMark.Line.Used = beforeMark.Line.Str.TrimmedLen(' ', beforeMark.Line.Used)
 			SyntaxMarkLineDirty(beforeMark.Line.Group.Frame, beforeMark.Line)
 			newLine.Used = newCol + length - 1
 			if beforeMark.Line.ScrRowNr != 0 {
@@ -832,7 +832,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		if shift > 0 {
 			LineChangeLength(newLine, shift)
 			newLine.Str.Copy(beforeMark.Line.Str, 1, shift, 1)
-			newLine.Used = newLine.Str.Length(' ', shift)
+			newLine.Used = newLine.Str.TrimmedLen(' ', shift)
 		}
 		LinesInject(newLine, newLine, beforeMark.Line)
 		SyntaxMarkLineDirty(newLine.Group.Frame, newLine)

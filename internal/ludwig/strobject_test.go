@@ -418,7 +418,7 @@ func TestLength(t *testing.T) {
 			if tt.content != "" {
 				s.Assign(tt.content)
 			}
-			got := s.Length(tt.value, tt.from)
+			got := s.TrimmedLen(tt.value, tt.from)
 			assert.Equal(t, tt.expected, got, "Length(%q, %d) mismatch", tt.value, tt.from)
 		})
 	}
