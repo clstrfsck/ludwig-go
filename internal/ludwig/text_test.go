@@ -220,8 +220,7 @@ func TestTextRealizeNull(t *testing.T) {
 		}
 		frame.Dot = dot
 
-		result := TextRealizeNull(nullLine)
-		assert.True(t, result, "TextRealizeNull should succeed")
+		TextRealizeNull(nullLine)
 		assert.True(t, frame.TextModified, "Frame should be marked as modified")
 	})
 }

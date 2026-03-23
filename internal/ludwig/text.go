@@ -58,16 +58,12 @@ func TextReturnCol(curLine *LineHdrObject, curCol int, splitting bool) int {
 }
 
 // TextRealizeNull converts a null line into a real line
-func TextRealizeNull(oldNull *LineHdrObject) bool {
+func TextRealizeNull(oldNull *LineHdrObject) {
 	newNull, _ := LinesCreate(1)
-	if LinesInject(newNull, newNull, oldNull) {
-		if MarksShift(oldNull, 1, MaxStrLenP, newNull, 1) {
-			newNull.Group.Frame.TextModified = true
-			markCopy(newNull.Group.Frame.Dot, &newNull.Group.Frame.Marks[MarkModified])
-			return true
-		}
-	}
-	return false
+	LinesInject(newNull, newNull, oldNull)
+	MarksShift(oldNull, 1, MaxStrLenP, newNull, 1)
+	newNull.Group.Frame.TextModified = true
+	markCopy(newNull.Group.Frame.Dot, &newNull.Group.Frame.Marks[MarkModified])
 }
 
 // TextInsert inserts text at a specified position
@@ -94,18 +90,14 @@ func TextInsert(
 			return false
 		}
 		if dstLine.FLink == nil {
-			if !TextRealizeNull(dstLine) {
-				return false
-			}
+			TextRealizeNull(dstLine)
 			dstLine = dstLine.BLink
 		}
 
 		if finalLen > dstLine.Len() {
 			LineChangeLength(dstLine, finalLen)
 		}
-		if !MarksShift(dstLine, dstCol, MaxStrLenP-dstCol, dstLine, dstCol+insertLen) {
-			return false
-		}
+		MarksShift(dstLine, dstCol, MaxStrLenP-dstCol, dstLine, dstCol+insertLen)
 		if tailLen > 0 {
 			// Shift tail to make room
 			for i := dstLine.Used; i >= dstCol; i-- {
@@ -175,9 +167,7 @@ func TextOvertype(
 			return false
 		}
 		if dstLine.FLink == nil {
-			if !TextRealizeNull(dst.Line) {
-				return false
-			}
+			TextRealizeNull(dst.Line)
 			dstLine = dstLine.BLink
 		}
 
@@ -247,8 +237,8 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			return false
 		}
 		firstLine, lastLine := LinesCreate(lineCount)
-		if beforeMark.Line.FLink == nil && !TextRealizeNull(beforeMark.Line) {
-			goto cleanup
+		if beforeMark.Line.FLink == nil {
+			TextRealizeNull(beforeMark.Line)
 		}
 		if !TextSplitLine(beforeMark, 1, equalsMark) {
 			goto cleanup
@@ -271,9 +261,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			tmpLine = tmpLine.FLink
 		}
 		if lineCount != 0 {
-			if !LinesInject(firstLine, lastLine, beforeMark.Line) {
-				goto cleanup
-			}
+			LinesInject(firstLine, lastLine, beforeMark.Line)
 		}
 		if !TextInsert(true, 1, tmpTp.Str, tmpTp.Len, beforeMark) {
 			return false
@@ -285,23 +273,19 @@ cleanup:
 }
 
 // textIntraRemove removes text within a single line
-func textIntraRemove(markOne *MarkObject, size int) bool {
+func textIntraRemove(markOne *MarkObject, size int) {
 	ln := markOne.Line
 	colOne := markOne.Col
 	colTwo := colOne + size
-	if !MarksSqueeze(ln, colOne, ln, colTwo) {
-		return false
-	}
-	if !MarksShift(ln, colTwo, MaxStrLenP+1-colTwo, ln, colOne) {
-		return false
-	}
+	MarksSqueeze(ln, colOne, ln, colTwo)
+	MarksShift(ln, colTwo, MaxStrLenP+1-colTwo, ln, colOne)
 	if size == 0 {
-		return true
+		return
 	}
 
 	oldUsed := ln.Used
 	if colOne > oldUsed {
-		return true
+		return
 	}
 	dstLen := oldUsed + 1 - colOne
 	if colTwo <= oldUsed {
@@ -324,11 +308,11 @@ func textIntraRemove(markOne *MarkObject, size int) bool {
 
 	// Update screen if necessary
 	if ln.ScrRowNr == 0 {
-		return true
+		return
 	}
 	offsetPWidth := ln.Group.Frame.ScrOffset + ln.Group.Frame.ScrWidth
 	if colOne > offsetPWidth {
-		return true
+		return
 	}
 	distance := colTwo - colOne
 	firstColOnScr := colOne
@@ -342,7 +326,7 @@ func textIntraRemove(markOne *MarkObject, size int) bool {
 		VduDeleteChars(distance)
 		firstColOnScr = offsetPWidth + 1 - distance
 		if firstColOnScr > ln.Used {
-			return true
+			return
 		}
 	}
 
@@ -359,7 +343,6 @@ func textIntraRemove(markOne *MarkObject, size int) bool {
 	} else {
 		VduDisplayStr(ln.Str.Slice(firstColOnScr, bufLen), true)
 	}
-	return true
 }
 
 // textInterRemove removes text spanning multiple lines
@@ -380,15 +363,9 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 		colOne = markOne.Col
 		extrOne = lineOne.FLink
 		extrTwo = markTwo.Line
-		if !textIntraRemove(markOne, MaxStrLenP-markOne.Col) {
-			goto cleanup
-		}
-		if !MarksSqueeze(lineOne, colOne, markTwo.Line, markTwo.Col) {
-			goto cleanup
-		}
-		if !MarksShift(markTwo.Line, markTwo.Col, MaxStrLenP+1-markTwo.Col, lineOne, colOne) {
-			goto cleanup
-		}
+		textIntraRemove(markOne, MaxStrLenP-markOne.Col)
+		MarksSqueeze(lineOne, colOne, markTwo.Line, markTwo.Col)
+		MarksShift(markTwo.Line, markTwo.Col, MaxStrLenP+1-markTwo.Col, lineOne, colOne)
 		if extrOne == extrTwo {
 			goto success
 		}
@@ -408,9 +385,7 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	delta = markOne.Col - markTwo.Col
 	if delta < 0 {
 		MarkCreate(markTwo.Line, markOne.Col, &markStart)
-		if !textIntraRemove(markStart, markTwo.Col-markStart.Col) {
-			goto cleanup
-		}
+		textIntraRemove(markStart, markTwo.Col-markStart.Col)
 	} else if delta > 0 {
 		strngTail.Copy(strng, markTwo.Col, delta, 1)
 		if !TextInsert(true, 1, strngTail, delta, markTwo) {
@@ -427,18 +402,12 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	colOne = markOne.Col
 	extrOne = markOne.Line
 	extrTwo = markTwo.Line.BLink
-	if !MarksSqueeze(extrOne, colOne, markTwo.Line, markTwo.Col) {
-		goto cleanup
-	}
+	MarksSqueeze(extrOne, colOne, markTwo.Line, markTwo.Col)
 	if colOne > 1 {
-		if !MarksShift(extrOne, 1, colOne-1, markTwo.Line, 1) {
-			goto cleanup
-		}
+		MarksShift(extrOne, 1, colOne-1, markTwo.Line, 1)
 	}
 extract:
-	if !LinesExtract(extrOne, extrTwo) {
-		goto cleanup
-	}
+	LinesExtract(extrOne, extrTwo)
 success:
 	result = true
 cleanup:
@@ -451,7 +420,8 @@ cleanup:
 // TextRemove removes text between two marks
 func TextRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	if markOne.Line == markTwo.Line {
-		return textIntraRemove(markOne, markTwo.Col-markOne.Col)
+		textIntraRemove(markOne, markTwo.Col-markOne.Col)
+		return true
 	}
 	return textInterRemove(markOne, markTwo)
 }
@@ -516,9 +486,7 @@ func textIntraMove(
 			return false
 		}
 		if fullLen != 0 {
-			if !textIntraRemove(markOne, markTwo.Col-markOne.Col) {
-				return false
-			}
+			textIntraRemove(markOne, markTwo.Col-markOne.Col)
 		}
 	}
 	if fullLen != 0 {
@@ -622,12 +590,8 @@ func textInterMove(
 			if !copy && (lineTwoNr-lineOneNr > 1) {
 				firstNicked = lineOne.FLink
 				lastNicked = lineTwo.BLink
-				if !MarksSqueeze(firstNicked, 1, lastNicked.FLink, 1) {
-					goto cleanup
-				}
-				if !LinesExtract(firstNicked, lastNicked) {
-					goto cleanup
-				}
+				MarksSqueeze(firstNicked, 1, lastNicked.FLink, 1)
+				LinesExtract(firstNicked, lastNicked)
 				lastNicked.FLink = nextDstLine
 				firstNicked.BLink = nextDstLine.BLink
 				if firstNicked.BLink != nil {
@@ -695,9 +659,7 @@ func textInterMove(
 	// Special case for NULL line
 	if dstLine.FLink == nil {
 		if (dstCol != 1) || (lastLineLength != 0) {
-			if !TextRealizeNull(dstLine) {
-				goto cleanup
-			}
+			TextRealizeNull(dstLine)
 			dstLine = dstLine.BLink
 		} else {
 			if firstLine != lastLine {
@@ -715,9 +677,7 @@ func textInterMove(
 				firstLine.Str.FillCopy(textStr, 1, textLen, 1, firstLine.Len(), ' ')
 				firstLine.Used = textLen
 			}
-			if !LinesInject(firstLine, lastLine, dstLine) {
-				goto cleanup
-			}
+			LinesInject(firstLine, lastLine, dstLine)
 
 			lastLine = dstLine
 			dstLine = firstLine
@@ -726,12 +686,8 @@ func textInterMove(
 		}
 	}
 
-	if !LinesInject(firstLine, lastLine, dstLine.FLink) {
-		goto cleanup
-	}
-	if !MarksShift(dstLine, dstCol, MaxStrLenP+1-dstCol, lastLine, colTwo) {
-		goto cleanup
-	}
+	LinesInject(firstLine, lastLine, dstLine.FLink)
+	MarksShift(dstLine, dstCol, MaxStrLenP+1-dstCol, lastLine, colTwo)
 	firstLine = nil
 	if textLen > 0 {
 		LineChangeLength(dstLine, dstCol+textLen-1)
@@ -858,12 +814,8 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 				}
 			}
 		}
-		if !LinesInject(newLine, newLine, beforeMark.Line.FLink) {
-			goto cleanup
-		}
-		if !MarksShift(beforeMark.Line, beforeMark.Col, MaxStrLenP+1-beforeMark.Col, newLine, newCol) {
-			goto cleanup
-		}
+		LinesInject(newLine, newLine, beforeMark.Line.FLink)
+		MarksShift(beforeMark.Line, beforeMark.Col, MaxStrLenP+1-beforeMark.Col, newLine, newCol)
 	} else {
 		// Move front up and adjust rest
 		equalsCol = beforeMark.Col
@@ -878,22 +830,16 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 			newLine.Str.Copy(beforeMark.Line.Str, 1, shift, 1)
 			newLine.Used = newLine.Str.Length(' ', shift)
 		}
-		if !LinesInject(newLine, newLine, beforeMark.Line) {
-			goto cleanup
-		}
+		LinesInject(newLine, newLine, beforeMark.Line)
 		SyntaxMarkLineDirty(newLine.Group.Frame, newLine)
 		if beforeMark.Col > 1 {
-			if !MarksShift(beforeMark.Line, 1, beforeMark.Col-1, newLine, 1) {
-				goto cleanup
-			}
+			MarksShift(beforeMark.Line, 1, beforeMark.Col-1, newLine, 1)
 		}
 		shift = newCol - beforeMark.Col
 		if shift <= 0 {
 			if shift < 0 {
 				beforeMark.Col += shift
-				if !textIntraRemove(beforeMark, -shift) {
-					goto cleanup
-				}
+				textIntraRemove(beforeMark, -shift)
 			}
 			if newCol > 1 {
 				saveCol = beforeMark.Col

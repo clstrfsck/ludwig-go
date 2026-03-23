@@ -308,12 +308,8 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 				goto l98
 			}
 		}
-		if !MarksSqueeze(firstLine, 1, lastLine.FLink, 1) {
-			goto l98
-		}
-		if !LinesExtract(firstLine, lastLine) {
-			goto l98
-		}
+		MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
+		LinesExtract(firstLine, lastLine)
 		if current.InputFile != 0 {
 			if Files[current.InputFile] != nil {
 				Files[current.InputFile].LineCount = 0
@@ -381,12 +377,8 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		if lastLine.FLink == nil {
 			return false
 		}
-		if !MarksSqueeze(firstLine, 1, lastLine.FLink, 1) {
-			return false
-		}
-		if !LinesExtract(firstLine, lastLine) {
-			return false
-		}
+		MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
+		LinesExtract(firstLine, lastLine)
 	}
 
 	// Page in the new lines
@@ -404,9 +396,7 @@ func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 		if firstLine == nil {
 			goto l98
 		}
-		if !LinesInject(firstLine, lastLine, currentFrame.LastGroup.LastLine) {
-			return false
-		}
+		LinesInject(firstLine, lastLine, currentFrame.LastGroup.LastLine)
 
 		// If dot was on the null line, shift it onto the first line
 		if currentFrame.Dot.Line.FLink == nil {
@@ -740,9 +730,7 @@ func FileCommand(command Commands, rept LeadParam, count int, tparam *TParObject
 			goto l99
 		}
 		if first != nil {
-			if !LinesInject(first, last, CurrentFrame.Dot.Line) {
-				goto l99
-			}
+			LinesInject(first, last, CurrentFrame.Dot.Line)
 			MarkCreate(first, 1, &CurrentFrame.Marks[MarkEquals])
 			CurrentFrame.TextModified = true
 			MarkCreate(last.FLink, 1, &CurrentFrame.Marks[MarkModified])

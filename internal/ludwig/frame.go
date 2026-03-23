@@ -269,12 +269,8 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 
 		firstLine := CurrentFrame.Dot.Line
 		dotCol := CurrentFrame.Dot.Col
-		if !MarksSqueeze(firstLine, 1, firstLine.FLink, 1) {
-			return false
-		}
-		if !LinesExtract(firstLine, firstLine) {
-			return false
-		}
+		MarksSqueeze(firstLine, 1, firstLine.FLink, 1)
+		LinesExtract(firstLine, firstLine)
 		CurrentFrame.Dot.Col = dotCol
 
 	case 'S': // Set tab
@@ -614,24 +610,16 @@ func FrameKill(frameName string) bool {
 	ptr2 := thisFrame.LastGroup.LastLine.BLink
 	if ptr2 != nil {
 		ptr1 := thisFrame.FirstGroup.FirstLine
-		if !LinesExtract(ptr1, ptr2) {
-			return false
-		}
+		LinesExtract(ptr1, ptr2)
 	}
 
 	// Step 3b: Destroy the <eop> line
 	thisFrame.FirstGroup = nil
 
 	// Step 4: Dispose of the frame header and any pattern tables attached
-	if !PatternDFATableKill(&thisFrame.EqsPatternPtr) {
-		return false
-	}
-	if !PatternDFATableKill(&thisFrame.GetPatternPtr) {
-		return false
-	}
-	if !PatternDFATableKill(&thisFrame.RepPatternPtr) {
-		return false
-	}
+	PatternDFATableKill(&thisFrame.EqsPatternPtr)
+	PatternDFATableKill(&thisFrame.GetPatternPtr)
+	PatternDFATableKill(&thisFrame.RepPatternPtr)
 
 	return true
 }

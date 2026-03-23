@@ -76,7 +76,7 @@ func MarksSqueeze(
 	firstColumn int,
 	lastLine *LineHdrObject,
 	lastColumn int,
-) bool {
+) {
 	if firstLine == lastLine {
 		// Simple case: all marks are on the same line
 		for _, mark := range lastLine.Marks {
@@ -84,7 +84,7 @@ func MarksSqueeze(
 				mark.Col = lastColumn
 			}
 		}
-		return true
+		return
 	}
 
 	// Multi-line case
@@ -117,7 +117,6 @@ func MarksSqueeze(
 		currentLine = currentLine.FLink
 		firstColumn = 1
 	}
-	return true
 }
 
 // MarksShift moves marks from source range to destination range.
@@ -127,7 +126,7 @@ func MarksShift(
 	width int,
 	destLine *LineHdrObject,
 	destColumn int,
-) bool {
+) {
 	sourceEnd := sourceColumn + width - 1
 	offset := destColumn - sourceColumn
 
@@ -138,7 +137,7 @@ func MarksShift(
 				mark.Col = min(mark.Col+offset, MaxStrLenP)
 			}
 		}
-		return true
+		return
 	}
 
 	// Different lines: move marks to destination line
@@ -158,6 +157,4 @@ func MarksShift(
 		}
 	}
 	sourceLine.Marks = marks
-
-	return true
 }

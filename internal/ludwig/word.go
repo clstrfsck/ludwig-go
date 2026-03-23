@@ -179,15 +179,7 @@ func WordFill(rept LeadParam, count int) bool {
 						goto cleanup
 					}
 					// Copy the marks
-					if !MarksShift(
-						CurrentFrame.Dot.Line.FLink,
-						oldHere.Col,
-						oldThere.Col-oldHere.Col,
-						here.Line,
-						here.Col,
-					) {
-						goto cleanup
-					}
+					MarksShift(CurrentFrame.Dot.Line.FLink, oldHere.Col, oldThere.Col-oldHere.Col, here.Line, here.Col)
 					// Wipe out the old text
 					MarkCreate(CurrentFrame.Dot.Line.FLink, 1, &oldHere)
 					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
@@ -199,17 +191,8 @@ func WordFill(rept LeadParam, count int) bool {
 					// If next line is now empty, delete it
 					if CurrentFrame.Dot.Line.FLink.Used == 0 {
 						thisLine = CurrentFrame.Dot.Line.FLink
-						if !MarksSqueeze(
-							CurrentFrame.Dot.Line.FLink,
-							1,
-							CurrentFrame.Dot.Line.FLink.FLink,
-							1,
-						) {
-							goto cleanup
-						}
-						if !LinesExtract(thisLine, thisLine) {
-							goto cleanup
-						}
+						MarksSqueeze(CurrentFrame.Dot.Line.FLink, 1, CurrentFrame.Dot.Line.FLink.FLink, 1)
+						LinesExtract(thisLine, thisLine)
 						count--
 						if count > 0 {
 							goto getMore
