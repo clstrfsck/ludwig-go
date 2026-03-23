@@ -173,7 +173,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 				CurrentFrame.Dot.Col -= count
 			} else if !fromSpan && count == 1 && dotCol == 1 && joinLines() {
 				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
-				return true
+				return
 			} else {
 				cmdValid = false
 			}
