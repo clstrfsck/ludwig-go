@@ -224,9 +224,8 @@ func TestMarksSqueeze(t *testing.T) {
 		MarkCreate(line, 15, &mark3) // In range
 		MarkCreate(line, 25, &mark4) // After range
 
-		result := MarksSqueeze(line, 10, line, 20)
+		MarksSqueeze(line, 10, line, 20)
 
-		assert.True(t, result, "MarksSqueeze should return true")
 		assert.Equal(t, 5, mark1.Col, "mark1 should stay at column 5")
 		assert.Equal(t, 20, mark2.Col, "mark2 should move to column 20")
 		assert.Equal(t, 20, mark3.Col, "mark3 should move to column 20")
@@ -243,9 +242,8 @@ func TestMarksSqueeze(t *testing.T) {
 		MarkCreate(lines[1], 10, &mark3) // On middle line
 		MarkCreate(lines[2], 5, &mark4)  // Before lastColumn on last line
 
-		result := MarksSqueeze(lines[0], 10, lines[2], 20)
+		MarksSqueeze(lines[0], 10, lines[2], 20)
 
-		assert.True(t, result, "MarksSqueeze should return true")
 		assert.Equal(t, lines[0], mark1.Line)
 		assert.Equal(t, 5, mark1.Col, "mark1 should stay at line[0] col 5")
 		assert.Equal(t, lines[2], mark2.Line)
@@ -261,9 +259,8 @@ func TestMarksSqueeze(t *testing.T) {
 		var mark *MarkObject
 
 		MarkCreate(line, 15, &mark)
-		result := MarksSqueeze(line, 10, line, 10)
+		MarksSqueeze(line, 10, line, 10)
 
-		assert.True(t, result, "MarksSqueeze should return true")
 		assert.Equal(t, 15, mark.Col, "mark should stay at column 15")
 	})
 
@@ -273,9 +270,8 @@ func TestMarksSqueeze(t *testing.T) {
 
 		MarkCreate(line, 5, &mark1)
 		MarkCreate(line, 25, &mark2)
-		result := MarksSqueeze(line, 10, line, 20)
+		MarksSqueeze(line, 10, line, 20)
 
-		assert.True(t, result, "MarksSqueeze should return true")
 		assert.Equal(t, 5, mark1.Col, "mark1 should stay at column 5")
 		assert.Equal(t, 25, mark2.Col, "mark2 should stay at column 25")
 	})
@@ -293,9 +289,8 @@ func TestMarksShift(t *testing.T) {
 		MarkCreate(line, 25, &mark3) // Out of range
 
 		// Shift columns 10-19 (width 10) to position 30
-		result := MarksShift(line, 10, 10, line, 30)
+		MarksShift(line, 10, 10, line, 30)
 
-		assert.True(t, result, "MarksShift should return true")
 		assert.Equal(t, 30, mark1.Col, "mark1 should move to column 30")
 		assert.Equal(t, 35, mark2.Col, "mark2 should move to column 35")
 		assert.Equal(t, 25, mark3.Col, "mark3 should stay at column 25")
@@ -311,9 +306,8 @@ func TestMarksShift(t *testing.T) {
 		MarkCreate(line1, 25, &mark3) // Out of range
 
 		// Shift columns 10-19 from line1 to line2 starting at position 5
-		result := MarksShift(line1, 10, 10, line2, 5)
+		MarksShift(line1, 10, 10, line2, 5)
 
-		assert.True(t, result, "MarksShift should return true")
 		assert.Equal(t, line2, mark1.Line)
 		assert.Equal(t, 5, mark1.Col, "mark1 should move to line2 col 5")
 		assert.Equal(t, line2, mark2.Line)
@@ -331,9 +325,8 @@ func TestMarksShift(t *testing.T) {
 		MarkCreate(line, 20, &mark)
 
 		// Shift columns 20-29 to position 10 (negative offset of -10)
-		result := MarksShift(line, 20, 10, line, 10)
+		MarksShift(line, 20, 10, line, 10)
 
-		assert.True(t, result, "MarksShift should return true")
 		assert.Equal(t, 10, mark.Col, "mark should move to column 10")
 	})
 
@@ -344,9 +337,8 @@ func TestMarksShift(t *testing.T) {
 		MarkCreate(line, 10, &mark)
 
 		// Try to shift way beyond MaxStrLenP
-		result := MarksShift(line, 10, 10, line, MaxStrLenP+100)
+		MarksShift(line, 10, 10, line, MaxStrLenP+100)
 
-		assert.True(t, result, "MarksShift should return true")
 		assert.Equal(t, MaxStrLenP, mark.Col, "mark should be clamped to MaxStrLenP")
 	})
 
@@ -357,9 +349,8 @@ func TestMarksShift(t *testing.T) {
 		MarkCreate(line, 5, &mark)
 
 		// Shift columns 10-19 to position 30
-		result := MarksShift(line, 10, 10, line, 30)
+		MarksShift(line, 10, 10, line, 30)
 
-		assert.True(t, result, "MarksShift should return true")
 		assert.Equal(t, 5, mark.Col, "mark should stay at column 5")
 	})
 
@@ -369,9 +360,8 @@ func TestMarksShift(t *testing.T) {
 
 		MarkCreate(line, 10, &mark)
 
-		result := MarksShift(line, 10, 0, line, 30)
+		MarksShift(line, 10, 0, line, 30)
 
-		assert.True(t, result, "MarksShift should return true")
 		// With width 0, sourceEnd = 10 + 0 - 1 = 9, so col 10 is not in range
 		assert.Equal(t, 10, mark.Col, "mark should stay at column 10")
 	})

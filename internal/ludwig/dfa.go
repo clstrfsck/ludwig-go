@@ -35,7 +35,7 @@ func transitionKill(p **TransitionObject) {
 }
 
 // PatternDFATableKill destroys a DFA table and frees its memory
-func PatternDFATableKill(patternPtr **DFATableObject) bool {
+func PatternDFATableKill(patternPtr **DFATableObject) {
 	if *patternPtr != nil {
 		for count := 0; count <= (*patternPtr).DFAStatesUsed; count++ {
 			transitionKill(&(*patternPtr).DFATable[count].Transitions)
@@ -43,7 +43,6 @@ func PatternDFATableKill(patternPtr **DFATableObject) bool {
 		}
 		*patternPtr = nil
 	}
-	return true
 }
 
 // PatternDFATableInitialize initializes or reinitializes a DFA table

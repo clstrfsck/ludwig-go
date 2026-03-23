@@ -55,7 +55,7 @@ func LinesCreate(lineCount int) (*LineHdrObject, *LineHdrObject) {
 }
 
 // LinesInject injects a linked list of lines into the data structure
-func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *LineHdrObject) bool {
+func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *LineHdrObject) {
 	// Scan the lines to be inserted, counting lines and checking space used
 	var nrNewLines int
 	var space int
@@ -213,12 +213,10 @@ func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *
 	if beforeLine.ScrRowNr != 0 && beforeLine != ScrTopLine {
 		ScreenLinesInject(firstLine, nrNewLines, beforeLine)
 	}
-
-	return true
 }
 
 // LinesExtract extracts lines from the data structure
-func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) bool {
+func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) {
 	// Define some useful pointers
 	topLine := firstLine.BLink
 	endLine := lastLine.FLink
@@ -343,8 +341,6 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) bool {
 		lastGroup.FLink = nil
 		endGroup.BLink = topGroup
 	}
-
-	return true
 }
 
 // LineChangeLength changes the length of the allocated text of a line

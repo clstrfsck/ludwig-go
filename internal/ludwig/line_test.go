@@ -525,9 +525,7 @@ func TestLinesInject_Basic(t *testing.T) {
 
 		originalSpace := frame.SpaceLeft
 
-		result := LinesInject(firstLine, lastLine, beforeLine)
-
-		assert.True(t, result, "LinesInject returned false")
+		LinesInject(firstLine, lastLine, beforeLine)
 
 		// Verify structure
 		validateFrameStructure(t, frame)
@@ -550,9 +548,7 @@ func TestLinesInject_Basic(t *testing.T) {
 
 		firstLine, lastLine := LinesCreate(1)
 
-		result := LinesInject(firstLine, lastLine, beforeLine)
-
-		assert.True(t, result, "LinesInject returned false")
+		LinesInject(firstLine, lastLine, beforeLine)
 
 		validateFrameStructure(t, frame)
 
@@ -578,9 +574,7 @@ func TestLinesInject_Basic(t *testing.T) {
 
 		firstLine, lastLine := LinesCreate(5)
 
-		result := LinesInject(firstLine, lastLine, beforeLine)
-
-		assert.True(t, result, "LinesInject returned false")
+		LinesInject(firstLine, lastLine, beforeLine)
 
 		validateFrameStructure(t, frame)
 
@@ -633,9 +627,7 @@ func TestLinesInject_RequiringNewGroups(t *testing.T) {
 		lineCount := MaxGroupLines + 10
 		firstLine, lastLine := LinesCreate(lineCount)
 
-		result := LinesInject(firstLine, lastLine, beforeLine)
-
-		assert.True(t, result, "LinesInject returned false")
+		LinesInject(firstLine, lastLine, beforeLine)
 
 		validateFrameStructure(t, frame)
 
@@ -664,9 +656,7 @@ func TestLinesInject_RequiringNewGroups(t *testing.T) {
 		lineCount := 2 * MaxGroupLines
 		firstLine, lastLine := LinesCreate(lineCount)
 
-		result := LinesInject(firstLine, lastLine, beforeLine)
-
-		assert.True(t, result, "LinesInject returned false")
+		LinesInject(firstLine, lastLine, beforeLine)
 
 		validateFrameStructure(t, frame)
 
@@ -717,9 +707,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 		LineChangeLength(extractLine, 10)
 		originalSpace := frame.SpaceLeft
 
-		result := LinesExtract(extractLine, extractLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(extractLine, extractLine)
 
 		validateFrameStructure(t, frame)
 
@@ -747,9 +735,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 		}
 		lastLine := firstLine.FLink.FLink
 
-		result := LinesExtract(firstLine, lastLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(firstLine, lastLine)
 
 		validateFrameStructure(t, frame)
 
@@ -765,9 +751,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 
 		firstLine := group.FirstLine
 
-		result := LinesExtract(firstLine, firstLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(firstLine, firstLine)
 
 		validateFrameStructure(t, frame)
 
@@ -792,9 +776,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 
 		lastLine := group.LastLine
 
-		result := LinesExtract(lastLine, lastLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(lastLine, lastLine)
 
 		validateFrameStructure(t, frame)
 
@@ -824,9 +806,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 		firstLine := group2.FirstLine
 		lastLine := group2.LastLine
 
-		result := LinesExtract(firstLine, lastLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(firstLine, lastLine)
 
 		validateFrameStructure(t, frame)
 
@@ -887,9 +867,7 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 			lastLine = lastLine.FLink
 		}
 
-		result := LinesExtract(firstLine, lastLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(firstLine, lastLine)
 
 		validateFrameStructure(t, frame)
 
@@ -933,9 +911,7 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 		firstLine := group2.FirstLine
 		lastLine := group2.LastLine
 
-		result := LinesExtract(firstLine, lastLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(firstLine, lastLine)
 
 		validateFrameStructure(t, frame)
 
@@ -986,9 +962,7 @@ func TestLinesInjectExtractIntegration(t *testing.T) {
 		originalSpace := frame.SpaceLeft
 
 		// Extract the same lines
-		result := LinesExtract(firstLine, lastLine)
-
-		assert.True(t, result, "LinesExtract returned false")
+		LinesExtract(firstLine, lastLine)
 
 		validateFrameStructure(t, frame)
 

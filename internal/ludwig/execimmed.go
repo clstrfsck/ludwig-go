@@ -88,10 +88,7 @@ func ExecuteImmed() {
 						VduTakeBackKey(key)
 						if ChIsPrintable(rune(key)) && key != CommandIntroducer {
 							// If printing char, realize NULL, re-fix cursor.
-							if !TextRealizeNull(CurrentFrame.Dot.Line) {
-								cmdSuccess = false
-								goto l9
-							}
+							TextRealizeNull(CurrentFrame.Dot.Line)
 						}
 
 						// MAKE SURE THE USER CAN SEE THE CURRENT DOT POSITION.

@@ -315,16 +315,10 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			if lastLine.FLink == nil {
 				goto l99
 			}
-			if !MarksSqueeze(firstLine, 1, lastLine.FLink, 1) {
-				goto l99
-			}
-			if !LinesExtract(firstLine, lastLine) {
-				goto l99
-			}
+			MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
+			LinesExtract(firstLine, lastLine)
 			if CurrentFrame != FrameOops {
-				if !LinesInject(firstLine, lastLine, FrameOops.LastGroup.LastLine) {
-					goto l99
-				}
+				LinesInject(firstLine, lastLine, FrameOops.LastGroup.LastLine)
 				MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals])
 				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot)
 				FrameOops.TextModified = true
@@ -463,12 +457,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			firstLine = FrameCmd.FirstGroup.FirstLine
 			lastLine = FrameCmd.LastGroup.LastLine.BLink
 			if lastLine != nil {
-				if !MarksSqueeze(firstLine, 1, lastLine.FLink, 1) {
-					goto l99
-				}
-				if !LinesExtract(firstLine, lastLine) {
-					goto l99
-				}
+				MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
+				LinesExtract(firstLine, lastLine)
 			}
 
 			// Insert the new tpar into frame COMMAND
@@ -505,12 +495,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			firstLine = FrameCmd.FirstGroup.FirstLine
 			lastLine = FrameCmd.LastGroup.LastLine.BLink
 			if lastLine != nil {
-				if !MarksSqueeze(firstLine, 1, lastLine.FLink, 1) {
-					goto l99
-				}
-				if !LinesExtract(firstLine, lastLine) {
-					goto l99
-				}
+				MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
+				LinesExtract(firstLine, lastLine)
 			}
 			if FileCommand(CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
 				CurrentFrame = CurrentFrame.ReturnFrame
@@ -585,21 +571,19 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdInsertLine:
 		if count != 0 {
 			firstLine, lastLine = LinesCreate(iabs(count))
-			cmdSuccess = LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
-			if cmdSuccess {
-				if count > 0 {
-					markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
-					MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
-				} else {
-					MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
-				}
-				CurrentFrame.TextModified = true
-				markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
+			LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
+			if count > 0 {
+				markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
+				MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+			} else {
+				MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
 			}
+			CurrentFrame.TextModified = true
+			markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkModified])
 		} else {
 			markCopy(CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals])
-			cmdSuccess = true
 		}
+		cmdSuccess = true
 
 	case CmdInsertMode:
 		EditMode = ModeInsert
@@ -809,9 +793,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				goto l99
 			}
 			if firstLine != nil {
-				if !LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line) {
-					goto l99
-				}
+				LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
 				MarkCreate(firstLine, 1, &CurrentFrame.Marks[MarkEquals])
 				CurrentFrame.TextModified = true
 				MarkCreate(lastLine.FLink, 1, &CurrentFrame.Marks[MarkModified])
@@ -1015,9 +997,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdSplitLine:
 		if CurrentFrame.Dot.Line.FLink == nil {
-			if !TextRealizeNull(CurrentFrame.Dot.Line) {
-				goto l99
-			}
+			TextRealizeNull(CurrentFrame.Dot.Line)
 		}
 		cmdSuccess = TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals])
 

@@ -231,9 +231,7 @@ func doCmdReturn(count int, newEql *MarkObject, eopLineNr *int) bool {
 			return false
 		}
 		if dotLine.FLink == nil {
-			if !TextRealizeNull(dotLine) {
-				return false
-			}
+			TextRealizeNull(dotLine)
 			*eopLineNr++
 			dotLine = dotLine.BLink
 			if counter == 1 {
