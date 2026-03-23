@@ -14,9 +14,24 @@
 
 package ludwig
 
-import (
-	"math/big"
+type commandType int
+
+const (
+	caseCommand commandType = iota
+	dittoCommand
+	unknown
 )
+
+func getCommandType(command Commands) commandType {
+	switch command {
+	case CmdCaseUp, CmdCaseLow, CmdCaseEdit:
+		return caseCommand
+	case CmdDittoUp, CmdDittoDown:
+		return dittoCommand
+	default:
+		return unknown
+	}
+}
 
 // CaseDittoCommand handles case change and ditto commands
 func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool) bool {
@@ -35,14 +50,11 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		CurrentFrame.Dot.Line.Used,
 	)
 
-	commandSet := big.NewInt(0)
+	commandType := getCommandType(command)
 	var otherLine *LineHdrObject
 
 	switch command {
 	case CmdCaseUp, CmdCaseLow, CmdCaseEdit:
-		commandSet.SetBit(commandSet, int(CmdCaseUp), 1)
-		commandSet.SetBit(commandSet, int(CmdCaseLow), 1)
-		commandSet.SetBit(commandSet, int(CmdCaseEdit), 1)
 		otherLine = CurrentFrame.Dot.Line
 	case CmdDittoUp, CmdDittoDown:
 		if insert && (rept == LeadParamMinus || rept == LeadParamNInt ||
@@ -50,8 +62,6 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			ScreenMessage(MsgNotAllowedInInsertMode)
 			return false
 		}
-		commandSet.SetBit(commandSet, int(CmdDittoUp), 1)
-		commandSet.SetBit(commandSet, int(CmdDittoDown), 1)
 	}
 
 	var firstCol int
@@ -190,7 +200,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			command = CmdNoop
 		}
 
-		if commandSet.Bit(int(command)) == 0 {
+		if commandType == unknown || commandType != getCommandType(command) {
 			VduTakeBackKey(key)
 			break
 		}

@@ -35,16 +35,9 @@ var (
 	delimitedSet = func() [MaxSetRange + 1]bool {
 		var s [MaxSetRange + 1]bool
 		s[PatternKStar] = true
-		s['0'] = true
-		s['1'] = true
-		s['2'] = true
-		s['3'] = true
-		s['4'] = true
-		s['5'] = true
-		s['6'] = true
-		s['7'] = true
-		s['8'] = true
-		s['9'] = true
+		for d := byte('0'); d <= '9'; d++ {
+			s[d] = true
+		}
 		s[PatternLRangeDelim] = true
 		s[PatternPlus] = true
 		return s
