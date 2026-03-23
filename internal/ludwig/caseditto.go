@@ -17,19 +17,19 @@ package ludwig
 type commandType int
 
 const (
-	caseCommand commandType = iota
-	dittoCommand
-	unknown
+	caseCommandType commandType = iota
+	dittoCommandType
+	unknownCommandType
 )
 
 func getCommandType(command Commands) commandType {
 	switch command {
 	case CmdCaseUp, CmdCaseLow, CmdCaseEdit:
-		return caseCommand
+		return caseCommandType
 	case CmdDittoUp, CmdDittoDown:
-		return dittoCommand
+		return dittoCommandType
 	default:
-		return unknown
+		return unknownCommandType
 	}
 }
 
@@ -50,7 +50,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		CurrentFrame.Dot.Line.Used,
 	)
 
-	commandType := getCommandType(command)
+	cmdType := getCommandType(command)
 	var otherLine *LineHdrObject
 
 	switch command {
@@ -200,7 +200,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 			command = CmdNoop
 		}
 
-		if commandType == unknown || commandType != getCommandType(command) {
+		if cmdType == unknownCommandType || cmdType != getCommandType(command) {
 			VduTakeBackKey(key)
 			break
 		}
