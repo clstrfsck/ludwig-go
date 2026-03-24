@@ -499,7 +499,8 @@ func createMarks(
 	newStart **MarkObject,
 	lastLine *LineHdrObject,
 	lastCol int,
-	newEnd **MarkObject) {
+	newEnd **MarkObject,
+) {
 	MarkCreate(dstLine, dstCol, newStart)
 	MarkCreate(lastLine, lastCol, newEnd)
 }
