@@ -274,27 +274,7 @@ func PatternDFAConvert(
 	dfaStart *int,
 	dfaEnd *int,
 ) bool {
-	var auxElt *StateEltObject
-	var state, currentState int
-	var closureSet [MaxNFAStateRange + 1]bool
-	var transferState NFAAttributeType
-	var transitionSet NFAAttributeType
-	var auxStatePtr *StateEltObject
 	var statesUsed int
-	var auxCount, auxCount2 int
-	var incomingTranPtr, killTranPtr, auxTranPtr *TransitionObject
-	var auxTranPtr2 *TransitionObject
-	var found bool
-	var auxSet [MaxNFAStateRange + 1]bool
-	var mask [MaxNFAStateRange + 1]bool
-	var killSet big.Int
-	var partitionPtr *acceptSetPartitionType
-	var auxPartitionPtr *acceptSetPartitionType
-	var currentPartitionPtr *acceptSetPartitionType
-	var followerPtr *acceptSetPartitionType
-	var insertPartition *acceptSetPartitionType
-	var auxEquivPtr *StateEltObject
-	var auxClosure NFAAttributeType
 
 	// patternNewDFA creates a new DFA state
 	patternNewDFA := func(equivalentSet *NFAAttributeType, stateCount *int) bool {
@@ -396,11 +376,13 @@ func PatternDFAConvert(
 
 	// Build initial state
 	statesUsed = 1
-	auxElt = &StateEltObject{}
+	auxElt := &StateEltObject{}
 	auxElt.NextElt = nil
 	auxElt.StateElt = nfaStart
+	var transitionSet NFAAttributeType
 	transitionSet.EquivList = auxElt
 	transitionSet.EquivSet[nfaStart] = true
+	var auxClosure NFAAttributeType
 	if !epsilonClosures(nfaTable, &transitionSet, &auxClosure) {
 		return false
 	}
@@ -408,21 +390,23 @@ func PatternDFAConvert(
 		return false
 	}
 
+	var currentState int
 	for unmarkedStates(&currentState) {
 		if TtControlC {
 			dfaTablePointer.Definition.Length = 0 // invalidate the table
 			return false
 		}
+		var killSet big.Int
 		bitsetSetRange(&killSet, 0, MaxSetRange)
-		partitionPtr = nil
+		var partitionPtr *acceptSetPartitionType
 		dtc := &dfaTablePointer.DFATable[currentState]
 		dtc.Marked = true
-		auxEquivPtr = dtc.NFAAttributes.EquivList
+		auxEquivPtr := dtc.NFAAttributes.EquivList
 
 		for auxEquivPtr != nil {
 			nta := &nfaTable[auxEquivPtr.StateElt]
 			if !nta.EpsilonOut {
-				auxPartitionPtr = partitionPtr
+				auxPartitionPtr := partitionPtr
 				partitionPtr = &acceptSetPartitionType{}
 				partitionPtr.acceptSetPartition.Set(&nta.AcceptSet)
 				bitsetRemove(&killSet, &nta.AcceptSet)
@@ -440,20 +424,20 @@ func PatternDFAConvert(
 
 		// Partition the list
 		if partitionPtr != nil && partitionPtr.flink != nil {
-			currentPartitionPtr = partitionPtr
-			followerPtr = currentPartitionPtr.flink
+			currentPartitionPtr := partitionPtr
+			followerPtr := currentPartitionPtr.flink
 			for currentPartitionPtr != nil {
 				if followerPtr == currentPartitionPtr {
 					followerPtr = followerPtr.flink
 				}
-				auxPartitionPtr = followerPtr
+				auxPartitionPtr := followerPtr
 				for auxPartitionPtr != nil {
 					if bitsetEquals(
 						&currentPartitionPtr.acceptSetPartition,
 						&auxPartitionPtr.acceptSetPartition,
 					) {
 						// merge entries
-						auxStatePtr = currentPartitionPtr.nfaTransitionList.EquivList
+						auxStatePtr := currentPartitionPtr.nfaTransitionList.EquivList
 						for auxStatePtr.NextElt != nil {
 							auxStatePtr = auxStatePtr.NextElt
 						}
@@ -488,7 +472,7 @@ func PatternDFAConvert(
 								bitsetRemove(&currentPartitionPtr.acceptSetPartition, intersectionSet)
 							} else {
 								// need to do a full partition
-								insertPartition = &acceptSetPartitionType{}
+								insertPartition := &acceptSetPartitionType{}
 								insertPartition.acceptSetPartition.Set(intersectionSet)
 								insertPartition.flink = followerPtr
 								insertPartition.blink = followerPtr.blink
@@ -518,7 +502,8 @@ func PatternDFAConvert(
 		dtc2.Transitions.TransitionAcceptSet.Set(&killSet)
 
 		for partitionPtr != nil {
-			auxPartitionPtr = partitionPtr
+			var transferState NFAAttributeType
+			auxPartitionPtr := partitionPtr
 			if !epsilonClosures(nfaTable, &auxPartitionPtr.nfaTransitionList, &transferState) {
 				return false
 			}
@@ -534,21 +519,21 @@ func PatternDFAConvert(
 	// Now fix it up so it will drive the recognizer
 
 	// Find all final states
-	for auxCount = 0; auxCount <= statesUsed; auxCount++ {
+	for auxCount := 0; auxCount <= statesUsed; auxCount++ {
 		if dfaTablePointer.DFATable[auxCount].NFAAttributes.EquivSet[*nfaEnd] {
 			dfaTablePointer.DFATable[auxCount].FinalAccept = true
 		}
 	}
 
 	// Start pattern flag creation
-	incomingTranPtr = dfaTablePointer.DFATable[PatternDFAStart].Transitions
+	incomingTranPtr := dfaTablePointer.DFATable[PatternDFAStart].Transitions
 	for incomingTranPtr != nil {
 		if (incomingTranPtr.AcceptNextState != PatternDFAKill) &&
 			(incomingTranPtr.AcceptNextState != PatternDFAFail) &&
 			!dfaTablePointer.DFATable[incomingTranPtr.AcceptNextState].FinalAccept {
 			dtans := &dfaTablePointer.DFATable[incomingTranPtr.AcceptNextState]
 			dtans.PatternStart = true
-			killTranPtr = dtans.Transitions
+			killTranPtr := dtans.Transitions
 			for (killTranPtr != nil) && (killTranPtr.AcceptNextState != PatternDFAKill) {
 				killTranPtr = killTranPtr.NextTransition
 			}
@@ -558,7 +543,7 @@ func PatternDFAConvert(
 					&killTranPtr.TransitionAcceptSet,
 				)
 				if !bitsetIsEmptyAccept(auxTransitionSet) {
-					auxTranPtr = &TransitionObject{}
+					auxTranPtr := &TransitionObject{}
 					auxTranPtr.TransitionAcceptSet.Set(auxTransitionSet)
 					auxTranPtr.AcceptNextState = incomingTranPtr.AcceptNextState
 					auxTranPtr.NextTransition = nil
@@ -572,10 +557,12 @@ func PatternDFAConvert(
 	}
 
 	// Find all end of left context states
+	var closureSet [MaxNFAStateRange + 1]bool
+	var mask [MaxNFAStateRange + 1]bool
 	if !epsilonAndMask(nfaTable, middleContextStart, &closureSet, &mask, true) {
 		return false
 	}
-	for auxCount = PatternDFAStart; auxCount <= statesUsed; auxCount++ {
+	for auxCount := PatternDFAStart; auxCount <= statesUsed; auxCount++ {
 		dtac := &dfaTablePointer.DFATable[auxCount]
 		if dtac.NFAAttributes.EquivSet[middleContextStart] &&
 			bitsetIsEmpty(bitsetDifference(dtac.NFAAttributes.EquivSet, mask)) {
@@ -584,23 +571,21 @@ func PatternDFAConvert(
 	}
 
 	// Create auxSet for middle context range
-	for i := 0; i <= MaxNFAStateRange; i++ {
-		auxSet[i] = false
-	}
+	var auxSet [MaxNFAStateRange + 1]bool
 	for i := middleContextStart; i <= rightContextStart && i <= MaxNFAStateRange; i++ {
 		if closureSet[i] {
 			auxSet[i] = true
 		}
 	}
 
-	for auxCount2 = PatternDFAStart; auxCount2 <= statesUsed; auxCount2++ {
+	for auxCount2 := PatternDFAStart; auxCount2 <= statesUsed; auxCount2++ {
 		if dfaTablePointer.DFATable[auxCount2].LeftTransition {
-			auxTranPtr2 = dfaTablePointer.DFATable[auxCount2].Transitions
+			auxTranPtr2 := dfaTablePointer.DFATable[auxCount2].Transitions
 			for auxTranPtr2 != nil {
-				state = auxTranPtr2.AcceptNextState
+				state := auxTranPtr2.AcceptNextState
 				if state > auxCount2 {
-					auxTranPtr = dfaTablePointer.DFATable[state].Transitions
-					found = false
+					auxTranPtr := dfaTablePointer.DFATable[state].Transitions
+					found := false
 					for auxTranPtr != nil && !found {
 						if auxTranPtr.AcceptNextState == state {
 							found = true
@@ -610,7 +595,7 @@ func PatternDFAConvert(
 					}
 					if found {
 						dfaTablePointer.DFATable[state].LeftContextCheck = true
-						for auxCount = middleContextStart; auxCount <= rightContextStart; auxCount++ {
+						for auxCount := middleContextStart; auxCount <= rightContextStart; auxCount++ {
 							if nfaTable[auxCount].Indefinite &&
 								auxSet[auxCount] &&
 								dfaTablePointer.DFATable[state].NFAAttributes.EquivSet[auxCount] {
@@ -628,7 +613,7 @@ func PatternDFAConvert(
 	if !epsilonAndMask(nfaTable, rightContextStart, &closureSet, &mask, true) {
 		return false
 	}
-	for auxCount = 0; auxCount <= statesUsed; auxCount++ {
+	for auxCount := 0; auxCount <= statesUsed; auxCount++ {
 		dtac := &dfaTablePointer.DFATable[auxCount]
 		if dtac.NFAAttributes.EquivSet[rightContextStart] &&
 			bitsetIsEmpty(bitsetDifference(dtac.NFAAttributes.EquivSet, mask)) {
