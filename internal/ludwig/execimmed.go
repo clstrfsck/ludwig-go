@@ -216,7 +216,7 @@ outerLoop:
 	}
 }
 
-func executeImmedNoScreen() {
+func executeImmedBatchHardcopy() {
 	cmdSpan := SpanObject{
 		Name: defaultSpanName,
 	}
@@ -279,15 +279,6 @@ func executeImmedNoScreen() {
 
 // ExecuteImmed is the main execution loop for Ludwig
 func ExecuteImmed() {
-	var cmdSpan SpanObject
-	cmdSpan.FLink = nil
-	cmdSpan.BLink = nil
-	cmdSpan.Name = defaultSpanName
-	cmdSpan.Frame = nil
-	cmdSpan.MarkOne = nil
-	cmdSpan.MarkTwo = nil
-	cmdSpan.Code = nil
-
 	// Vector off to the appropriate main execution mode. Each mode behaves
 	// slightly differently at this level.
 	switch LudwigMode {
@@ -295,6 +286,6 @@ func ExecuteImmed() {
 		executeImmedScreen()
 
 	case LudwigHardcopy, LudwigBatch:
-		executeImmedNoScreen()
+		executeImmedBatchHardcopy()
 	}
 }
