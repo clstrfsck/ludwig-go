@@ -332,6 +332,7 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 		startCol = line.Used + 1
 	}
 
+outerLoop:
 	for count > 0 && !TtControlC {
 		var matchedStartCol int
 		var matchedFinishCol int
@@ -351,28 +352,29 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 					} else {
 						MarkCreate(line, matchedFinishCol, &CurrentFrame.Dot)
 					}
+					verified := true
 					if !fromSpan {
 						switch ScreenVerify(thisOne) {
 						case VerifyReplyAlways, VerifyReplyYes:
-							break
+							// accepted
 						case VerifyReplyQuit, VerifyReplyNo:
 							count = 1
 							MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
+							verified = false
 							if ExitAbort {
-								goto l99
-							} else {
-								goto l1
+								break outerLoop
 							}
 						}
 					}
-					if backwards {
-						MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals])
-					} else {
-						MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals])
+					if verified {
+						if backwards {
+							MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals])
+						} else {
+							MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals])
+						}
+						result = true
+						break outerLoop
 					}
-					result = true
-					goto l99
-				l1:
 				}
 				startCol = matchedFinishCol
 				if startCol == matchedStartCol {
@@ -385,7 +387,7 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 						line = line.FLink
 					}
 					if line == nil {
-						goto l99
+						break
 					}
 					markFlag = false
 					startCol = 1
@@ -393,7 +395,7 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 			} else {
 				line = line.BLink
 				if line == nil {
-					goto l99
+					break
 				}
 				markFlag = false
 				startCol = 1
@@ -405,14 +407,12 @@ func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag 
 				line = line.FLink
 			}
 			if line == nil {
-				goto l99
+				break
 			}
 			markFlag = false
 			startCol = 1
 		}
 	}
-
-l99:
 	return result
 }
 
