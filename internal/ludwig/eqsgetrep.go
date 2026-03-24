@@ -424,14 +424,10 @@ func EqsGetRepGet(count int, tpar TParObject, fromSpan bool) bool {
 }
 
 func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, fromSpan bool) bool {
-	var getcount int
-	var length int
-	var delta int
-	var startCol int
+	result := false
+
 	var oldDot *MarkObject
 	var oldEquals *MarkObject
-	var okay bool
-	result := false
 
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot)
 	if CurrentFrame.Marks[MarkEquals] != nil {
@@ -441,12 +437,21 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 			&oldEquals,
 		)
 	}
+	defer func() {
+		if oldDot != nil {
+			MarkDestroy(&oldDot)
+		}
+		if oldEquals != nil {
+			MarkDestroy(&oldEquals)
+		}
+	}()
+
 	if tpar.Dlm == TpdSmart {
 		if !eqsgetrepPatternBuild(tpar, &CurrentFrame.RepPatternPtr) {
-			goto l99
+			return result
 		}
 	}
-	getcount = 1
+	getcount := 1
 	if rept == LeadParamMinus || rept == LeadParamNIndef || rept == LeadParamNInt {
 		getcount = -1
 	}
@@ -455,28 +460,31 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 	} else if count < 0 {
 		count = -count
 	}
+
+outerLoop:
 	for count > 0 {
+		var okay bool
 		for {
 			okay = true
 			if TtControlC || ExitAbort {
-				goto l1
+				break outerLoop
 			}
 			if tpar.Dlm == TpdSmart {
 				if !eqsgetrepPatternGet(getcount, tpar, true, true) {
-					goto l1
+					break outerLoop
 				}
 			} else if !eqsgetrepDumbGet(getcount, tpar, true) {
-				goto l1
+				break outerLoop
 			}
 			if TtControlC || ExitAbort {
-				goto l1
+				break outerLoop
 			}
 			if !fromSpan {
 				switch ScreenVerify(replaceThisOne) {
 				case VerifyReplyAlways:
 					fromSpan = true
 				case VerifyReplyYes:
-					break
+					// accepted
 				case VerifyReplyQuit, VerifyReplyNo:
 					okay = false
 				}
@@ -485,32 +493,33 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 				break
 			}
 		}
-		length = CurrentFrame.Marks[MarkEquals].Col - CurrentFrame.Dot.Col
+
+		length := CurrentFrame.Marks[MarkEquals].Col - CurrentFrame.Dot.Col
 		if length < 0 {
 			CurrentFrame.Dot.Col = CurrentFrame.Marks[MarkEquals].Col
 			CurrentFrame.Marks[MarkEquals].Col = CurrentFrame.Dot.Col - length
 			length = -length
 		}
 		if tpar2.Con == nil {
-			startCol = CurrentFrame.Dot.Col
-			delta = length - tpar2.Len
+			startCol := CurrentFrame.Dot.Col
+			delta := length - tpar2.Len
 			if delta > 0 {
 				if CurrentFrame.Dot.Col+delta > CurrentFrame.Dot.Line.Used+1 {
 					delta = CurrentFrame.Dot.Line.Used + 1 - CurrentFrame.Dot.Col
 				}
 				if delta > 0 {
 					if !CharcmdDelete(LeadParamPInt, delta, true) {
-						goto l99
+						return result
 					}
 				}
 			} else if delta < 0 {
 				if !CharcmdInsert(LeadParamPInt, -delta, true) {
-					goto l99
+					return result
 				}
 				CurrentFrame.Dot.Col = startCol
 			}
 			if !TextOvertype(true, 1, tpar2.Str, tpar2.Len, CurrentFrame.Dot) {
-				goto l99
+				return result
 			}
 			if getcount > 0 {
 				MarkCreate(CurrentFrame.Dot.Line, startCol, &CurrentFrame.Marks[MarkEquals])
@@ -520,10 +529,10 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 			}
 		} else {
 			if !CharcmdDelete(LeadParamPInt, length, true) {
-				goto l99
+				return result
 			}
 			if !TextInsertTpar(&tpar2, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
-				goto l99
+				return result
 			}
 		}
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot)
@@ -536,7 +545,8 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 		count--
 	}
-l1:
+
+	// Restore dot and equals to their pre-loop positions
 	MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
 	MarkDestroy(&oldDot)
 	if oldEquals != nil {
@@ -546,12 +556,5 @@ l1:
 		MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 	}
 	result = (count == 0) || rept == LeadParamPIndef || rept == LeadParamNIndef
-l99:
-	if oldDot != nil {
-		MarkDestroy(&oldDot)
-	}
-	if oldEquals != nil {
-		MarkDestroy(&oldEquals)
-	}
 	return result
 }
