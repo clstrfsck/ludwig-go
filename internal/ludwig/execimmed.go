@@ -153,7 +153,7 @@ outerLoop:
 								}
 								VduTakeBackKey(key)
 							}
-							CurrentFrame.Dot.Col++
+							CurrentFrame.Dot.Col = col1 + 1
 							TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals])
 							CurrentFrame.Dot.Col += CurrentFrame.MarginRight - col1
 							continue outerLoop
