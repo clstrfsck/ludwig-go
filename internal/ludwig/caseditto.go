@@ -52,7 +52,6 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 
 	cmdType := getCommandType(command)
 	var otherLine *LineHdrObject
-
 	switch command {
 	case CmdCaseUp, CmdCaseLow, CmdCaseEdit:
 		otherLine = CurrentFrame.Dot.Line
@@ -64,10 +63,6 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		}
 	}
 
-	var firstCol int
-	var newCol int
-	var key int
-
 	for {
 		switch command {
 		case CmdDittoUp:
@@ -77,6 +72,8 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		}
 
 		cmdValid := true
+		var firstCol int
+		var newCol int
 		if otherLine != nil {
 			switch rept {
 			case LeadParamNone, LeadParamPlus, LeadParamPInt:
@@ -172,7 +169,7 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		} else {
 			VduBeep()
 		}
-		key = VduGetKey()
+		key := VduGetKey()
 		if TtControlC {
 			break
 		}

@@ -204,11 +204,8 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject
 	var theOtherMark *MarkObject
-	var lineNr int
-	var newLineNr int
-	var oldDotCol int
-
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
+
 	defer func() {
 		MarkDestroy(&oldPos)
 		MarkDestroy(&here)
@@ -227,10 +224,10 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 		return false
 	}
 	// OK. We now wipe out everything from Dot to here
-	oldDotCol = CurrentFrame.Dot.Col
+	oldDotCol := CurrentFrame.Dot.Col
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &theOtherMark)
-	lineNr = LineToNumber(theOtherMark.Line)
-	newLineNr = LineToNumber(here.Line)
+	lineNr := LineToNumber(theOtherMark.Line)
+	newLineNr := LineToNumber(here.Line)
 	if (lineNr > newLineNr) || ((lineNr == newLineNr) && (theOtherMark.Col > here.Col)) {
 		// Reverse mark pointers to get The_Other_Mark first.
 		anotherMark := here
@@ -411,14 +408,11 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 
 // NewwordDeleteParagraph deletes paragraphs
 func NewwordDeleteParagraph(rept LeadParam, count int) bool {
-	result := false
 	var oldPos *MarkObject
 	var here *MarkObject
 	var theOtherMark *MarkObject
-	var lineNr int
-	var newLineNr int
-
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
+
 	defer func() {
 		MarkDestroy(&oldPos)
 		MarkDestroy(&here)
@@ -438,8 +432,8 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 
 	// Now delete all the lines between marks dot and here
 	MarkCreate(CurrentFrame.Dot.Line, 1, &theOtherMark)
-	lineNr = LineToNumber(theOtherMark.Line)
-	newLineNr = LineToNumber(here.Line)
+	lineNr := LineToNumber(theOtherMark.Line)
+	newLineNr := LineToNumber(here.Line)
 	if lineNr > newLineNr {
 		// reverse marks to get the_other_mark first.
 		anotherMark := here
@@ -449,7 +443,7 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	if CurrentFrame != FrameOops {
 		// Make sure oops_span is okay.
 		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
-		result = TextMove(
+		return TextMove(
 			false,                        // Don't copy, transfer
 			1,                            // One instance of
 			theOtherMark,                 // starting pos.
@@ -459,11 +453,9 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 			&FrameOops.Dot,               // leave at end.
 		)
 	} else {
-		result = TextRemove(
+		return TextRemove(
 			theOtherMark, // starting pos.
 			here,         // ending pos.
 		)
 	}
-
-	return result
 }
