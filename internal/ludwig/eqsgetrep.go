@@ -546,7 +546,7 @@ outerLoop:
 	MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
 	if oldEquals != nil {
 		MarkCreate(oldEquals.Line, oldEquals.Col, &CurrentFrame.Marks[MarkEquals])
-	} else if CurrentFrame.Marks[MarkEquals] != nil {
+	} else {
 		MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 	}
 	result = (count == 0) || rept == LeadParamPIndef || rept == LeadParamNIndef
