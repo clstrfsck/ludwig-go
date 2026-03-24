@@ -14,13 +14,12 @@
 package ludwig
 
 // SwapLine swaps the current line with another line
-func SwapLine(rept LeadParam, count int) bool {
+func SwapLine(frame *FrameObject, rept LeadParam, count int) bool {
 	// SW is implemented as a ST of the dot line to before the other line.
 
-	thisLine := CurrentFrame.Dot.Line
-	dotCol := CurrentFrame.Dot.Col
+	thisLine := frame.Dot.Line
+	dotCol := frame.Dot.Col
 	nextLine := thisLine.FLink
-	var destLine *LineHdrObject
 
 	if nextLine == nil {
 		return false
@@ -31,16 +30,12 @@ func SwapLine(rept LeadParam, count int) bool {
 	var destMark *MarkObject
 
 	defer func() {
-		if topMark != nil {
-			MarkDestroy(&topMark)
-		}
-		if endMark != nil {
-			MarkDestroy(&endMark)
-		}
-		if destMark != nil {
-			MarkDestroy(&destMark)
-		}
+		MarkDestroy(&topMark)
+		MarkDestroy(&endMark)
+		MarkDestroy(&destMark)
 	}()
+
+	var destLine *LineHdrObject
 
 	switch rept {
 	case LeadParamNone, LeadParamPlus, LeadParamPInt:
@@ -60,21 +55,21 @@ func SwapLine(rept LeadParam, count int) bool {
 			}
 		}
 	case LeadParamPIndef:
-		destLine = CurrentFrame.LastGroup.LastLine
+		destLine = frame.LastGroup.LastLine
 	case LeadParamNIndef:
-		destLine = CurrentFrame.FirstGroup.FirstLine
+		destLine = frame.FirstGroup.FirstLine
 	case LeadParamMarker:
-		destLine = CurrentFrame.Marks[count].Line
+		destLine = frame.Marks[count].Line
 	}
 
 	MarkCreate(thisLine, 1, &topMark)
 	MarkCreate(nextLine, 1, &endMark)
 	MarkCreate(destLine, 1, &destMark)
-	if !TextMove(false, 1, topMark, endMark, destMark, &CurrentFrame.Dot, &topMark) {
+	if !TextMove(false, 1, topMark, endMark, destMark, &frame.Dot, &topMark) {
 		return false
 	}
-	CurrentFrame.TextModified = true
-	CurrentFrame.Dot.Col = dotCol
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+	frame.TextModified = true
+	frame.Dot.Col = dotCol
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
 	return true
 }

@@ -148,14 +148,7 @@ func setupMultiLineFrame(lines []string) *FrameObject {
 func TestCharcmdInsert(t *testing.T) {
 	t.Run("InsertSingleSpaceInMiddle", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // After "he"
@@ -172,14 +165,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertMultipleSpaces", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // After "he"
@@ -194,14 +180,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertAtStartOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("world")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 1
@@ -215,14 +194,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertWithNegativeCount", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
@@ -241,14 +213,7 @@ func TestCharcmdInsert(t *testing.T) {
 			longContent = longContent[:i] + "x" + longContent[i+1:]
 		}
 		frame, _ := setupTestFrameForCharCmd(longContent)
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Dot.Col = MaxStrLen - 4
 
@@ -261,14 +226,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertWithLeadParamNInt", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("text")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
@@ -283,14 +241,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertCreatesModifiedMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
@@ -303,14 +254,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertCreatesEqualsMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
@@ -326,14 +270,7 @@ func TestCharcmdInsert(t *testing.T) {
 func TestCharcmdDelete(t *testing.T) {
 	t.Run("DeleteSingleChar", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 2 // At 'e'
@@ -349,14 +286,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteMultipleChars", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // At 's'
@@ -371,14 +301,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteBackward", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("world")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 4 // At 'l'
@@ -395,14 +318,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteToEndOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
@@ -417,14 +333,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteToStartOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 5
@@ -440,14 +349,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteBeyondLineEnd", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hi")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
@@ -465,11 +367,7 @@ func TestCharcmdDelete(t *testing.T) {
 	t.Run("DeleteAtStartBackward", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"first", "second"})
 		frame.Options.Set(OptNewLine)
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() {
-			CurrentFrame = oldFrame
-		}()
+		withFrame(t, frame)
 
 		// Second line, first column
 		frame.Dot.Line = frame.FirstGroup.FirstLine.FLink
@@ -484,14 +382,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteUpdatesModifiedMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
@@ -504,14 +395,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteClearsEqualsMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		// Create an equals mark
 		MarkCreate(frame.Dot.Line, 3, &frame.Marks[MarkEquals])
@@ -529,16 +413,11 @@ func TestCharcmdDelete(t *testing.T) {
 func TestCharcmdRubout(t *testing.T) {
 	t.Run("RuboutInInsertMode", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeInsert
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 		line := frame.Dot.Line
 
@@ -555,16 +434,11 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInOverwriteModeSingleChar", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeOvertype
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 		line := frame.Dot.Line
 
@@ -581,16 +455,11 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInOverwriteModeMultiple", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeOvertype
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 		line := frame.Dot.Line
 
@@ -607,16 +476,11 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutAtStartOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeOvertype
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 		line := frame.Dot.Line
 
@@ -631,16 +495,11 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInInsertModeConvertsToDelete", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("world")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeInsert
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 		_ = frame.Dot.Line
 
@@ -655,16 +514,11 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInOverwriteModeCreatesMarks", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeOvertype
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 
 		frame.Dot.Col = 3
@@ -679,16 +533,11 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutWithPIndefinite", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		oldFrame := CurrentFrame
+		withFrame(t, frame)
 		oldMode := EditMode
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
 		EditMode = ModeOvertype
-		TtControlC = false
 		defer func() {
-			CurrentFrame = oldFrame
 			EditMode = oldMode
-			TtControlC = oldTtControlC
 		}()
 
 		frame.Dot.Col = 5
@@ -706,14 +555,7 @@ func TestCharcmdRubout(t *testing.T) {
 func TestJoinLines(t *testing.T) {
 	t.Run("JoinWithPreviousLine", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", "world"})
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		// Set options to enable newline mode
 		frame.Options.Set(OptNewLine)
@@ -734,14 +576,7 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinFailsWithoutNewlineOption", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", "world"})
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		// Explicitly clear newline option
 		frame.Options.Clear(OptNewLine)
@@ -757,14 +592,7 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinFailsAtFirstLine", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", "world"})
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 		frame.Dot.Col = 1
@@ -776,14 +604,7 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinCreatesModifiedMark", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"line1", "line2"})
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 
@@ -799,14 +620,7 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinWithEmptyLine", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", ""})
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 
@@ -827,14 +641,7 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinVerifiesContentMerge", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"foo", "bar"})
-		oldFrame := CurrentFrame
-		oldTtControlC := TtControlC
-		CurrentFrame = frame
-		TtControlC = false
-		defer func() {
-			CurrentFrame = oldFrame
-			TtControlC = oldTtControlC
-		}()
+		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 

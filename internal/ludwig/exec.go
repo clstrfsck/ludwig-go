@@ -1016,7 +1016,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		cmdSuccess = TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals])
 
 	case CmdSwapLine:
-		cmdSuccess = SwapLine(rept, count)
+		cmdSuccess = SwapLine(CurrentFrame, rept, count)
 
 	case CmdUserCommandIntroducer:
 		if LudwigMode != LudwigScreen {

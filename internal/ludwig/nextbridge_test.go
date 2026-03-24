@@ -152,14 +152,11 @@ func TestSearchBackward(t *testing.T) {
 }
 
 func TestNextbridgeCommand(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
-	defer func() { CurrentFrame = oldCurrentFrame }()
-
 	t.Run("Count zero sets MarkEquals and returns true", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 3}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(0, createTestTpar("x"), false)
 
@@ -174,7 +171,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(1, createTestTpar(" "), false)
 
@@ -187,7 +184,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world test")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(2, createTestTpar(" "), false)
 
@@ -199,7 +196,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(1, createTestTpar("x"), false)
 
@@ -212,7 +209,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 8}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(-1, createTestTpar(" "), false)
 
@@ -224,7 +221,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 3}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(-1, createTestTpar("x"), false)
 
@@ -237,7 +234,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 2}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(1, createTestTpar("aeiou"), true)
 
@@ -250,7 +247,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "HELLO world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(1, createTestTpar("a..z"), false)
 
@@ -262,7 +259,7 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		CurrentFrame = frame
+		withFrame(t, frame)
 
 		ok := NextbridgeCommand(1, createTestTpar(" "), false)
 

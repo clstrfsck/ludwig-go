@@ -45,9 +45,7 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 1,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdLeft(LeadParamNone, 1, &newEql)
@@ -64,9 +62,7 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 1,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdLeft(LeadParamPInt, 5, &newEql)
@@ -82,9 +78,7 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 1,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdLeft(LeadParamNone, 5, &newEql)
@@ -100,9 +94,7 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 5,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdLeft(LeadParamPIndef, 0, &newEql)
@@ -118,9 +110,7 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 10,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdLeft(LeadParamPIndef, 0, &newEql)
@@ -139,9 +129,7 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdRight(LeadParamNone, 1, &newEql)
@@ -158,9 +146,7 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdRight(LeadParamPInt, 5, &newEql)
@@ -176,9 +162,7 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdRight(LeadParamNone, 5, &newEql)
@@ -194,9 +178,7 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: 80,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdRight(LeadParamPIndef, 0, &newEql)
@@ -212,9 +194,7 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: 80,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdRight(LeadParamPIndef, 0, &newEql)
@@ -240,9 +220,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(1, 1, &newEql)
@@ -266,9 +244,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(1, 2, &newEql)
@@ -291,9 +267,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(-1, 1, &newEql)
@@ -314,9 +288,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  15,
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(1, 1, &newEql)
@@ -337,9 +309,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: 80,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(1, 1, &newEql)
@@ -360,9 +330,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP + 10, // Beyond boundary
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(1, 1, &newEql)
@@ -383,9 +351,7 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  -5, // Beyond boundary
 			MarginRight: MaxStrLenP,
 		}
-		oldFrame := CurrentFrame
-		CurrentFrame = frame
-		defer func() { CurrentFrame = oldFrame }()
+		withFrame(t, frame)
 
 		var newEql MarkObject
 		result := doCmdTabBacktab(-1, 1, &newEql)
@@ -407,8 +373,8 @@ func TestDoCmdHome(t *testing.T) {
 			},
 			ScrOffset: 10,
 		}
+		withFrame(t, frame)
 
-		oldFrame := CurrentFrame
 		oldScrFrame := ScrFrame
 		oldScrTopLine := ScrTopLine
 
@@ -417,7 +383,6 @@ func TestDoCmdHome(t *testing.T) {
 		ScrTopLine = topLine
 
 		defer func() {
-			CurrentFrame = oldFrame
 			ScrFrame = oldScrFrame
 			ScrTopLine = oldScrTopLine
 		}()
@@ -436,17 +401,16 @@ func TestDoCmdHome(t *testing.T) {
 				Col:  50,
 			},
 		}
+		withFrame(t, frame)
 
 		otherFrame := &FrameObject{}
 
-		oldFrame := CurrentFrame
 		oldScrFrame := ScrFrame
 
 		CurrentFrame = frame
 		ScrFrame = otherFrame // Different from CurrentFrame
 
 		defer func() {
-			CurrentFrame = oldFrame
 			ScrFrame = oldScrFrame
 		}()
 

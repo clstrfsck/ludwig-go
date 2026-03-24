@@ -107,16 +107,12 @@ func getLineContent(line *LineHdrObject) string {
 // TestCaseDittoCommand tests the CaseDittoCommand function
 func TestCaseDittoCommand(t *testing.T) {
 	// Save and restore global state
-	oldCurrentFrame := CurrentFrame
 	oldEditMode := EditMode
 	oldPreviousMode := PreviousMode
-	oldTtControlC := TtControlC
 
 	defer func() {
-		CurrentFrame = oldCurrentFrame
 		EditMode = oldEditMode
 		PreviousMode = oldPreviousMode
-		TtControlC = oldTtControlC
 	}()
 
 	// Note: Most tests use fromSpan=false to test the validation logic only
@@ -124,7 +120,7 @@ func TestCaseDittoCommand(t *testing.T) {
 
 	t.Run("InsertMode_NotAllowedWithNegativeParams_Minus", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeInsert
 		PreviousMode = ModeCommand
 		TtControlC = false
@@ -140,7 +136,7 @@ func TestCaseDittoCommand(t *testing.T) {
 
 	t.Run("InsertMode_NotAllowedWithNInt", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeInsert
 		TtControlC = false
 
@@ -154,7 +150,7 @@ func TestCaseDittoCommand(t *testing.T) {
 
 	t.Run("InsertMode_NotAllowedWithNIndef", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeInsert
 		TtControlC = false
 
@@ -168,7 +164,7 @@ func TestCaseDittoCommand(t *testing.T) {
 
 	t.Run("InsertMode_AllowedWithPositiveParams", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeInsert
 		TtControlC = false
 
@@ -183,7 +179,7 @@ func TestCaseDittoCommand(t *testing.T) {
 
 	t.Run("DittoInsertModeDetection", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		TtControlC = false
 
 		setLineContent(lines[0], "UPPER")
@@ -207,19 +203,15 @@ func TestCaseDittoCommand(t *testing.T) {
 
 // TestCaseDittoCommand_CaseCommands tests the case conversion commands
 func TestCaseDittoCommand_CaseCommands(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
 	oldEditMode := EditMode
-	oldTtControlC := TtControlC
 
 	defer func() {
-		CurrentFrame = oldCurrentFrame
 		EditMode = oldEditMode
-		TtControlC = oldTtControlC
 	}()
 
 	t.Run("CaseUp_CommandSetup", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -238,7 +230,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseLow_CommandSetup", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -257,7 +249,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseEdit_CommandSetup", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -275,7 +267,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseUp_WithCount", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -292,7 +284,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseLow_WithOffset", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -310,7 +302,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseEdit_AlternatingCase", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -328,19 +320,15 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 // TestCaseDittoCommand_SuccessfulDittoCases tests successful ditto operations
 func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
 	oldEditMode := EditMode
-	oldTtControlC := TtControlC
 
 	defer func() {
-		CurrentFrame = oldCurrentFrame
 		EditMode = oldEditMode
-		TtControlC = oldTtControlC
 	}()
 
 	t.Run("DittoUp_ValidLineAbove", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -359,7 +347,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoDown_ValidLineBelow", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -378,7 +366,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoUp_WithLeadParamPlus", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -396,7 +384,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoDown_WithLeadParamPInt", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -414,7 +402,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoUp_WithLeadParamPIndef", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -434,7 +422,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoDown_FromMiddleOfLine", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -453,19 +441,15 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 // TestCaseDittoCommand_ParameterCalculations tests parameter handling
 func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
 	oldEditMode := EditMode
-	oldTtControlC := TtControlC
 
 	defer func() {
-		CurrentFrame = oldCurrentFrame
 		EditMode = oldEditMode
-		TtControlC = oldTtControlC
 	}()
 
 	t.Run("LeadParamNone_DefaultCount", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -484,7 +468,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamPlus_PositiveCount", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -501,7 +485,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("ZeroCount_Handling", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -517,7 +501,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("DittoUp_EmptySourceLine", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -533,7 +517,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamMinus_BackwardCopy", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -558,7 +542,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamNInt_BackwardCopy", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -583,7 +567,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamNIndef_CopyFromStart", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -604,7 +588,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamMinus_AtStartOfLine", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -621,21 +605,15 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 // TestCaseDittoCommandValidation tests parameter validation logic
 func TestCaseDittoCommandValidation(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
 	oldEditMode := EditMode
-	oldPreviousMode := PreviousMode
-	oldTtControlC := TtControlC
 
 	defer func() {
-		CurrentFrame = oldCurrentFrame
 		EditMode = oldEditMode
-		PreviousMode = oldPreviousMode
-		TtControlC = oldTtControlC
 	}()
 
 	t.Run("DittoInInsertMode_RejectsNegativeLeadParams", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		TtControlC = false
 		setLineContent(lines[0], "test")
 		frame.Dot.Line = lines[0]
@@ -674,7 +652,7 @@ func TestCaseDittoCommandValidation(t *testing.T) {
 		// This tests that the function recognizes and groups commands correctly
 		// by checking the validation that rejects invalid commands
 		frame, lines := setupTestFrame(1)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 		setLineContent(lines[0], "test")
@@ -699,21 +677,15 @@ func TestCaseDittoCommandValidation(t *testing.T) {
 
 // TestInsertModeRestrictions specifically tests insert mode logic
 func TestInsertModeRestrictions(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
 	oldEditMode := EditMode
-	oldPreviousMode := PreviousMode
-	oldTtControlC := TtControlC
 
 	defer func() {
-		CurrentFrame = oldCurrentFrame
 		EditMode = oldEditMode
-		PreviousMode = oldPreviousMode
-		TtControlC = oldTtControlC
 	}()
 
 	t.Run("AllNegativeParamCombinations", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		CurrentFrame = frame
+		withFrame(t, frame)
 		TtControlC = false
 		setLineContent(lines[0], "above")
 		setLineContent(lines[1], "current")
