@@ -238,16 +238,14 @@ func WordFill(rept LeadParam, count int) bool {
 
 // WordCentre centers text between margins
 func WordCentre(rept LeadParam, count int) bool {
-	var startChar int
-	var lineCount int
-	var spaceToAdd int
-	var thisLine *LineHdrObject
 	var here *MarkObject
 	var there *MarkObject
 
-	result := false
-	here = nil
-	there = nil
+	defer func() {
+		MarkDestroy(&here)
+		MarkDestroy(&there)
+	}()
+
 	if rept == LeadParamPIndef {
 		count = MaxInt
 	}
@@ -256,48 +254,48 @@ func WordCentre(rept LeadParam, count int) bool {
 		rept = LeadParamPInt
 	}
 	if rept == LeadParamPInt {
-		lineCount = count
-		thisLine = CurrentFrame.Dot.Line
+		lineCount := count
+		thisLine := CurrentFrame.Dot.Line
 		for (lineCount > 0) && (thisLine.Used > 0) {
 			thisLine = thisLine.FLink
 			lineCount--
 			if thisLine == nil {
-				goto cleanup
+				return false
 			}
 		}
 		if lineCount != 0 {
-			goto cleanup
+			return false
 		}
 	}
 	for (count > 0) && (CurrentFrame.Dot.Line.Used > 0) {
 		if CurrentFrame.Dot.Line.FLink == nil {
-			goto cleanup
+			return false
 		}
 		if (CurrentFrame.Dot.Line.Used < CurrentFrame.MarginLeft) ||
 			(CurrentFrame.Dot.Line.Used > CurrentFrame.MarginRight) {
-			goto cleanup
+			return false
 		}
-		startChar = 1
+		startChar := 1
 		for CurrentFrame.Dot.Line.Str.Get(startChar) == ' ' {
 			startChar++
 		}
 		if startChar < CurrentFrame.MarginLeft {
-			goto cleanup
+			return false
 		}
-		spaceToAdd = (CurrentFrame.MarginRight-CurrentFrame.MarginLeft-
+		spaceToAdd := (CurrentFrame.MarginRight-CurrentFrame.MarginLeft-
 			(CurrentFrame.Dot.Line.Used-startChar))/2 -
 			(startChar - CurrentFrame.MarginLeft)
 		if spaceToAdd > 0 {
 			MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
 			if !TextInsert(true, 1, BlankString, spaceToAdd, here) {
-				goto cleanup
+				return false
 			}
 			MarkDestroy(&here)
 		} else if spaceToAdd < 0 {
 			MarkCreate(CurrentFrame.Dot.Line, startChar, &there)
 			MarkCreate(CurrentFrame.Dot.Line, startChar-spaceToAdd, &here)
 			if !TextRemove(there, here) {
-				goto cleanup
+				return false
 			}
 			MarkDestroy(&here)
 			MarkDestroy(&there)
@@ -307,15 +305,7 @@ func WordCentre(rept LeadParam, count int) bool {
 		CurrentFrame.TextModified = true
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
-	result = (count <= 0) || (rept == LeadParamPIndef)
-cleanup:
-	if here != nil {
-		MarkDestroy(&here)
-	}
-	if there != nil {
-		MarkDestroy(&there)
-	}
-	return result
+	return (count <= 0) || (rept == LeadParamPIndef)
 }
 
 // WordJustify space-justifies text between margins
