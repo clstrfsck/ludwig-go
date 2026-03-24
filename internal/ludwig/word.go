@@ -197,7 +197,7 @@ func WordFill(rept LeadParam, count int) bool {
 					}
 					// Make sure first char in next line is at left margin
 					if (count > 0) && (CurrentFrame.Dot.Line.FLink.Used != 0) {
-						startChar = 1
+						startChar := 1
 						for CurrentFrame.Dot.Line.FLink.Str.Get(startChar) == ' ' {
 							startChar++
 						}
