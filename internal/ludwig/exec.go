@@ -132,8 +132,6 @@ func ExecComputeLineRange(
 
 // Execute executes a command with the specified parameters
 func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fromSpan bool) (cmdSuccess bool) {
-	cmdSuccess = false
-
 	ExecLevel++
 	defer func() {
 		ExecLevel--
