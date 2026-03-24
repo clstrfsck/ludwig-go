@@ -31,38 +31,33 @@ func collectLineContents(start *LineHdrObject) []string {
 }
 
 func TestSwapLine(t *testing.T) {
-	oldCurrentFrame := CurrentFrame
-	defer func() { CurrentFrame = oldCurrentFrame }()
 
 	t.Run("Returns false when no next line", func(t *testing.T) {
 		// Dot on the null sentinel line (FLink==nil) — nothing to swap with
 		frame, lines := setupSwapFrame(2)
-		CurrentFrame = frame
 		nullLine := lines[1].FLink
 		frame.Dot.Line = nullLine
 		frame.Dot.Col = 1
 
-		assert.False(t, SwapLine(LeadParamNone, 1))
+		assert.False(t, SwapLine(frame, LeadParamNone, 1))
 	})
 
 	t.Run("Returns false when forward count exceeds list", func(t *testing.T) {
 		// Dot on the last real line: count=1 would require nullLine.FLink (nil)
 		frame, lines := setupSwapFrame(2)
-		CurrentFrame = frame
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		assert.False(t, SwapLine(LeadParamNone, 1))
+		assert.False(t, SwapLine(frame, LeadParamNone, 1))
 	})
 
 	t.Run("Returns false when backward count exceeds list", func(t *testing.T) {
 		// Dot on the first line: BLink is nil, cannot go further back
 		frame, lines := setupSwapFrame(2)
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		assert.False(t, SwapLine(LeadParamMinus, -1))
+		assert.False(t, SwapLine(frame, LeadParamMinus, -1))
 	})
 
 	t.Run("Basic forward swap", func(t *testing.T) {
@@ -74,11 +69,10 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[1], "beta")
 		setLineContent(lines[2], "gamma")
 		setLineContent(lines[3], "delta")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamNone, 1)
+		ok := SwapLine(frame, LeadParamNone, 1)
 
 		assert.True(t, ok)
 		assert.True(t, frame.TextModified)
@@ -96,11 +90,10 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[2], "gamma")
 		setLineContent(lines[3], "delta")
 		setLineContent(lines[4], "epsilon")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamPInt, 2)
+		ok := SwapLine(frame, LeadParamPInt, 2)
 
 		assert.True(t, ok)
 		assert.Equal(t, []string{"beta", "gamma", "alpha", "delta", "epsilon"},
@@ -116,11 +109,10 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[1], "beta")
 		setLineContent(lines[2], "gamma")
 		setLineContent(lines[3], "delta")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[2]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamMinus, -1)
+		ok := SwapLine(frame, LeadParamMinus, -1)
 
 		assert.True(t, ok)
 		assert.Equal(t, []string{"alpha", "gamma", "beta", "delta"},
@@ -137,11 +129,10 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[2], "gamma")
 		setLineContent(lines[3], "delta")
 		setLineContent(lines[4], "epsilon")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[3]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamNInt, -2)
+		ok := SwapLine(frame, LeadParamNInt, -2)
 
 		assert.True(t, ok)
 		assert.Equal(t, []string{"alpha", "delta", "beta", "gamma", "epsilon"},
@@ -158,11 +149,10 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[2], "third")
 		setLineContent(lines[3], "fourth")
 		setLineContent(lines[4], "fifth")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamPIndef, 0)
+		ok := SwapLine(frame, LeadParamPIndef, 0)
 
 		assert.True(t, ok)
 		assert.Equal(t, []string{"second", "third", "fourth", "fifth", "first"},
@@ -179,11 +169,10 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[2], "third")
 		setLineContent(lines[3], "fourth")
 		setLineContent(lines[4], "fifth")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[3]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamNIndef, 0)
+		ok := SwapLine(frame, LeadParamNIndef, 0)
 
 		assert.True(t, ok)
 		assert.Equal(t, []string{"fourth", "first", "second", "third", "fifth"},
@@ -201,12 +190,11 @@ func TestSwapLine(t *testing.T) {
 		setLineContent(lines[2], "third")
 		setLineContent(lines[3], "fourth")
 		setLineContent(lines[4], "fifth")
-		CurrentFrame = frame
 		MarkCreate(lines[3], 1, &frame.Marks[MarkEquals])
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamMarker, MarkEquals)
+		ok := SwapLine(frame, LeadParamMarker, MarkEquals)
 
 		assert.True(t, ok)
 		assert.Equal(t, []string{"second", "third", "first", "fourth", "fifth"},
@@ -218,11 +206,10 @@ func TestSwapLine(t *testing.T) {
 		frame, lines := setupSwapFrame(4)
 		setLineContent(lines[0], "moved")
 		setLineContent(lines[1], "stays")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		SwapLine(LeadParamNone, 1)
+		SwapLine(frame, LeadParamNone, 1)
 
 		assert.Equal(t, "moved", getLineContent(frame.Dot.Line),
 			"dot should be on the line holding the moved content")
@@ -232,11 +219,10 @@ func TestSwapLine(t *testing.T) {
 		frame, lines := setupSwapFrame(4)
 		setLineContent(lines[0], "line with content")
 		setLineContent(lines[1], "another line")
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 7
 
-		ok := SwapLine(LeadParamNone, 1)
+		ok := SwapLine(frame, LeadParamNone, 1)
 
 		assert.True(t, ok)
 		assert.Equal(t, 7, frame.Dot.Col, "dot column should be preserved after swap")
@@ -244,12 +230,11 @@ func TestSwapLine(t *testing.T) {
 
 	t.Run("Text modified set on success", func(t *testing.T) {
 		frame, lines := setupSwapFrame(3)
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 		frame.TextModified = false
 
-		SwapLine(LeadParamNone, 1)
+		SwapLine(frame, LeadParamNone, 1)
 
 		assert.True(t, frame.TextModified)
 	})
@@ -257,23 +242,21 @@ func TestSwapLine(t *testing.T) {
 	t.Run("Text modified not set on failure", func(t *testing.T) {
 		// Backward past start returns false without modifying the buffer
 		frame, lines := setupSwapFrame(2)
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 		frame.TextModified = false
 
-		SwapLine(LeadParamMinus, -1)
+		SwapLine(frame, LeadParamMinus, -1)
 
 		assert.False(t, frame.TextModified)
 	})
 
 	t.Run("Modified mark set on success", func(t *testing.T) {
 		frame, lines := setupSwapFrame(3)
-		CurrentFrame = frame
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := SwapLine(LeadParamNone, 1)
+		ok := SwapLine(frame, LeadParamNone, 1)
 
 		assert.True(t, ok)
 		assert.NotNil(t, frame.Marks[MarkModified],
