@@ -202,6 +202,7 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 		}
 	}
 
+outerLoop:
 	for count > 0 && !TtControlC {
 		var found bool
 		var offset int
@@ -221,6 +222,7 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 			)
 		}
 		if found {
+			processMatch := true
 			if tailSpace {
 				var tailChar byte
 				if startCol+offset+newlen <= line.Used {
@@ -240,40 +242,43 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 					} else {
 						startCol++
 					}
-					goto l2
+					processMatch = false
 				}
 			}
-			startCol += offset
-			if !backwards {
-				startCol += tpar.Len
-			}
-			count--
-			if count == 0 {
-				MarkCreate(line, startCol, &CurrentFrame.Dot)
-				if !fromSpan {
-					switch ScreenVerify(thisOne) {
-					case VerifyReplyAlways, VerifyReplyYes:
-						break
-					case VerifyReplyQuit, VerifyReplyNo:
-						count = 1
-						MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
-						if ExitAbort {
-							goto l99
-						} else {
-							goto l1
+			if processMatch {
+				startCol += offset
+				if !backwards {
+					startCol += tpar.Len
+				}
+				count--
+				if count == 0 {
+					MarkCreate(line, startCol, &CurrentFrame.Dot)
+					verified := true
+					if !fromSpan {
+						switch ScreenVerify(thisOne) {
+						case VerifyReplyAlways, VerifyReplyYes:
+							// accepted
+						case VerifyReplyQuit, VerifyReplyNo:
+							count = 1
+							MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
+							verified = false
+							if ExitAbort {
+								break outerLoop
+							}
 						}
 					}
+					if verified {
+						if backwards {
+							MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals])
+						} else {
+							MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals])
+						}
+						result = true
+						break outerLoop
+					}
 				}
-				if backwards {
-					MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals])
-				} else {
-					MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals])
-				}
-				result = true
-				goto l99
-			l1:
 			}
-		l2:
+			// Update startCol/length for next search
 			if backwards {
 				length = startCol - 1
 				startCol = 1
@@ -289,13 +294,12 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 				line = line.FLink
 			}
 			if line == nil {
-				goto l99
+				break
 			}
 			startCol = 1
 			length = line.Used
 		}
 	}
-l99:
 	return result
 }
 
