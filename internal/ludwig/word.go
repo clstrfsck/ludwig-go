@@ -16,22 +16,14 @@ package ludwig
 
 // WordFill fills/wraps text within margins
 func WordFill(rept LeadParam, count int) bool {
-	var startChar int
-	var endChar int
-	var oldEnd int
-	var lineCount int
-	var spaceToAdd int
-	var thisLine *LineHdrObject
 	var here *MarkObject
 	var there *MarkObject
-	var oldHere *MarkObject
-	var oldThere *MarkObject
-	var leaveDotAlone bool
+	defer func() {
+		MarkDestroy(&here)
+		MarkDestroy(&there)
+	}()
 
-	result := false
-	leaveDotAlone = false
-	here = nil
-	there = nil
+	leaveDotAlone := false
 	if rept == LeadParamPIndef {
 		count = MaxInt
 	}
@@ -40,28 +32,28 @@ func WordFill(rept LeadParam, count int) bool {
 		rept = LeadParamPInt
 	}
 	if rept == LeadParamPInt {
-		lineCount = count
-		thisLine = CurrentFrame.Dot.Line
+		lineCount := count
+		thisLine := CurrentFrame.Dot.Line
 		for (lineCount > 0) && (thisLine.Used > 0) {
 			thisLine = thisLine.FLink
 			lineCount--
 			if thisLine == nil {
-				goto cleanup
+				return false
 			}
 		}
 		if lineCount != 0 {
-			goto cleanup
+			return false
 		}
 	}
 	for (count > 0) && (CurrentFrame.Dot.Line.Used > 0) {
 		if CurrentFrame.Dot.Line.FLink == nil {
-			goto cleanup
+			return false
 		}
 		// Adjust the current line to the margins
 		if CurrentFrame.Dot.Line.BLink != nil {
 			if CurrentFrame.Dot.Line.BLink.Used != 0 {
 				// Not the first line of a paragraph, adjust to left margin
-				startChar = 1
+				startChar := 1
 				for (CurrentFrame.Dot.Line.Str.Get(startChar) == ' ') &&
 					(startChar < CurrentFrame.Dot.Line.Used) {
 					startChar++
@@ -72,23 +64,22 @@ func WordFill(rept LeadParam, count int) bool {
 					if !TextInsert(
 						true, 1, BlankString, CurrentFrame.MarginLeft-startChar, here,
 					) {
-						goto cleanup
+						return false
 					}
 					MarkDestroy(&here)
 				} else {
 					// Might have to remove some spaces
-					startChar = CurrentFrame.MarginLeft
-					endChar = CurrentFrame.MarginLeft
+					endChar := CurrentFrame.MarginLeft
 					if endChar < CurrentFrame.Dot.Line.Used {
 						for (CurrentFrame.Dot.Line.Str.Get(endChar) == ' ') &&
 							(endChar < CurrentFrame.Dot.Line.Used) {
 							endChar++
 						}
 						if endChar > 1 {
-							MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
+							MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.MarginLeft, &here)
 							MarkCreate(CurrentFrame.Dot.Line, endChar, &there)
 							if !TextRemove(here, there) {
-								goto cleanup
+								return false
 							}
 							MarkDestroy(&here)
 							MarkDestroy(&there)
@@ -100,23 +91,23 @@ func WordFill(rept LeadParam, count int) bool {
 		if CurrentFrame.Dot.Line.Used > CurrentFrame.MarginRight {
 			// Must split this line if possible
 			// 1. Scan back for first non-blank
-			endChar = CurrentFrame.MarginRight + 1
+			endChar := CurrentFrame.MarginRight + 1
 			if CurrentFrame.Dot.Line.Str.Get(endChar) != ' ' {
 				for (CurrentFrame.Dot.Line.Str.Get(endChar) != ' ') &&
 					(endChar > CurrentFrame.MarginLeft) {
 					endChar--
 				}
 				if endChar == CurrentFrame.MarginLeft {
-					goto cleanup
+					return false
 				}
 			}
-			startChar = endChar
+			startChar := endChar
 			for (CurrentFrame.Dot.Line.Str.Get(endChar) == ' ') &&
 				(endChar > CurrentFrame.MarginLeft) {
 				endChar--
 			}
 			if endChar == CurrentFrame.MarginLeft {
-				goto cleanup
+				return false
 			}
 			// 2. Scan forward for first non-blank
 			for CurrentFrame.Dot.Line.Str.Get(startChar) == ' ' {
@@ -128,7 +119,7 @@ func WordFill(rept LeadParam, count int) bool {
 				MarkCreate(CurrentFrame.Dot.Line, endChar, &CurrentFrame.Dot)
 			}
 			if !TextSplitLine(here, CurrentFrame.MarginLeft, &there) {
-				goto cleanup
+				return false
 			}
 			MarkDestroy(&here)
 			MarkDestroy(&there)
@@ -137,100 +128,102 @@ func WordFill(rept LeadParam, count int) bool {
 			}
 		} else {
 			// Need to get stuff from the next line
-		getMore:
-			// 1. Figure out how many chars we can fit in
-			spaceToAdd = CurrentFrame.MarginRight - CurrentFrame.Dot.Line.Used - 1
-			// 2. See if we can find a word to fit
-			startChar = 1
-			if (spaceToAdd > 0) && (CurrentFrame.Dot.Line.FLink.Used != 0) {
-				for CurrentFrame.Dot.Line.FLink.Str.Get(startChar) == ' ' {
-					startChar++
-				}
-				endChar = startChar
-				oldEnd = endChar
-				for endChar <= CurrentFrame.Dot.Line.FLink.Used {
-					for CurrentFrame.Dot.Line.FLink.Str.Get(endChar) == ' ' {
-						endChar++
-					}
-					for (CurrentFrame.Dot.Line.FLink.Str.Get(endChar) != ' ') &&
-						(endChar < CurrentFrame.Dot.Line.FLink.Used) {
-						endChar++
-					}
-					if endChar == CurrentFrame.Dot.Line.FLink.Used {
-						endChar++
-					}
-					if spaceToAdd < (endChar - startChar) {
-						endChar = CurrentFrame.Dot.Line.FLink.Used + 1
-					} else {
-						oldEnd = endChar
-					}
-				}
-				if ((oldEnd - startChar) <= spaceToAdd) && (oldEnd != startChar) {
-					// It will fit
-					oldHere = nil
-					oldThere = nil
-					MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &here)
-					MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &oldHere)
-					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &there)
-					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
-					CurrentFrame.Dot.Col = CurrentFrame.Dot.Line.Used + 2
-					// Copy the text
-					if !TextMove(true, 1, here, there, CurrentFrame.Dot, &here, &there) {
-						goto cleanup
-					}
-					// Copy the marks
-					MarksShift(CurrentFrame.Dot.Line.FLink, oldHere.Col, oldThere.Col-oldHere.Col, here.Line, here.Col)
-					// Wipe out the old text
-					MarkCreate(CurrentFrame.Dot.Line.FLink, 1, &oldHere)
-					MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
-					if !TextRemove(oldHere, oldThere) {
-						goto cleanup
-					}
-					MarkDestroy(&oldHere)
-					MarkDestroy(&oldThere)
-					// If next line is now empty, delete it
-					if CurrentFrame.Dot.Line.FLink.Used == 0 {
-						thisLine = CurrentFrame.Dot.Line.FLink
-						MarksSqueeze(CurrentFrame.Dot.Line.FLink, 1, CurrentFrame.Dot.Line.FLink.FLink, 1)
-						LinesExtract(thisLine, thisLine)
-						count--
-						if count > 0 {
-							goto getMore
-						}
-						leaveDotAlone = true
-					}
-				}
-				// Make sure first char in next line is at left margin
-				if (count > 0) && (CurrentFrame.Dot.Line.FLink.Used != 0) {
-					startChar = 1
+			for {
+				// 1. Figure out how many chars we can fit in
+				spaceToAdd := CurrentFrame.MarginRight - CurrentFrame.Dot.Line.Used - 1
+				// 2. See if we can find a word to fit
+				if (spaceToAdd > 0) && (CurrentFrame.Dot.Line.FLink.Used != 0) {
+					startChar := 1
 					for CurrentFrame.Dot.Line.FLink.Str.Get(startChar) == ' ' {
 						startChar++
 					}
-					MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &there)
-					if startChar < CurrentFrame.MarginLeft {
-						// Must insert some chars
-						if !TextInsert(
-							true,
-							1,
-							BlankString,
-							CurrentFrame.MarginLeft-startChar,
-							there,
-						) {
-							goto cleanup
+					endChar := startChar
+					oldEnd := endChar
+					for endChar <= CurrentFrame.Dot.Line.FLink.Used {
+						for CurrentFrame.Dot.Line.FLink.Str.Get(endChar) == ' ' {
+							endChar++
 						}
-					} else {
-						MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &here)
-						if !TextRemove(here, there) {
-							goto cleanup
+						for (CurrentFrame.Dot.Line.FLink.Str.Get(endChar) != ' ') &&
+							(endChar < CurrentFrame.Dot.Line.FLink.Used) {
+							endChar++
+						}
+						if endChar == CurrentFrame.Dot.Line.FLink.Used {
+							endChar++
+						}
+						if spaceToAdd < (endChar - startChar) {
+							endChar = CurrentFrame.Dot.Line.FLink.Used + 1
+						} else {
+							oldEnd = endChar
+						}
+					}
+					if ((oldEnd - startChar) <= spaceToAdd) && (oldEnd != startChar) {
+						// It will fit
+						var oldHere *MarkObject
+						var oldThere *MarkObject
+						MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &here)
+						MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &oldHere)
+						MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &there)
+						MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
+						CurrentFrame.Dot.Col = CurrentFrame.Dot.Line.Used + 2
+						// Copy the text
+						if !TextMove(true, 1, here, there, CurrentFrame.Dot, &here, &there) {
+							MarkDestroy(&oldHere)
+							MarkDestroy(&oldThere)
+							return false
+						}
+						// Copy the marks
+						MarksShift(CurrentFrame.Dot.Line.FLink, oldHere.Col, oldThere.Col-oldHere.Col, here.Line, here.Col)
+						// Wipe out the old text
+						MarkCreate(CurrentFrame.Dot.Line.FLink, 1, &oldHere)
+						MarkCreate(CurrentFrame.Dot.Line.FLink, oldEnd, &oldThere)
+						if !TextRemove(oldHere, oldThere) {
+							MarkDestroy(&oldHere)
+							MarkDestroy(&oldThere)
+							return false
+						}
+						MarkDestroy(&oldHere)
+						MarkDestroy(&oldThere)
+						// If next line is now empty, delete it
+						if CurrentFrame.Dot.Line.FLink.Used == 0 {
+							thisLine := CurrentFrame.Dot.Line.FLink
+							MarksSqueeze(CurrentFrame.Dot.Line.FLink, 1, CurrentFrame.Dot.Line.FLink.FLink, 1)
+							LinesExtract(thisLine, thisLine)
+							count--
+							if count > 0 {
+								continue
+							}
+							leaveDotAlone = true
+						}
+					}
+					// Make sure first char in next line is at left margin
+					if (count > 0) && (CurrentFrame.Dot.Line.FLink.Used != 0) {
+						startChar = 1
+						for CurrentFrame.Dot.Line.FLink.Str.Get(startChar) == ' ' {
+							startChar++
+						}
+						MarkCreate(CurrentFrame.Dot.Line.FLink, startChar, &there)
+						if startChar < CurrentFrame.MarginLeft {
+							// Must insert some chars
+							if !TextInsert(
+								true,
+								1,
+								BlankString,
+								CurrentFrame.MarginLeft-startChar,
+								there,
+							) {
+								return false
+							}
+						} else {
+							MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &here)
+							if !TextRemove(here, there) {
+								return false
+							}
 						}
 					}
 				}
-				if here != nil {
-					MarkDestroy(&here)
-				}
-				if there != nil {
-					MarkDestroy(&there)
-				}
+				MarkDestroy(&here)
+				MarkDestroy(&there)
+				break
 			}
 		}
 		count--
@@ -240,15 +233,7 @@ func WordFill(rept LeadParam, count int) bool {
 		CurrentFrame.TextModified = true
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
-	result = (count <= 0) || (rept == LeadParamPIndef)
-cleanup:
-	if here != nil {
-		MarkDestroy(&here)
-	}
-	if there != nil {
-		MarkDestroy(&there)
-	}
-	return result
+	return (count <= 0) || (rept == LeadParamPIndef)
 }
 
 // WordCentre centers text between margins
@@ -781,43 +766,41 @@ func WordAdvanceWord(rept LeadParam, count int) bool {
 func WordDeleteWord(rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject
-	var anotherMark *MarkObject
 	var theOtherMark *MarkObject
-	var oldDotCol int
-	var lineNr int
-	var newLineNr int
+	defer func() {
+		MarkDestroy(&oldPos)
+		MarkDestroy(&here)
+		MarkDestroy(&theOtherMark)
+	}()
 
-	result := false
-	oldPos = nil
-	here = nil
-	theOtherMark = nil
 	if rept == LeadParamMarker {
 		ScreenMessage(MsgSyntaxError)
-		goto cleanup
+		return false
 	}
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
 	// Get to beginning of word if in middle
 	if !WordAdvanceWord(LeadParamPInt, 0) {
-		goto cleanup
+		return false
 	}
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &here)
 	if !WordAdvanceWord(rept, count) {
 		// Put dot back and bail out
 		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
-		goto cleanup
+		return false
 	}
 	// Wipe out everything from dot to here
-	oldDotCol = CurrentFrame.Dot.Col
+	oldDotCol := CurrentFrame.Dot.Col
 	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &theOtherMark)
-	lineNr = LineToNumber(CurrentFrame.Dot.Line)
-	newLineNr = LineToNumber(here.Line)
+	lineNr := LineToNumber(CurrentFrame.Dot.Line)
+	newLineNr := LineToNumber(here.Line)
 	if (lineNr > newLineNr) ||
 		((lineNr == newLineNr) && (CurrentFrame.Dot.Col > here.Col)) {
 		// Reverse mark pointers
-		anotherMark = here
+		anotherMark := here
 		here = theOtherMark
 		theOtherMark = anotherMark
 	}
+	result := false
 	if CurrentFrame != FrameOops {
 		// Make sure oops_span is okay
 		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
@@ -835,13 +818,6 @@ func WordDeleteWord(rept LeadParam, count int) bool {
 	}
 	if lineNr != newLineNr {
 		result = TextSplitLine(CurrentFrame.Dot, oldDotCol, &here)
-	}
-cleanup:
-	if oldPos != nil {
-		MarkDestroy(&oldPos)
-	}
-	if here != nil {
-		MarkDestroy(&here)
 	}
 	return result
 }
