@@ -438,12 +438,8 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 		)
 	}
 	defer func() {
-		if oldDot != nil {
-			MarkDestroy(&oldDot)
-		}
-		if oldEquals != nil {
-			MarkDestroy(&oldEquals)
-		}
+		MarkDestroy(&oldDot)
+		MarkDestroy(&oldEquals)
 	}()
 
 	if tpar.Dlm == TpdSmart {
@@ -546,12 +542,10 @@ outerLoop:
 		count--
 	}
 
-	// Restore dot and equals to their pre-loop positions
+	// Restore dot and equals to their last-saved positions (typically the final replacement)
 	MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
-	MarkDestroy(&oldDot)
 	if oldEquals != nil {
 		MarkCreate(oldEquals.Line, oldEquals.Col, &CurrentFrame.Marks[MarkEquals])
-		MarkDestroy(&oldEquals)
 	} else if CurrentFrame.Marks[MarkEquals] != nil {
 		MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 	}
