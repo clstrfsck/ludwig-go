@@ -347,8 +347,9 @@ func textIntraRemove(markOne *MarkObject, size int) {
 
 // textInterRemove removes text spanning multiple lines
 func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
-	result := false
 	var markStart *MarkObject
+	defer MarkDestroy(&markStart)
+
 	var extrOne *LineHdrObject
 	var extrTwo *LineHdrObject
 	var textLen int
@@ -366,11 +367,10 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 		textIntraRemove(markOne, MaxStrLenP-markOne.Col)
 		MarksSqueeze(lineOne, colOne, markTwo.Line, markTwo.Col)
 		MarksShift(markTwo.Line, markTwo.Col, MaxStrLenP+1-markTwo.Col, lineOne, colOne)
-		if extrOne == extrTwo {
-			goto success
+		if extrOne != extrTwo {
+			LinesExtract(extrOne, extrTwo.BLink)
 		}
-		extrTwo = extrTwo.BLink
-		goto extract
+		return true
 	}
 
 	// Bring the start of lineOne down to replace the start of lineTwo
@@ -389,14 +389,14 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	} else if delta > 0 {
 		strngTail.Copy(strng, markTwo.Col, delta, 1)
 		if !TextInsert(true, 1, strngTail, delta, markTwo) {
-			goto cleanup
+			return false
 		}
 		textLen -= delta
 	}
 	MarkCreate(markTwo.Line, 1, &markStart)
 	if textLen > 0 {
 		if !TextOvertype(true, 1, strng, textLen, markStart) {
-			goto cleanup
+			return false
 		}
 	}
 	colOne = markOne.Col
@@ -406,15 +406,8 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 	if colOne > 1 {
 		MarksShift(extrOne, 1, colOne-1, markTwo.Line, 1)
 	}
-extract:
 	LinesExtract(extrOne, extrTwo)
-success:
-	result = true
-cleanup:
-	if markStart != nil {
-		MarkDestroy(&markStart)
-	}
-	return result
+	return true
 }
 
 // TextRemove removes text between two marks
@@ -500,6 +493,17 @@ func textIntraMove(
 	return true
 }
 
+func createMarks(
+	dstLine *LineHdrObject,
+	dstCol int,
+	newStart **MarkObject,
+	lastLine *LineHdrObject,
+	lastCol int,
+	newEnd **MarkObject) {
+	MarkCreate(dstLine, dstCol, newStart)
+	MarkCreate(lastLine, lastCol, newEnd)
+}
+
 // textInterMove moves/copies text spanning multiple lines
 func textInterMove(
 	copy bool,
@@ -510,23 +514,8 @@ func textInterMove(
 	newStart **MarkObject,
 	newEnd **MarkObject,
 ) bool {
-	var lastLine *LineHdrObject
-	var nextSrcLine *LineHdrObject
-	var nextDstLine *LineHdrObject
-	var firstNicked *LineHdrObject
-	var lastNicked *LineHdrObject
-	var linesRequired int
-	var lastLineLength int
-	var tempLen int
-	var textLen int
 	textStr := NewBlankStrObject(MaxStrLen)
-	var dstCol int
-	var dstUsed int
-	var dstLine *LineHdrObject
-	var i int
 
-	result := false
-	var firstLine *LineHdrObject
 	lineOne := markOne.Line
 	colOne := markOne.Col
 	lineTwo := markTwo.Line
@@ -535,8 +524,8 @@ func textInterMove(
 	lineTwoNr := LineToNumber(lineTwo)
 
 	// Predict dst.Col and dst.Line.Used just before insertion
-	dstCol = dst.Col
-	dstUsed = dst.Line.Used
+	dstCol := dst.Col
+	dstUsed := dst.Line.Used
 	if !copy && dst.Line.Group.Frame == lineOne.Group.Frame {
 		lineDstNr := LineToNumber(dst.Line)
 		if (lineOneNr <= lineDstNr) && (lineDstNr <= lineTwoNr) {
@@ -545,7 +534,7 @@ func textInterMove(
 			} else if (lineOneNr != lineDstNr) || (dstCol >= colOne) {
 				dstCol = colOne
 			}
-			tempLen = 0
+			tempLen := 0
 			if colTwo <= lineTwo.Used {
 				tempLen = lineTwo.Used + 1 - colTwo
 			}
@@ -553,43 +542,43 @@ func textInterMove(
 		}
 	}
 	if (colTwo <= lineTwo.Used) && (colOne+lineTwo.Used-colTwo > MaxStrLenP) {
-		goto cleanup
+		return false
 	}
 	if (colOne <= lineOne.Used) && (dstCol+lineOne.Used-colOne > MaxStrLenP) {
-		goto cleanup
+		return false
 	}
 	if (dstCol <= dstUsed) && (colTwo+dstUsed-dstCol > MaxStrLen) {
-		goto cleanup
+		return false
 	}
 	if (count > 1) && (colOne <= lineOne.Used) && (colTwo+lineOne.Used-colOne > MaxStrLen) {
-		goto cleanup
+		return false
 	}
 
 	// Create extra lines required
-	linesRequired = count * (lineTwoNr - lineOneNr)
+	linesRequired := count * (lineTwoNr - lineOneNr)
 	if !copy {
 		linesRequired -= lineTwoNr - lineOneNr - 1
 	}
-	firstLine, lastLine = LinesCreate(linesRequired)
+	firstLine, lastLine := LinesCreate(linesRequired)
 
 	// Copy end of first line
-	textLen = 0
+	textLen := 0
 	if colOne <= lineOne.Used {
 		textLen = lineOne.Used + 1 - colOne
 		textStr.Copy(lineOne.Str, colOne, textLen, 1)
 	}
 
 	// Take count copies
-	nextDstLine = firstLine
-	for i = count - 1; i >= 0; i-- {
+	nextDstLine := firstLine
+	for i := count - 1; i >= 0; i-- {
 		if TtControlC {
-			goto cleanup
+			return false
 		}
-		nextSrcLine = lineOne.FLink
+		nextSrcLine := lineOne.FLink
 		if i == 0 {
 			if !copy && (lineTwoNr-lineOneNr > 1) {
-				firstNicked = lineOne.FLink
-				lastNicked = lineTwo.BLink
+				firstNicked := lineOne.FLink
+				lastNicked := lineTwo.BLink
 				MarksSqueeze(firstNicked, 1, lastNicked.FLink, 1)
 				LinesExtract(firstNicked, lastNicked)
 				lastNicked.FLink = nextDstLine
@@ -638,16 +627,16 @@ func textInterMove(
 
 	// Remove original if necessary
 	if !copy && !textInterRemove(markOne, markTwo) {
-		goto cleanup
+		return false
 	}
 
 	// Insert source text into destination
-	dstLine = dst.Line
+	dstLine := dst.Line
 	dstCol = dst.Col
 
 	// Complete the last line with rest of destination line
-	lastLineLength = lastLine.Used
-	i = dstLine.Used + 1 - dstCol
+	lastLineLength := lastLine.Used
+	i := dstLine.Used + 1 - dstCol
 	if i > 0 {
 		LineChangeLength(lastLine, lastLine.Used+i)
 		lastLine.Str.Copy(dstLine.Str, dstCol, i, lastLineLength+1)
@@ -663,7 +652,7 @@ func textInterMove(
 			dstLine = dstLine.BLink
 		} else {
 			if firstLine != lastLine {
-				firstNicked = lastLine
+				firstNicked := lastLine
 				lastLine = lastLine.BLink
 				lastLine.FLink = nil
 				firstNicked.BLink = nil
@@ -682,7 +671,8 @@ func textInterMove(
 			lastLine = dstLine
 			dstLine = firstLine
 			firstLine = nil
-			goto finished
+			createMarks(dstLine, dstCol, newStart, lastLine, colTwo, newEnd)
+			return true
 		}
 	}
 
@@ -706,12 +696,8 @@ func textInterMove(
 		}
 	}
 
-finished:
-	MarkCreate(dstLine, dstCol, newStart)
-	MarkCreate(lastLine, colTwo, newEnd)
-	result = true
-cleanup:
-	return result
+	createMarks(dstLine, dstCol, newStart, lastLine, colTwo, newEnd)
+	return true
 }
 
 // TextMove moves or copies text between two marks to a destination
