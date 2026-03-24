@@ -335,19 +335,9 @@ cleanup:
 
 // WordJustify space-justifies text between margins
 func WordJustify(rept LeadParam, count int) bool {
-	var startChar int
-	var endChar int
-	var holes int
-	var i int
-	var lineCount int
-	var spaceToAdd int
-	var thisLine *LineHdrObject
 	var here *MarkObject
-	var fillRatio float64
-	var debit float64
+	defer MarkDestroy(&here)
 
-	result := false
-	here = nil
 	if rept == LeadParamPIndef {
 		count = MaxInt
 	}
@@ -356,92 +346,86 @@ func WordJustify(rept LeadParam, count int) bool {
 		rept = LeadParamPInt
 	}
 	if rept == LeadParamPInt {
-		lineCount = count
-		thisLine = CurrentFrame.Dot.Line
+		lineCount := count
+		thisLine := CurrentFrame.Dot.Line
 		for (lineCount > 0) && (thisLine.Used > 0) {
 			thisLine = thisLine.FLink
 			lineCount--
 			if thisLine == nil {
-				goto cleanup
+				return false
 			}
 		}
 		if lineCount != 0 {
-			goto cleanup
+			return false
 		}
 	}
 	for (count > 0) && (CurrentFrame.Dot.Line.Used > 0) {
 		if CurrentFrame.Dot.Line.FLink == nil {
-			goto cleanup
+			return false
 		}
-		if CurrentFrame.Dot.Line.FLink.Used == 0 {
-			goto nextLine
-		}
-		if CurrentFrame.Dot.Line.Used > CurrentFrame.MarginRight {
-			goto cleanup
-		}
-
-		// Figure out how many spaces to add
-		spaceToAdd = CurrentFrame.MarginRight - CurrentFrame.Dot.Line.Used
-		// Find number of holes for space distribution
-		startChar = CurrentFrame.MarginLeft
-		for (CurrentFrame.Dot.Line.Str.Get(startChar) == ' ') &&
-			(startChar < CurrentFrame.Dot.Line.Used) {
-			startChar++
-		}
-		endChar = startChar
-		holes = 0
-		for {
-			for (CurrentFrame.Dot.Line.Str.Get(startChar) != ' ') &&
-				(startChar < CurrentFrame.Dot.Line.Used) {
-				startChar++
+		if CurrentFrame.Dot.Line.FLink.Used != 0 {
+			if CurrentFrame.Dot.Line.Used > CurrentFrame.MarginRight {
+				return false
 			}
+
+			// Figure out how many spaces to add
+			spaceToAdd := CurrentFrame.MarginRight - CurrentFrame.Dot.Line.Used
+			// Find number of holes for space distribution
+			startChar := CurrentFrame.MarginLeft
 			for (CurrentFrame.Dot.Line.Str.Get(startChar) == ' ') &&
 				(startChar < CurrentFrame.Dot.Line.Used) {
 				startChar++
 			}
-			holes++
-			if !(startChar < CurrentFrame.Dot.Line.Used) {
-				break
-			}
-		}
-		holes--
-		if holes > 0 {
-			fillRatio = float64(spaceToAdd) / float64(holes)
-		}
-		debit = 0.0
-		startChar = endChar
-		for i = 1; i <= holes; i++ {
-			// Find a hole
-			for CurrentFrame.Dot.Line.Str.Get(startChar) != ' ' {
-				startChar++
-			}
-			debit += fillRatio
-			spaceToAdd = int(debit + 0.5)
-			if spaceToAdd > 0 {
-				here = nil
-				MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
-				if !TextInsert(true, 1, BlankString, spaceToAdd, here) {
-					goto cleanup
+			endChar := startChar
+			holes := 0
+			for {
+				for (CurrentFrame.Dot.Line.Str.Get(startChar) != ' ') &&
+					(startChar < CurrentFrame.Dot.Line.Used) {
+					startChar++
 				}
-				MarkDestroy(&here)
-				debit -= float64(spaceToAdd)
+				for (CurrentFrame.Dot.Line.Str.Get(startChar) == ' ') &&
+					(startChar < CurrentFrame.Dot.Line.Used) {
+					startChar++
+				}
+				holes++
+				if !(startChar < CurrentFrame.Dot.Line.Used) {
+					break
+				}
 			}
-			for CurrentFrame.Dot.Line.Str.Get(startChar) == ' ' {
-				startChar++
+			holes--
+			fillRatio := 0.0
+			if holes > 0 {
+				fillRatio = float64(spaceToAdd) / float64(holes)
+			}
+			debit := 0.0
+			startChar = endChar
+			for i := 1; i <= holes; i++ {
+				// Find a hole
+				for CurrentFrame.Dot.Line.Str.Get(startChar) != ' ' {
+					startChar++
+				}
+				debit += fillRatio
+				spaceToAdd = int(debit + 0.5)
+				if spaceToAdd > 0 {
+					here = nil
+					MarkCreate(CurrentFrame.Dot.Line, startChar, &here)
+					if !TextInsert(true, 1, BlankString, spaceToAdd, here) {
+						return false
+					}
+					MarkDestroy(&here)
+					debit -= float64(spaceToAdd)
+				}
+				for CurrentFrame.Dot.Line.Str.Get(startChar) == ' ' {
+					startChar++
+				}
 			}
 		}
-	nextLine:
 		count--
 		MarkCreate(CurrentFrame.Dot.Line.FLink, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
 		CurrentFrame.TextModified = true
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
-	result = (count <= 0) || (rept == LeadParamPIndef)
-cleanup:
-	if here != nil {
-		MarkDestroy(&here)
-	}
-	return result
+	return (count <= 0) || (rept == LeadParamPIndef)
 }
 
 // WordSqueeze removes multiple spaces from lines
