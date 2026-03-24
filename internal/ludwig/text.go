@@ -347,23 +347,11 @@ func textIntraRemove(markOne *MarkObject, size int) {
 
 // textInterRemove removes text spanning multiple lines
 func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
-	var markStart *MarkObject
-	defer MarkDestroy(&markStart)
-
-	var extrOne *LineHdrObject
-	var extrTwo *LineHdrObject
-	var textLen int
-	strng := NewBlankStrObject(MaxStrLen)
-	strngTail := NewBlankStrObject(MaxStrLen)
-	var delta int
-	var lineOne *LineHdrObject
-	var colOne int
-
 	if (markTwo.Line.FLink == nil) && (markOne.Col != 1) {
-		lineOne = markOne.Line
-		colOne = markOne.Col
-		extrOne = lineOne.FLink
-		extrTwo = markTwo.Line
+		lineOne := markOne.Line
+		colOne := markOne.Col
+		extrOne := lineOne.FLink
+		extrTwo := markTwo.Line
 		textIntraRemove(markOne, MaxStrLenP-markOne.Col)
 		MarksSqueeze(lineOne, colOne, markTwo.Line, markTwo.Col)
 		MarksShift(markTwo.Line, markTwo.Col, MaxStrLenP+1-markTwo.Col, lineOne, colOne)
@@ -373,20 +361,25 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 		return true
 	}
 
+	var markStart *MarkObject
+	defer MarkDestroy(&markStart)
+
 	// Bring the start of lineOne down to replace the start of lineTwo
-	textLen = markOne.Line.Used
+	textLen := markOne.Line.Used
 	if markOne.Col <= textLen {
 		textLen = markOne.Col - 1
 	}
+	strng := NewBlankStrObject(MaxStrLen)
 	if markOne.Col > 1 {
 		strng.FillCopy(markOne.Line.Str, 1, textLen, 1, markOne.Col-1, ' ')
 	}
 	textLen = markOne.Col - 1
-	delta = markOne.Col - markTwo.Col
+	delta := markOne.Col - markTwo.Col
 	if delta < 0 {
 		MarkCreate(markTwo.Line, markOne.Col, &markStart)
 		textIntraRemove(markStart, markTwo.Col-markStart.Col)
 	} else if delta > 0 {
+		strngTail := NewBlankStrObject(MaxStrLen)
 		strngTail.Copy(strng, markTwo.Col, delta, 1)
 		if !TextInsert(true, 1, strngTail, delta, markTwo) {
 			return false
@@ -399,9 +392,9 @@ func textInterRemove(markOne *MarkObject, markTwo *MarkObject) bool {
 			return false
 		}
 	}
-	colOne = markOne.Col
-	extrOne = markOne.Line
-	extrTwo = markTwo.Line.BLink
+	colOne := markOne.Col
+	extrOne := markOne.Line
+	extrTwo := markTwo.Line.BLink
 	MarksSqueeze(extrOne, colOne, markTwo.Line, markTwo.Col)
 	if colOne > 1 {
 		MarksShift(extrOne, 1, colOne-1, markTwo.Line, 1)
@@ -737,14 +730,6 @@ func TextMove(
 
 // TextSplitLine splits a line at a mark position
 func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) bool {
-	var saveCol int
-	var length int
-	var shift int
-	var newLine *LineHdrObject
-	var cost int
-	var equalsCol int
-	var equalsLine *LineHdrObject
-
 	if beforeMark.Line.FLink == nil {
 		ScreenMessage(MsgCantSplitNullLine)
 		return false
@@ -752,7 +737,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	if newCol == 0 {
 		newCol = TextReturnCol(beforeMark.Line, beforeMark.Col, true)
 	}
-	length = beforeMark.Line.Used + 1 - beforeMark.Col
+	length := beforeMark.Line.Used + 1 - beforeMark.Col
 	if length <= 0 {
 		length = 0
 	} else {
@@ -762,11 +747,11 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		}
 	}
 
-	newLine, _ = LinesCreate(1)
+	newLine, _ := LinesCreate(1)
 
 	// Heuristic to decide which way to do the split
-	shift = newCol - beforeMark.Col
-	cost = MaxInt
+	shift := newCol - beforeMark.Col
+	cost := MaxInt
 	if (beforeMark.Col <= beforeMark.Line.Used) && (beforeMark.Line.ScrRowNr != 0) {
 		if shift == 0 {
 			cost = beforeMark.Col + beforeMark.Col
@@ -778,6 +763,8 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 	}
 
 	// Do the split
+	var equalsCol int
+	var equalsLine *LineHdrObject
 	if 2*length < cost {
 		// Move end to next (new) line
 		equalsCol = beforeMark.Col
@@ -828,7 +815,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 				textIntraRemove(beforeMark, -shift)
 			}
 			if newCol > 1 {
-				saveCol = beforeMark.Col
+				saveCol := beforeMark.Col
 				beforeMark.Col = 1
 				if !TextOvertype(true, 1, BlankString, newCol-1, beforeMark) {
 					return false
@@ -840,7 +827,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 				return false
 			}
 			if newCol > 1 {
-				saveCol = beforeMark.Col
+				saveCol := beforeMark.Col
 				beforeMark.Col = 1
 				if !TextOvertype(true, 1, BlankString, newCol-1, beforeMark) {
 					return false
