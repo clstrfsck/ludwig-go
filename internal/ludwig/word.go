@@ -430,16 +430,15 @@ func WordJustify(rept LeadParam, count int) bool {
 
 // WordSqueeze removes multiple spaces from lines
 func WordSqueeze(rept LeadParam, count int) bool {
-	var startChar int
-	var endChar int
-	var lineCount int
-	var thisLine *LineHdrObject
+
 	var here *MarkObject
 	var there *MarkObject
 
-	result := false
-	here = nil
-	there = nil
+	defer func() {
+		MarkDestroy(&here)
+		MarkDestroy(&there)
+	}()
+
 	if rept == LeadParamPIndef {
 		count = MaxInt
 	}
@@ -448,29 +447,28 @@ func WordSqueeze(rept LeadParam, count int) bool {
 		rept = LeadParamPInt
 	}
 	if rept == LeadParamPInt {
-		lineCount = count
-		thisLine = CurrentFrame.Dot.Line
+		lineCount := count
+		thisLine := CurrentFrame.Dot.Line
 		for (lineCount > 0) && (thisLine.Used > 0) {
 			thisLine = thisLine.FLink
 			lineCount--
 			if thisLine == nil {
-				goto cleanup
+				return false
 			}
 		}
 		if lineCount != 0 {
-			goto cleanup
+			return false
 		}
 	}
 	for (count > 0) && (CurrentFrame.Dot.Line.Used > 0) {
 		if CurrentFrame.Dot.Line.FLink == nil {
 			// on EOP line so abort
-			goto cleanup
+			return false
 		}
-		startChar = 1
+		startChar := 1
 		for CurrentFrame.Dot.Line.Str.Get(startChar) == ' ' {
 			startChar += 1
 		}
-		// with line^ do
 		for {
 			for CurrentFrame.Dot.Line.Str.Get(startChar) != ' ' &&
 				startChar < CurrentFrame.Dot.Line.Used {
@@ -479,7 +477,7 @@ func WordSqueeze(rept LeadParam, count int) bool {
 			if CurrentFrame.Dot.Line.Str.Get(startChar) != ' ' {
 				break // Nothing more to do
 			}
-			endChar = startChar
+			endChar := startChar
 			for CurrentFrame.Dot.Line.Str.Get(endChar) == ' ' {
 				endChar++
 			}
@@ -489,7 +487,7 @@ func WordSqueeze(rept LeadParam, count int) bool {
 				there = nil
 				MarkCreate(CurrentFrame.Dot.Line, endChar-1, &there)
 				if !TextRemove(here, there) {
-					goto cleanup
+					return false
 				}
 				startChar = here.Col
 			} else {
@@ -502,15 +500,7 @@ func WordSqueeze(rept LeadParam, count int) bool {
 		CurrentFrame.TextModified = true
 		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
 	}
-	result = (count <= 0) || (rept == LeadParamPIndef)
-cleanup:
-	if here != nil {
-		MarkDestroy(&here)
-	}
-	if there != nil {
-		MarkDestroy(&there)
-	}
-	return result
+	return (count <= 0) || (rept == LeadParamPIndef)
 }
 
 // WordRight right-aligns text
