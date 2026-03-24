@@ -378,7 +378,6 @@ func TestDoCmdHome(t *testing.T) {
 		oldScrFrame := ScrFrame
 		oldScrTopLine := ScrTopLine
 
-		CurrentFrame = frame
 		ScrFrame = frame
 		ScrTopLine = topLine
 
@@ -404,10 +403,7 @@ func TestDoCmdHome(t *testing.T) {
 		withFrame(t, frame)
 
 		otherFrame := &FrameObject{}
-
 		oldScrFrame := ScrFrame
-
-		CurrentFrame = frame
 		ScrFrame = otherFrame // Different from CurrentFrame
 
 		defer func() {
