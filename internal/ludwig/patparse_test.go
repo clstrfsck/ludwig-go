@@ -793,3 +793,125 @@ func TestPatternParserIntegration(t *testing.T) {
 		assert.True(t, result, "Whitespace pattern should succeed")
 	})
 }
+
+// Tests for error paths introduced during panic removal
+
+func TestPatternParserErrorPaths(t *testing.T) {
+	runParser := func(content string) bool {
+		nfaTable, patternDef := setupParser()
+		pattern := createTestTpar(content)
+		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
+		return PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+	}
+
+	// --- Error cases ---
+
+	t.Run("UnmatchedSingleQuote", func(t *testing.T) {
+		assert.False(t, runParser("'abc"), "Unclosed ' should fail")
+	})
+
+	t.Run("UnmatchedDoubleQuote", func(t *testing.T) {
+		assert.False(t, runParser(`"abc`), "Unclosed \" should fail")
+	})
+
+	t.Run("UnclosedGroup", func(t *testing.T) {
+		assert.False(t, runParser("('abc'"), "Missing ) should fail")
+	})
+
+	t.Run("MarkNumberZero", func(t *testing.T) {
+		// @0 is illegal: marks are 1-9
+		assert.False(t, runParser("@0"), "@0 should fail")
+	})
+
+	t.Run("MarkNumberTooLarge", func(t *testing.T) {
+		// @10 is > MaxUserMarkNumber (9)
+		assert.False(t, runParser("@10"), "@10 should fail")
+	})
+
+	t.Run("MarkNoDigit", func(t *testing.T) {
+		// @ followed by non-digit
+		assert.False(t, runParser("@z"), "@z should fail")
+	})
+
+	t.Run("MarkAlone", func(t *testing.T) {
+		// @ at end of input
+		assert.False(t, runParser("@"), "@ alone should fail")
+	})
+
+	t.Run("NegatedPositional", func(t *testing.T) {
+		// Positionals cannot be negated
+		assert.False(t, runParser("-<"), "-< should fail")
+	})
+
+	t.Run("NegateAtEndOfInput", func(t *testing.T) {
+		// - with nothing following
+		assert.False(t, runParser("-"), "- alone should fail")
+	})
+
+	t.Run("RangeMissingComma", func(t *testing.T) {
+		// [2a] is not a valid range — missing comma
+		assert.False(t, runParser("[2a]n"), "[2a]n should fail")
+	})
+
+	t.Run("RangeMissingCloseBracket", func(t *testing.T) {
+		// [2,5 with no closing ]
+		assert.False(t, runParser("[2,5n"), "[2,5n should fail")
+	})
+
+	t.Run("RangeAlone", func(t *testing.T) {
+		// [ at end of input
+		assert.False(t, runParser("["), "[ alone should fail")
+	})
+
+	t.Run("DefineSetAlone", func(t *testing.T) {
+		// D at end of input — premature end before opening delimiter
+		assert.False(t, runParser("D"), "D alone should fail")
+	})
+
+	t.Run("DefineSetUnclosed", func(t *testing.T) {
+		// D'abc — missing closing '
+		assert.False(t, runParser("D'abc"), "D'abc should fail")
+	})
+
+	t.Run("TenLevelsOfNesting", func(t *testing.T) {
+		// 10 levels of () — depth 22 > PatternMaxDepth (20)
+		assert.False(t, runParser("((((((((((a))))))))))"), "10 levels of nesting should fail (depth > 20)")
+	})
+
+	// --- Valid cases not yet covered ---
+
+	t.Run("MarkOne", func(t *testing.T) {
+		// @1 matches mark number 1
+		assert.True(t, runParser("@1"), "@1 should succeed")
+	})
+
+	t.Run("EqualsPositional", func(t *testing.T) {
+		// = matches the equals mark position
+		assert.True(t, runParser("="), "= should succeed")
+	})
+
+	t.Run("ModifiedPositional", func(t *testing.T) {
+		// % matches the modified mark position
+		assert.True(t, runParser("%"), "% should succeed")
+	})
+
+	t.Run("DefineSet", func(t *testing.T) {
+		// D'abc' defines the set {a,b,c}
+		assert.True(t, runParser("D'abc'"), "D'abc' should succeed")
+	})
+
+	t.Run("NegatedDefineSet", func(t *testing.T) {
+		// -D'abc' matches any char not in {a,b,c}
+		assert.True(t, runParser("-D'abc'"), "-D'abc' should succeed")
+	})
+
+	t.Run("DefineSetWithRange", func(t *testing.T) {
+		// D'a..z' defines the set a-z via range syntax
+		assert.True(t, runParser("D'a..z'"), "D'a..z' should succeed")
+	})
+
+	t.Run("NineLevelsOfNesting", func(t *testing.T) {
+		// 9 levels of () — innermost patternPattern at depth 20 (== PatternMaxDepth, passes)
+		assert.True(t, runParser("(((((((((a)))))))))"), "9 levels of nesting should succeed")
+	})
+}

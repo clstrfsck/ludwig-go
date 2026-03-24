@@ -19,10 +19,6 @@ import (
 	"math/big"
 )
 
-// localException and otherException are used for non-local control flow
-type localException struct{}
-type otherException struct{}
-
 // Predefined accept sets for pattern parsing
 var (
 	quotedSet = func() [MaxSetRange + 1]bool {
@@ -208,18 +204,19 @@ func PatternParser(
 ) bool {
 	var firstPatternEnd int
 	var parseCount int
+	var parseErr bool // Phase 0: shared error flag for patternGetch
 
 	// patternNewNFA allocates a new NFA state
-	patternNewNFA := func() int {
+	patternNewNFA := func() (int, bool) {
 		if *statesUsed < MaxNFAStateRange {
 			newNfa := *statesUsed
 			nfaTable[*statesUsed].Fail = false
 			nfaTable[*statesUsed].Indefinite = false
 			(*statesUsed)++
-			return newNfa
+			return newNfa, true
 		}
 		ScreenMessage(MsgPatPatternTooComplex)
-		panic(localException{})
+		return 0, false
 	}
 
 	// patternDuplicateNFA duplicates an NFA path
@@ -227,12 +224,15 @@ func PatternParser(
 		offset := (currentState - copyThisStart) + 1
 		if (*statesUsed + offset) > MaxNFAStateRange {
 			ScreenMessage(MsgPatPatternTooComplex)
-			panic(localException{})
+			return false
 		}
 		duplicateStart := *statesUsed
 
 		for aux := copyThisStart; aux <= copyThisFinish; aux++ {
-			auxState := patternNewNFA()
+			auxState, ok := patternNewNFA()
+			if !ok {
+				return false
+			}
 			nfaTable[auxState].Fail = nfaTable[aux].Fail
 			if !nfaTable[auxState].Fail {
 				nfaTable[auxState].EpsilonOut = nfaTable[aux].EpsilonOut
@@ -265,6 +265,9 @@ func PatternParser(
 
 	// patternGetch reads next character from pattern
 	patternGetch := func(parseCount *int, ch *byte, inString *TParObject) bool {
+		if parseErr {
+			return false
+		}
 		result := true
 		if *parseCount < inString.Len {
 			(*parseCount)++
@@ -272,7 +275,8 @@ func PatternParser(
 			patternDefinition.Length++
 			if patternDefinition.Length > MaxStrLen {
 				ScreenMessage(MsgPatPatternTooComplex)
-				panic(localException{})
+				parseErr = true
+				return false
 			}
 			patternDefinition.Strng.Set(patternDefinition.Length, *ch)
 		} else {
@@ -299,11 +303,11 @@ func PatternParser(
 	}
 
 	// Forward declarations for mutually recursive functions
-	var patternCompound func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int)
-	var patternPattern func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int)
+	var patternCompound func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int) bool
+	var patternPattern func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int) bool
 
 	// patternPattern is the main pattern parsing function
-	patternPattern = func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int) {
+	patternPattern = func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int) bool {
 		var leadingParam ParameterType
 		var aux, auxCount, temporary int
 		var delimiter, auxCh1, auxCh2, auxPatCh byte
@@ -316,7 +320,7 @@ func PatternParser(
 		var rangeIndefinite bool
 
 		// patternRangeDelimgen processes range delimiters
-		patternRangeDelimgen := func(rangePatch, rangeStart, rangeEnd *int, rangeIndefinite *bool, leadingParam *ParameterType) {
+		patternRangeDelimgen := func(rangePatch, rangeStart, rangeEnd *int, rangeIndefinite *bool, leadingParam *ParameterType) bool {
 			*rangeIndefinite = false
 			*leadingParam = PatternRange
 			switch *patCh {
@@ -334,51 +338,68 @@ func PatternParser(
 				*rangeEnd = *rangeStart
 			case PatternLRangeDelim:
 				if !patternGetch(parseCount, patCh, inString) {
-					ScreenMessage(MsgPatNoMatchingDelim)
-					panic(localException{})
+					if !parseErr {
+						ScreenMessage(MsgPatNoMatchingDelim)
+					}
+					return false
 				}
 				if *patCh >= '0' && *patCh <= '9' {
 					(*parseCount)--
 					_ = patternGetnumb(parseCount, rangeStart, patCh, inString)
 					_ = patternGetch(parseCount, patCh, inString)
+					if parseErr {
+						return false
+					}
 				} else {
 					*rangeStart = 0
 				}
 				if *patCh == PatternComma {
 					if !patternGetch(parseCount, patCh, inString) {
-						ScreenMessage(MsgPatNoMatchingDelim)
-						panic(localException{})
+						if !parseErr {
+							ScreenMessage(MsgPatNoMatchingDelim)
+						}
+						return false
 					}
 				} else {
-					ScreenMessage(MsgPatErrorInRange)
-					panic(localException{})
+					if !parseErr {
+						ScreenMessage(MsgPatErrorInRange)
+					}
+					return false
 				}
 				if *patCh >= '0' && *patCh <= '9' {
 					(*parseCount)--
 					_ = patternGetnumb(parseCount, rangeEnd, patCh, inString)
 					_ = patternGetch(parseCount, patCh, inString)
+					if parseErr {
+						return false
+					}
 				} else {
 					*rangeIndefinite = true
 					*rangeEnd = 0
 				}
 				if *patCh != PatternRRangeDelim {
 					ScreenMessage(MsgPatNoMatchingDelim)
-					panic(localException{})
+					return false
 				}
 			}
 			if *rangeStart == 0 {
+				firstOut, ok := patternNewNFA()
+				if !ok {
+					return false
+				}
 				*rangePatch = currentState
 				nfaTable[*rangePatch].EpsilonOut = true
-				nfaTable[*rangePatch].FirstOut = patternNewNFA()
+				nfaTable[*rangePatch].FirstOut = firstOut
 				nfaTable[*rangePatch].SecondOut = PatternNull
-				currentState = nfaTable[*rangePatch].FirstOut
+				currentState = firstOut
 			} else {
 				*rangePatch = PatternNull
 			}
+			return true
 		}
 
 		// patternRangeBuild builds a range pattern
-		patternRangeBuild := func(rangeStart, rangeEnd, rangePatch int, indefinite bool) {
+		patternRangeBuild := func(rangeStart, rangeEnd, rangePatch int, indefinite bool) bool {
 			endState := currentState
 			indefinitePatch := beginState
 			divertPtr := rangePatch
@@ -389,7 +410,9 @@ func PatternParser(
 
 			for aux := 2; aux <= rangeStart; aux++ {
 				indefinitePatch = currentState
-				_ = patternDuplicateNFA(beginState, endState, currentState, &currentState)
+				if !patternDuplicateNFA(beginState, endState, currentState, &currentState) {
+					return false
+				}
 			}
 
 			if rangeStart > 0 {
@@ -399,7 +422,9 @@ func PatternParser(
 			for aux := rangeStart + 2; aux <= rangeEnd; aux++ {
 				nfaTable[currentState].SecondOut = divertPtr
 				divertPtr = currentState
-				_ = patternDuplicateNFA(beginState, endState, currentState, &currentState)
+				if !patternDuplicateNFA(beginState, endState, currentState, &currentState) {
+					return false
+				}
 			}
 
 			nfaTable[currentState].SecondOut = PatternNull
@@ -413,10 +438,15 @@ func PatternParser(
 			if indefinite {
 				nfaTable[currentState].EpsilonOut = true
 				nfaTable[currentState].FirstOut = indefinitePatch
-				nfaTable[currentState].SecondOut = patternNewNFA()
-				currentState = nfaTable[currentState].SecondOut
+				secondOut, ok := patternNewNFA()
+				if !ok {
+					return false
+				}
+				nfaTable[currentState].SecondOut = secondOut
+				currentState = secondOut
 				nfaTable[indefinitePatch].Indefinite = true
 			}
+			return true
 		}
 
 		derefSpan.Nxt = nil
@@ -424,7 +454,7 @@ func PatternParser(
 
 		if depth > PatternMaxDepth {
 			ScreenMessage(MsgPatPatternTooComplex)
-			panic(localException{})
+			return false
 		}
 
 		currentState = first
@@ -433,11 +463,14 @@ func PatternParser(
 		for !endOfInput && (*patCh == PatternSpace) {
 			endOfInput = !patternGetch(parseCount, patCh, inString)
 		}
+		if parseErr {
+			return false
+		}
 
 		for (*patCh != PatternComma && *patCh != PatternRParen && *patCh != PatternBar) && !endOfInput {
 			if !syntaxSet[*patCh] {
 				ScreenMessage(MsgPatIllegalSymbol)
-				panic(localException{})
+				return false
 			}
 
 			switch *patCh {
@@ -446,15 +479,19 @@ func PatternParser(
 				derefTpar := TParObject{Str: NewBlankStrObject(MaxStrLen)}
 				aux = 0
 				if !patternGetch(parseCount, patCh, inString) {
-					ScreenMessage(MsgPatNoMatchingDelim)
-					panic(localException{})
+					if !parseErr {
+						ScreenMessage(MsgPatNoMatchingDelim)
+					}
+					return false
 				}
 				for *patCh != delimiter {
 					aux++
 					derefTpar.Str.Set(aux, *patCh)
 					if !patternGetch(parseCount, patCh, inString) {
-						ScreenMessage(MsgPatNoMatchingDelim)
-						panic(localException{})
+						if !parseErr {
+							ScreenMessage(MsgPatNoMatchingDelim)
+						}
+						return false
 					}
 				}
 				patternDefinition.Length = patternDefinition.Length - (aux + 2)
@@ -462,7 +499,7 @@ func PatternParser(
 				derefTpar.Len = aux
 				derefTpar.Dlm = delimiter
 				if !TparGet1(&derefTpar, tparSort, &derefSpan) {
-					panic(otherException{})
+					return false
 				}
 
 				if quotedSet[derefSpan.Dlm] {
@@ -476,11 +513,15 @@ func PatternParser(
 				}
 				auxCount = 0
 				if patternGetch(&auxCount, &auxPatCh, &derefSpan) {
-					patternCompound(currentState, &currentState, &auxCount, &derefSpan, &auxPatCh, depth+1)
+					if !patternCompound(currentState, &currentState, &auxCount, &derefSpan, &auxPatCh, depth+1) {
+						return false
+					}
 					if (auxCount != derefSpan.Len) || (derefSpan.Str.Get(auxCount) == PatternComma) {
 						ScreenMessage(MsgPatErrorInSpan)
-						panic(localException{})
+						return false
 					}
+				} else if parseErr {
+					return false
 				}
 
 			case TpdExact, TpdLit, PatternLParen, PatternLRangeDelim, PatternKStar, PatternPlus,
@@ -495,10 +536,14 @@ func PatternParser(
 
 				leadingParam = NullParam
 				if delimitedSet[*patCh] {
-					patternRangeDelimgen(&rangePatch, &rangeStart, &rangeEnd, &rangeIndefinite, &leadingParam)
+					if !patternRangeDelimgen(&rangePatch, &rangeStart, &rangeEnd, &rangeIndefinite, &leadingParam) {
+						return false
+					}
 					if !patternGetch(parseCount, patCh, inString) {
-						ScreenMessage(MsgPatPrematurePatternEnd)
-						panic(localException{})
+						if !parseErr {
+							ScreenMessage(MsgPatPrematurePatternEnd)
+						}
+						return false
 					}
 					beginState = currentState
 				}
@@ -508,8 +553,10 @@ func PatternParser(
 					auxCh1 = *patCh
 					auxCount = *parseCount
 					if !patternGetch(parseCount, patCh, inString) {
-						ScreenMessage(MsgPatNoMatchingDelim)
-						panic(localException{})
+						if !parseErr {
+							ScreenMessage(MsgPatNoMatchingDelim)
+						}
+						return false
 					}
 					if *patCh == TpdSpan || *patCh == TpdPrompt {
 						noDereference = false
@@ -518,8 +565,10 @@ func PatternParser(
 						aux = 0
 						for {
 							if !patternGetch(parseCount, patCh, inString) {
-								ScreenMessage(MsgPatNoMatchingDelim)
-								panic(localException{})
+								if !parseErr {
+									ScreenMessage(MsgPatNoMatchingDelim)
+								}
+								return false
 							}
 							aux++
 							derefTpar.Str.Set(aux, *patCh)
@@ -534,7 +583,7 @@ func PatternParser(
 								derefTpar.Len = aux - 2
 								derefTpar.Dlm = delimiter
 								if !TparGet1(&derefTpar, tparSort, &derefSpan) {
-									panic(otherException{})
+									return false
 								}
 								// Insert quote at beginning: shift string right and add delimiters
 								for i := derefSpan.Len; i >= 1; i-- {
@@ -545,7 +594,11 @@ func PatternParser(
 								derefSpan.Str.Set(1, auxCh1)
 								auxCount = 0
 								if patternGetch(&auxCount, &auxPatCh, &derefSpan) {
-									patternPattern(currentState, &currentState, &auxCount, &derefSpan, &auxPatCh, depth+1)
+									if !patternPattern(currentState, &currentState, &auxCount, &derefSpan, &auxPatCh, depth+1) {
+										return false
+									}
+								} else if parseErr {
+									return false
 								}
 							} else {
 								*patCh = delimiter
@@ -569,11 +622,17 @@ func PatternParser(
 								nfaTable[currentState].EpsilonOut = false
 								sset := singletonSet(*patCh)
 								nfaTable[currentState].AcceptSet.Set(sset)
-								nfaTable[currentState].NextState = patternNewNFA()
-								currentState = nfaTable[currentState].NextState
+								nextState, ok := patternNewNFA()
+								if !ok {
+									return false
+								}
+								nfaTable[currentState].NextState = nextState
+								currentState = nextState
 								if !patternGetch(parseCount, patCh, inString) {
-									ScreenMessage(MsgPatNoMatchingDelim)
-									panic(localException{})
+									if !parseErr {
+										ScreenMessage(MsgPatNoMatchingDelim)
+									}
+									return false
 								}
 							}
 						} else {
@@ -595,39 +654,56 @@ func PatternParser(
 									sset := singletonSet(*patCh)
 									nfaTable[currentState].AcceptSet.Set(sset)
 								}
-								nfaTable[currentState].NextState = patternNewNFA()
-								currentState = nfaTable[currentState].NextState
+								nextState, ok := patternNewNFA()
+								if !ok {
+									return false
+								}
+								nfaTable[currentState].NextState = nextState
+								currentState = nextState
 								if !patternGetch(parseCount, patCh, inString) {
-									ScreenMessage(MsgPatNoMatchingDelim)
-									panic(localException{})
+									if !parseErr {
+										ScreenMessage(MsgPatNoMatchingDelim)
+									}
+									return false
 								}
 							}
 						}
 					}
 
 				case PatternLParen:
-					_ = patternGetch(parseCount, patCh, inString)
-					patternCompound(currentState, &auxState, parseCount, inString, patCh, depth+1)
+					patternGetch(parseCount, patCh, inString)
+					if parseErr {
+						return false
+					}
+					if !patternCompound(currentState, &auxState, parseCount, inString, patCh, depth+1) {
+						return false
+					}
 					currentState = auxState
 					if *patCh != PatternRParen {
 						ScreenMessage(MsgPatNoMatchingDelim)
-						panic(localException{})
+						return false
 					}
 
 				case PatternMark:
 					if patternGetnumb(parseCount, &auxi, patCh, inString) {
 						if (auxi == 0) || (auxi > MaxUserMarkNumber) {
 							ScreenMessage(MsgPatIllegalMarkNumber)
-							panic(localException{})
+							return false
 						}
 						nfaTable[currentState].EpsilonOut = false
 						sset := singletonSet(byte(auxi + PatternMarksStart))
 						nfaTable[currentState].AcceptSet.Set(sset)
-						nfaTable[currentState].NextState = patternNewNFA()
-						currentState = nfaTable[currentState].NextState
+						nextState, ok := patternNewNFA()
+						if !ok {
+							return false
+						}
+						nfaTable[currentState].NextState = nextState
+						currentState = nextState
 					} else {
-						ScreenMessage(MsgPatIllegalMarkNumber)
-						panic(localException{})
+						if !parseErr {
+							ScreenMessage(MsgPatIllegalMarkNumber)
+						}
+						return false
 					}
 
 				case PatternEquals, PatternModified:
@@ -639,16 +715,22 @@ func PatternParser(
 						sset := singletonSet(PatternMarksModified)
 						nfaTable[currentState].AcceptSet.Set(sset)
 					}
-					nfaTable[currentState].NextState = patternNewNFA()
-					currentState = nfaTable[currentState].NextState
+					nextState, ok := patternNewNFA()
+					if !ok {
+						return false
+					}
+					nfaTable[currentState].NextState = nextState
+					currentState = nextState
 
 				default:
 					negate = false
 					if *patCh == PatternNegate {
 						negate = true
 						if !patternGetch(parseCount, patCh, inString) {
-							ScreenMessage(MsgPatPrematurePatternEnd)
-							panic(localException{})
+							if !parseErr {
+								ScreenMessage(MsgPatPrematurePatternEnd)
+							}
+							return false
 						}
 					}
 
@@ -656,8 +738,10 @@ func PatternParser(
 						auxSet := new(big.Int)
 						setClear(auxSet)
 						if !patternGetch(parseCount, patCh, inString) {
-							ScreenMessage(MsgPatPrematurePatternEnd)
-							panic(localException{})
+							if !parseErr {
+								ScreenMessage(MsgPatPrematurePatternEnd)
+							}
+							return false
 						}
 						delimiter = *patCh
 						temporary = patternDefinition.Length
@@ -669,36 +753,44 @@ func PatternParser(
 								Dlm: delimiter,
 							}
 							if !patternGetch(parseCount, patCh, inString) {
-								ScreenMessage(MsgPatPrematurePatternEnd)
-								panic(localException{})
+								if !parseErr {
+									ScreenMessage(MsgPatPrematurePatternEnd)
+								}
+								return false
 							}
 							aux = 0
 							for *patCh != delimiter {
 								aux++
 								derefTpar.Str.Set(aux, *patCh)
 								if !patternGetch(parseCount, patCh, inString) {
-									ScreenMessage(MsgPatNoMatchingDelim)
-									panic(localException{})
+									if !parseErr {
+										ScreenMessage(MsgPatNoMatchingDelim)
+									}
+									return false
 								}
 							}
 							patternDefinition.Length -= (aux + 1)
 							derefTpar.Len = aux
 							if !TparGet1(&derefTpar, tparSort, &derefSpan) {
-								panic(otherException{})
+								return false
 							}
 						} else {
 							aux = 0
 							if !patternGetch(parseCount, patCh, inString) {
-								ScreenMessage(MsgPatPrematurePatternEnd)
-								panic(localException{})
+								if !parseErr {
+									ScreenMessage(MsgPatPrematurePatternEnd)
+								}
+								return false
 							}
 							patternDefinition.Strng.Set(patternDefinition.Length, 0)
 							for *patCh != delimiter {
 								aux++
 								derefSpan.Str.Set(aux, *patCh)
 								if !patternGetch(parseCount, patCh, inString) {
-									ScreenMessage(MsgPatNoMatchingDelim)
-									panic(localException{})
+									if !parseErr {
+										ScreenMessage(MsgPatNoMatchingDelim)
+									}
+									return false
 								}
 							}
 							derefSpan.Len = aux
@@ -730,15 +822,19 @@ func PatternParser(
 						}
 						nfaTable[currentState].EpsilonOut = false
 						nfaTable[currentState].AcceptSet.Set(auxSet)
-						nfaTable[currentState].NextState = patternNewNFA()
-						currentState = nfaTable[currentState].NextState
+						nextState, ok := patternNewNFA()
+						if !ok {
+							return false
+						}
+						nfaTable[currentState].NextState = nextState
+						currentState = nextState
 
 					} else if chAndPosSet[*patCh] {
 						nfaTable[currentState].EpsilonOut = false
 						if positionalsSet[*patCh] {
 							if negate {
 								ScreenMessage(MsgPatIllegalParameter)
-								panic(localException{})
+								return false
 							}
 							setClear(&nfaTable[currentState].AcceptSet)
 							switch *patCh {
@@ -777,18 +873,24 @@ func PatternParser(
 								nfaTable[currentState].AcceptSet.Set(rset)
 							}
 						}
-						nfaTable[currentState].NextState = patternNewNFA()
-						currentState = nfaTable[currentState].NextState
+						nextState, ok := patternNewNFA()
+						if !ok {
+							return false
+						}
+						nfaTable[currentState].NextState = nextState
+						currentState = nextState
 					} else {
 						ScreenMessage(MsgPatSetNotDefined)
-						panic(localException{})
+						return false
 					}
 				}
 
 				if leadingParam == PatternRange {
 					nfaTable[currentState].EpsilonOut = true
 					nfaTable[currentState].FirstOut = PatternNull
-					patternRangeBuild(rangeStart, rangeEnd, rangePatch, rangeIndefinite)
+					if !patternRangeBuild(rangeStart, rangeEnd, rangePatch, rangeIndefinite) {
+						return false
+					}
 				}
 			}
 
@@ -798,51 +900,61 @@ func PatternParser(
 					break
 				}
 			}
+			if parseErr {
+				return false
+			}
 		}
 		*finish = currentState
+		return true
 	}
 
 	// patternCompound handles compound patterns (with alternatives)
-	patternCompound = func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int) {
+	patternCompound = func(first int, finish *int, parseCount *int, inString *TParObject, patCh *byte, depth int) bool {
 		var compoundFinish int
 		var currentEStart int
 
 		if depth > PatternMaxDepth {
 			ScreenMessage(MsgPatPatternTooComplex)
-			panic(localException{})
+			return false
 		}
 
 		currentEStart = first
 		nfaTable[currentEStart].EpsilonOut = true
 		nfaTable[currentEStart].SecondOut = PatternNull
-		nfaTable[currentEStart].FirstOut = patternNewNFA()
-		patternPattern(nfaTable[currentEStart].FirstOut, finish, parseCount, inString, patCh, depth+1)
+		firstOut, ok := patternNewNFA()
+		if !ok {
+			return false
+		}
+		nfaTable[currentEStart].FirstOut = firstOut
+		if !patternPattern(nfaTable[currentEStart].FirstOut, finish, parseCount, inString, patCh, depth+1) {
+			return false
+		}
 		compoundFinish = *finish
 
 		if *patCh == PatternBar {
 			if patternGetch(parseCount, patCh, inString) {
-				nfaTable[currentEStart].SecondOut = patternNewNFA()
-				patternCompound(nfaTable[currentEStart].SecondOut, finish, parseCount, inString, patCh, depth+1)
+				if parseErr {
+					return false
+				}
+				secondOut, ok := patternNewNFA()
+				if !ok {
+					return false
+				}
+				nfaTable[currentEStart].SecondOut = secondOut
+				if !patternCompound(nfaTable[currentEStart].SecondOut, finish, parseCount, inString, patCh, depth+1) {
+					return false
+				}
 				nfaTable[compoundFinish].EpsilonOut = true
 				nfaTable[compoundFinish].FirstOut = PatternNull
 				nfaTable[compoundFinish].SecondOut = *finish
+			} else if parseErr {
+				return false
 			} else {
 				nfaTable[currentEStart].SecondOut = *finish
 			}
 		}
+		return true
 	}
-
-	result := true
-	defer func() {
-		if r := recover(); r != nil {
-			switch r.(type) {
-			case localException, otherException:
-				result = false
-			default:
-				panic(r)
-			}
-		}
-	}()
 
 	ExitAbort = true
 	patternDefinition.Length = 0
@@ -852,15 +964,26 @@ func PatternParser(
 	nfaTable[PatternNull].SecondOut = PatternNull
 
 	*statesUsed = PatternNFAStart
-	*firstPatternStart = patternNewNFA()
+	firstStart, ok := patternNewNFA()
+	if !ok {
+		return false
+	}
+	*firstPatternStart = firstStart
 	parseCount = 0
 	var patCh byte
 	if patternGetch(&parseCount, &patCh, pattern) {
-		patternCompound(*firstPatternStart, &firstPatternEnd, &parseCount, pattern, &patCh, 1)
+		if !patternCompound(*firstPatternStart, &firstPatternEnd, &parseCount, pattern, &patCh, 1) {
+			return false
+		}
 		if patCh == PatternComma {
 			if patternGetch(&parseCount, &patCh, pattern) {
+				if parseErr {
+					return false
+				}
 				*leftContextEnd = firstPatternEnd
-				patternCompound(*leftContextEnd, middleContextEnd, &parseCount, pattern, &patCh, 1)
+				if !patternCompound(*leftContextEnd, middleContextEnd, &parseCount, pattern, &patCh, 1) {
+					return false
+				}
 			} else {
 				*middleContextEnd = firstPatternEnd
 				*patternFinalState = firstPatternEnd
@@ -872,7 +995,12 @@ func PatternParser(
 		}
 		if patCh == PatternComma {
 			if patternGetch(&parseCount, &patCh, pattern) {
-				patternCompound(*middleContextEnd, patternFinalState, &parseCount, pattern, &patCh, 1)
+				if parseErr {
+					return false
+				}
+				if !patternCompound(*middleContextEnd, patternFinalState, &parseCount, pattern, &patCh, 1) {
+					return false
+				}
 			} else {
 				*patternFinalState = *middleContextEnd
 			}
@@ -880,16 +1008,16 @@ func PatternParser(
 			*patternFinalState = *middleContextEnd
 		}
 	} else {
-		ScreenMessage(MsgPatNullPattern)
-		panic(localException{})
+		if !parseErr {
+			ScreenMessage(MsgPatNullPattern)
+		}
+		return false
 	}
 
 	nfaTable[*patternFinalState].EpsilonOut = true
 	nfaTable[*patternFinalState].FirstOut = PatternNull
 	nfaTable[*patternFinalState].SecondOut = PatternNull
 
-	result = true
 	ExitAbort = false
-
-	return result
+	return true
 }
