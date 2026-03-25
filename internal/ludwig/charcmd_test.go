@@ -8,146 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Helper functions for charcmd tests
-
-// setupTestFrameForCharCmd creates a frame with a line for character command testing
-func setupTestFrameForCharCmd(content string) (*FrameObject, *LineHdrObject) {
-	frame := &FrameObject{
-		SpaceLeft:    MaxSpace,
-		SpaceLimit:   MaxSpace,
-		ScrWidth:     80,
-		ScrOffset:    0,
-		MarginLeft:   1,
-		MarginRight:  MaxStrLen,
-		TextModified: false,
-		Options:      0,
-	}
-
-	group := &GroupObject{
-		Frame:       frame,
-		FirstLineNr: 1,
-		NrLines:     1,
-	}
-
-	line := &LineHdrObject{
-		Group:    group,
-		OffsetNr: 0,
-		Used:     len(content),
-		ScrRowNr: 0,
-		Str:      NewBlankStrObject(MaxStrLen),
-		Marks:    make([]*MarkObject, 0), // Initialize marks slice
-	}
-
-	// Copy content into the line
-	line.Str.Assign(content)
-
-	// Add NULL line at the end
-	nullLine := &LineHdrObject{
-		Group:    group,
-		OffsetNr: 1,
-		FLink:    nil,
-		BLink:    line,
-		Used:     0,
-		Str:      nil,
-		Marks:    make([]*MarkObject, 0),
-	}
-	line.FLink = nullLine
-
-	group.FirstLine = line
-	group.LastLine = nullLine
-	frame.FirstGroup = group
-	frame.LastGroup = group
-
-	// Create marks array for the frame
-	for i := range frame.Marks {
-		frame.Marks[i] = nil
-	}
-
-	// Create a dot mark (required for operations) using MarkCreate
-	MarkCreate(line, 1, &frame.Dot)
-
-	return frame, line
-}
-
-// setupMultiLineFrame creates a frame with multiple lines
-func setupMultiLineFrame(lines []string) *FrameObject {
-	frame := &FrameObject{
-		SpaceLeft:    MaxSpace,
-		SpaceLimit:   MaxSpace,
-		ScrWidth:     80,
-		ScrOffset:    0,
-		MarginLeft:   1,
-		MarginRight:  MaxStrLen,
-		TextModified: false,
-		Options:      0,
-	}
-
-	group := &GroupObject{
-		Frame:       frame,
-		FirstLineNr: 1,
-		NrLines:     len(lines),
-	}
-
-	var prevLine *LineHdrObject
-	var firstLine *LineHdrObject
-
-	for i, content := range lines {
-		line := &LineHdrObject{
-			Group:    group,
-			OffsetNr: i,
-			Used:     len(content),
-			ScrRowNr: 0,
-			Str:      NewBlankStrObject(MaxStrLen),
-			Marks:    make([]*MarkObject, 0), // Initialize marks slice
-		}
-
-		// Copy content
-		line.Str.Assign(content)
-
-		if prevLine != nil {
-			prevLine.FLink = line
-			line.BLink = prevLine
-		} else {
-			firstLine = line
-		}
-		prevLine = line
-	}
-
-	// Add NULL line at the end
-	nullLine := &LineHdrObject{
-		Group:    group,
-		OffsetNr: len(lines),
-		FLink:    nil,
-		BLink:    prevLine,
-		Used:     0,
-		Str:      nil,
-		Marks:    make([]*MarkObject, 0),
-	}
-	if prevLine != nil {
-		prevLine.FLink = nullLine
-	}
-
-	group.FirstLine = firstLine
-	group.LastLine = nullLine
-	frame.FirstGroup = group
-	frame.LastGroup = group
-
-	// Create marks array
-	for i := range frame.Marks {
-		frame.Marks[i] = nil
-	}
-
-	// Create dot mark using MarkCreate
-	MarkCreate(firstLine, 1, &frame.Dot)
-
-	return frame
-}
-
 // Tests for CharcmdInsert
 
 func TestCharcmdInsert(t *testing.T) {
 	t.Run("InsertSingleSpaceInMiddle", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // After "he"
@@ -163,7 +28,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertMultipleSpaces", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // After "he"
@@ -177,7 +42,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertAtStartOfLine", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("world")
+		frame := contentLineInFrame("world")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 1
@@ -190,7 +55,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertWithNegativeCount", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("test")
+		frame := contentLineInFrame("test")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
@@ -208,7 +73,7 @@ func TestCharcmdInsert(t *testing.T) {
 		for i := range MaxStrLen - 5 {
 			longContent = longContent[:i] + "x" + longContent[i+1:]
 		}
-		frame, _ := setupTestFrameForCharCmd(longContent)
+		frame := contentLineInFrame(longContent)
 
 		frame.Dot.Col = MaxStrLen - 4
 
@@ -220,7 +85,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertWithLeadParamNInt", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("text")
+		frame := contentLineInFrame("text")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
@@ -234,7 +99,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertCreatesModifiedMark", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("test")
+		frame := contentLineInFrame("test")
 
 		frame.Dot.Col = 2
 
@@ -246,7 +111,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertCreatesEqualsMark", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("test")
+		frame := contentLineInFrame("test")
 
 		frame.Dot.Col = 2
 
@@ -261,7 +126,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 func TestCharcmdDelete(t *testing.T) {
 	t.Run("DeleteSingleChar", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 2 // At 'e'
@@ -276,7 +141,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteMultipleChars", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("testing")
+		frame := contentLineInFrame("testing")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // At 's'
@@ -290,7 +155,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteBackward", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("world")
+		frame := contentLineInFrame("world")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 4 // At 'l'
@@ -306,7 +171,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteToEndOfLine", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
@@ -320,7 +185,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteToStartOfLine", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("testing")
+		frame := contentLineInFrame("testing")
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 5
@@ -335,7 +200,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteBeyondLineEnd", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hi")
+		frame := contentLineInFrame("hi")
 
 		frame.Dot.Col = 2
 
@@ -351,7 +216,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteAtStartBackward", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"first", "second"})
+		frame := contentLinesInFrame([]string{"first", "second"})
 		frame.Options.Set(OptNewLine)
 
 		// Second line, first column
@@ -366,7 +231,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteUpdatesModifiedMark", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 
 		frame.Dot.Col = 2
 
@@ -378,7 +243,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteClearsEqualsMark", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("test")
+		frame := contentLineInFrame("test")
 
 		// Create an equals mark
 		MarkCreate(frame.Dot.Line, 3, &frame.Marks[MarkEquals])
@@ -395,7 +260,7 @@ func TestCharcmdDelete(t *testing.T) {
 
 func TestCharcmdRubout(t *testing.T) {
 	t.Run("RuboutInInsertMode", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		oldMode := EditMode
 		EditMode = ModeInsert
 		defer func() {
@@ -415,7 +280,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInOverwriteModeSingleChar", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -435,7 +300,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInOverwriteModeMultiple", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("testing")
+		frame := contentLineInFrame("testing")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -455,7 +320,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutAtStartOfLine", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("test")
+		frame := contentLineInFrame("test")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -473,7 +338,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInInsertModeConvertsToDelete", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("world")
+		frame := contentLineInFrame("world")
 		oldMode := EditMode
 		EditMode = ModeInsert
 		defer func() {
@@ -491,7 +356,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInOverwriteModeCreatesMarks", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("hello")
+		frame := contentLineInFrame("hello")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -509,7 +374,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutWithPIndefinite", func(t *testing.T) {
-		frame, _ := setupTestFrameForCharCmd("testing")
+		frame := contentLineInFrame("testing")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -530,7 +395,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 func TestJoinLines(t *testing.T) {
 	t.Run("JoinWithPreviousLine", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"hello", "world"})
+		frame := contentLinesInFrame([]string{"hello", "world"})
 
 		// Set options to enable newline mode
 		frame.Options.Set(OptNewLine)
@@ -550,7 +415,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinFailsWithoutNewlineOption", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"hello", "world"})
+		frame := contentLinesInFrame([]string{"hello", "world"})
 
 		// Explicitly clear newline option
 		frame.Options.Clear(OptNewLine)
@@ -565,7 +430,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinFailsAtFirstLine", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"hello", "world"})
+		frame := contentLinesInFrame([]string{"hello", "world"})
 
 		frame.Options.Set(OptNewLine)
 		frame.Dot.Col = 1
@@ -576,7 +441,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinCreatesModifiedMark", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"line1", "line2"})
+		frame := contentLinesInFrame([]string{"line1", "line2"})
 
 		frame.Options.Set(OptNewLine)
 
@@ -591,7 +456,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinWithEmptyLine", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"hello", ""})
+		frame := contentLinesInFrame([]string{"hello", ""})
 
 		frame.Options.Set(OptNewLine)
 
@@ -611,7 +476,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinVerifiesContentMerge", func(t *testing.T) {
-		frame := setupMultiLineFrame([]string{"foo", "bar"})
+		frame := contentLinesInFrame([]string{"foo", "bar"})
 
 		frame.Options.Set(OptNewLine)
 
