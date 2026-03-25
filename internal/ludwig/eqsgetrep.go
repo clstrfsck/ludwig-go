@@ -504,12 +504,12 @@ outerLoop:
 					delta = CurrentFrame.Dot.Line.Used + 1 - CurrentFrame.Dot.Col
 				}
 				if delta > 0 {
-					if !CharcmdDelete(LeadParamPInt, delta, true) {
+					if !CharcmdDelete(CurrentFrame, LeadParamPInt, delta, true) {
 						return result
 					}
 				}
 			} else if delta < 0 {
-				if !CharcmdInsert(LeadParamPInt, -delta, true) {
+				if !CharcmdInsert(CurrentFrame, LeadParamPInt, -delta, true) {
 					return result
 				}
 				CurrentFrame.Dot.Col = startCol
@@ -524,7 +524,7 @@ outerLoop:
 				CurrentFrame.Dot.Col = startCol
 			}
 		} else {
-			if !CharcmdDelete(LeadParamPInt, length, true) {
+			if !CharcmdDelete(CurrentFrame, LeadParamPInt, length, true) {
 				return result
 			}
 			if !TextInsertTpar(&tpar2, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {

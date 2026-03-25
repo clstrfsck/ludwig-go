@@ -15,19 +15,19 @@
 package ludwig
 
 // CharcmdInsert handles character insertion commands
-func CharcmdInsert(rept LeadParam, count int, fromSpan bool) (result bool) {
+func CharcmdInsert(frame *FrameObject, rept LeadParam, count int, fromSpan bool) (result bool) {
 	cmdStatus := false
 	if rept == LeadParamMinus {
 		rept = LeadParamNInt
 	}
 	count = iabs(count)
 
-	oldDotCol := CurrentFrame.Dot.Col
+	oldDotCol := frame.Dot.Col
 	var maximum int
-	if CurrentFrame.Dot.Col <= CurrentFrame.Dot.Line.Used {
-		maximum = MaxStrLen - CurrentFrame.Dot.Line.Used
+	if frame.Dot.Col <= frame.Dot.Line.Used {
+		maximum = MaxStrLen - frame.Dot.Line.Used
 	} else {
-		maximum = MaxStrLen - CurrentFrame.Dot.Col
+		maximum = MaxStrLen - frame.Dot.Col
 	}
 
 	inserted := 0
@@ -37,15 +37,15 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) (result bool) {
 	defer func() {
 		if TtControlC {
 			cmdStatus = false
-			CurrentFrame.Dot.Col = oldDotCol
+			frame.Dot.Col = oldDotCol
 			var tempMark *MarkObject
-			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col+inserted, &tempMark)
-			TextRemove(CurrentFrame.Dot, tempMark)
+			MarkCreate(frame.Dot.Line, frame.Dot.Col+inserted, &tempMark)
+			TextRemove(frame.Dot, tempMark)
 			MarkDestroy(&tempMark)
 		} else if cmdStatus {
-			CurrentFrame.TextModified = true
-			MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-			MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
+			frame.TextModified = true
+			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+			MarkCreate(frame.Dot.Line, eqlCol, &frame.Marks[MarkEquals])
 		}
 		result = cmdStatus || !fromSpan
 	}()
@@ -55,14 +55,14 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) (result bool) {
 		if cmdValid {
 			maximum -= count
 			inserted += count
-			if !TextInsert(true, 1, BlankString, count, CurrentFrame.Dot) {
+			if !TextInsert(true, 1, BlankString, count, frame.Dot) {
 				return
 			}
 			if rept == LeadParamNInt {
-				eqlCol = CurrentFrame.Dot.Col - count
+				eqlCol = frame.Dot.Col - count
 			} else {
-				eqlCol = CurrentFrame.Dot.Col
-				CurrentFrame.Dot.Col -= count
+				eqlCol = frame.Dot.Col
+				frame.Dot.Col -= count
 			}
 			cmdStatus = true
 		}
@@ -94,35 +94,35 @@ func CharcmdInsert(rept LeadParam, count int, fromSpan bool) (result bool) {
 	return
 }
 
-func joinLines() bool {
+func joinLines(frame *FrameObject) bool {
 	// Only join lines if we are in the newline mode and there is a previous line to join to
-	if !CurrentFrame.Options.Has(OptNewLine) {
+	if !frame.Options.Has(OptNewLine) {
 		return false
 	}
-	bLine := CurrentFrame.Dot.Line.BLink
+	bLine := frame.Dot.Line.BLink
 	if bLine == nil {
 		return false
 	}
 	var theOtherMark *MarkObject
 	MarkCreate(bLine, bLine.Used+1, &theOtherMark)
 	defer MarkDestroy(&theOtherMark)
-	if TextRemove(theOtherMark, CurrentFrame.Dot) {
-		CurrentFrame.TextModified = true
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+	if TextRemove(theOtherMark, frame.Dot) {
+		frame.TextModified = true
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
 		return true
 	}
 	return false
 }
 
 // CharcmdDelete handles character deletion commands
-func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
+func CharcmdDelete(frame *FrameObject, rept LeadParam, count int, fromSpan bool) (result bool) {
 	cmdStatus := false
-	oldDotCol := CurrentFrame.Dot.Col
+	oldDotCol := frame.Dot.Col
 	oldStr := NewStrObjectCopy(
-		CurrentFrame.Dot.Line.Str,
+		frame.Dot.Line.Str,
 		1,
-		CurrentFrame.Dot.Line.Used,
-		CurrentFrame.Dot.Line.Used,
+		frame.Dot.Line.Used,
+		frame.Dot.Line.Used,
 	)
 	deleted := 0
 	var key int
@@ -130,16 +130,16 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 	defer func() {
 		if TtControlC {
 			cmdStatus = false
-			CurrentFrame.Dot.Col = 1
-			TextOvertype(false, 1, oldStr, oldStr.Len(), CurrentFrame.Dot)
-			CurrentFrame.Dot.Col = oldDotCol
+			frame.Dot.Col = 1
+			TextOvertype(false, 1, oldStr, oldStr.Len(), frame.Dot)
+			frame.Dot.Col = oldDotCol
 		} else if cmdStatus {
-			oldDotCol = CurrentFrame.Dot.Col
+			oldDotCol = frame.Dot.Col
 			count = MaxStrLenP - oldDotCol
 			if deleted > count {
 				deleted = count
 			}
-			line := CurrentFrame.Dot.Line
+			line := frame.Dot.Line
 			MarksSqueeze(line, oldDotCol, line, oldDotCol+deleted)
 			MarksShift(
 				line,
@@ -148,10 +148,10 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 				line,
 				oldDotCol,
 			)
-			CurrentFrame.TextModified = true
-			MarkCreate(line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-			if CurrentFrame.Marks[MarkEquals] != nil {
-				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+			frame.TextModified = true
+			MarkCreate(line, frame.Dot.Col, &frame.Marks[MarkModified])
+			if frame.Marks[MarkEquals] != nil {
+				MarkDestroy(&frame.Marks[MarkEquals])
 			}
 		}
 		result = cmdStatus || !fromSpan
@@ -159,7 +159,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 
 	for {
 		cmdValid := true
-		dotCol := CurrentFrame.Dot.Col
+		dotCol := frame.Dot.Col
 		switch rept {
 		case LeadParamNone, LeadParamPlus, LeadParamPInt:
 			if count > MaxStrLenP-dotCol {
@@ -170,58 +170,58 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 		case LeadParamMinus, LeadParamNInt:
 			count = -count
 			if count < dotCol {
-				CurrentFrame.Dot.Col -= count
-			} else if !fromSpan && count == 1 && dotCol == 1 && joinLines() {
-				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+				frame.Dot.Col -= count
+			} else if !fromSpan && count == 1 && dotCol == 1 && joinLines(frame) {
+				MarkDestroy(&frame.Marks[MarkEquals])
 				return
 			} else {
 				cmdValid = false
 			}
 		case LeadParamNIndef:
-			count = CurrentFrame.Dot.Col - 1
-			CurrentFrame.Dot.Col = 1
+			count = frame.Dot.Col - 1
+			frame.Dot.Col = 1
 		}
 
 		if cmdValid {
 			// Update the text of the line
-			oldUsed := CurrentFrame.Dot.Line.Used
-			length := (CurrentFrame.Dot.Line.Used + 1) - (CurrentFrame.Dot.Col + count)
+			oldUsed := frame.Dot.Line.Used
+			length := (frame.Dot.Line.Used + 1) - (frame.Dot.Col + count)
 			if length > 0 {
-				l := CurrentFrame.Dot.Line
-				dotCol := CurrentFrame.Dot.Col
+				l := frame.Dot.Line
+				dotCol := frame.Dot.Col
 				l.Str.Erase(count, dotCol)
 				l.Str.FillN(' ', count, l.Used+1-count)
 				l.Used -= count
-			} else if CurrentFrame.Dot.Col <= CurrentFrame.Dot.Line.Used {
-				d := CurrentFrame.Dot
+			} else if frame.Dot.Col <= frame.Dot.Line.Used {
+				d := frame.Dot
 				d.Line.Str.FillN(' ', d.Line.Used+1-d.Col, d.Col)
 				d.Line.Used = d.Line.Str.TrimmedLen(' ', d.Col)
 			}
 
 			// Update the screen
-			scrCol := CurrentFrame.Dot.Col - CurrentFrame.ScrOffset
-			if (CurrentFrame.Dot.Line.ScrRowNr != 0) && (count != 0) &&
-				(CurrentFrame.Dot.Col <= oldUsed) && (scrCol <= CurrentFrame.ScrWidth) {
+			scrCol := frame.Dot.Col - frame.ScrOffset
+			if (frame.Dot.Line.ScrRowNr != 0) && (count != 0) &&
+				(frame.Dot.Col <= oldUsed) && (scrCol <= frame.ScrWidth) {
 				if scrCol <= 0 {
 					scrCol = 1
 				}
-				VduMoveCurs(scrCol, CurrentFrame.Dot.Line.ScrRowNr)
-				length = CurrentFrame.ScrWidth + 1 - scrCol
+				VduMoveCurs(scrCol, frame.Dot.Line.ScrRowNr)
+				length = frame.ScrWidth + 1 - scrCol
 				if count < length {
 					length = count
 					VduDeleteChars(count)
 				} else {
 					VduClearEOL()
 				}
-				firstCol := CurrentFrame.ScrOffset + CurrentFrame.ScrWidth + 1 - length
-				if firstCol <= CurrentFrame.Dot.Line.Used {
+				firstCol := frame.ScrOffset + frame.ScrWidth + 1 - length
+				if firstCol <= frame.Dot.Line.Used {
 					VduMoveCurs(
-						CurrentFrame.ScrWidth+1-length, CurrentFrame.Dot.Line.ScrRowNr,
+						frame.ScrWidth+1-length, frame.Dot.Line.ScrRowNr,
 					)
-					if length > CurrentFrame.Dot.Line.Used+1-firstCol {
-						length = CurrentFrame.Dot.Line.Used + 1 - firstCol
+					if length > frame.Dot.Line.Used+1-firstCol {
+						length = frame.Dot.Line.Used + 1 - firstCol
 					}
-					VduDisplayStr(CurrentFrame.Dot.Line.Str.Slice(firstCol, length), true)
+					VduDisplayStr(frame.Dot.Line.Str.Slice(firstCol, length), true)
 				}
 			}
 			deleted += count
@@ -263,7 +263,7 @@ func CharcmdDelete(rept LeadParam, count int, fromSpan bool) (result bool) {
 }
 
 // CharcmdRubout handles rubout commands
-func CharcmdRubout(rept LeadParam, count int, fromSpan bool) (result bool) {
+func CharcmdRubout(frame *FrameObject, rept LeadParam, count int, fromSpan bool) (result bool) {
 	var cmdStatus bool
 	if EditMode == ModeInsert {
 		if rept == LeadParamPIndef {
@@ -271,41 +271,41 @@ func CharcmdRubout(rept LeadParam, count int, fromSpan bool) (result bool) {
 		} else {
 			rept = LeadParamNInt
 		}
-		cmdStatus = CharcmdDelete(rept, -count, fromSpan)
+		cmdStatus = CharcmdDelete(frame, rept, -count, fromSpan)
 		return cmdStatus || !fromSpan
 	} else {
-		oldDotCol := CurrentFrame.Dot.Col
-		dotUsed := CurrentFrame.Dot.Line.Used
-		oldStr := NewStrObjectCopy(CurrentFrame.Dot.Line.Str, 1, dotUsed, dotUsed)
+		oldDotCol := frame.Dot.Col
+		dotUsed := frame.Dot.Line.Used
+		oldStr := NewStrObjectCopy(frame.Dot.Line.Str, 1, dotUsed, dotUsed)
 		var key int
 		var eqlCol int
 
 		defer func() {
 			if TtControlC {
 				cmdStatus = false
-				CurrentFrame.Dot.Col = 1
-				TextOvertype(false, 1, oldStr, dotUsed, CurrentFrame.Dot)
-				CurrentFrame.Dot.Col = oldDotCol
+				frame.Dot.Col = 1
+				TextOvertype(false, 1, oldStr, dotUsed, frame.Dot)
+				frame.Dot.Col = oldDotCol
 			} else if cmdStatus {
-				CurrentFrame.TextModified = true
-				MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
-				MarkCreate(CurrentFrame.Dot.Line, eqlCol, &CurrentFrame.Marks[MarkEquals])
+				frame.TextModified = true
+				MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+				MarkCreate(frame.Dot.Line, eqlCol, &frame.Marks[MarkEquals])
 			}
 			result = cmdStatus || !fromSpan
 		}()
 
 		for {
 			if rept == LeadParamPIndef {
-				count = CurrentFrame.Dot.Col - 1
+				count = frame.Dot.Col - 1
 			}
-			cmdValid := (count <= CurrentFrame.Dot.Col-1)
+			cmdValid := (count <= frame.Dot.Col-1)
 			if cmdValid {
-				eqlCol = CurrentFrame.Dot.Col
-				CurrentFrame.Dot.Col -= count
-				if !TextOvertype(true, 1, BlankString, count, CurrentFrame.Dot) {
+				eqlCol = frame.Dot.Col
+				frame.Dot.Col -= count
+				if !TextOvertype(true, 1, BlankString, count, frame.Dot) {
 					return
 				}
-				CurrentFrame.Dot.Col -= count
+				frame.Dot.Col -= count
 				cmdStatus = true
 			}
 			if fromSpan {
