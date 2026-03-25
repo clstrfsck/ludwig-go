@@ -1,17 +1,23 @@
 package ludwig
 
 // emptyTestLineInFrame creates a test line within a frame with a group
-func emptyTestLineInFrame() *FrameObject {
-	return contentLinesInFrame([]string{""})
+func emptyTestLineInFrame() (*FrameObject, *LineHdrObject) {
+	return contentLineInFrame("")
 }
 
-// contentLineInFrame creates a frame with a line for character command testing
-func contentLineInFrame(content string) *FrameObject {
-	return contentLinesInFrame([]string{content})
+// contentLineInFrame creates a frame containing a single content line plus the
+// trailing NULL/sentinel line
+func contentLineInFrame(content string) (*FrameObject, *LineHdrObject) {
+	frame, lines := contentLinesInFrame([]string{content})
+	return frame, lines[0]
 }
 
-// contentLinesInFrame creates a frame with multiple lines
-func contentLinesInFrame(lines []string) *FrameObject {
+// contentLinesInFrame creates a frame with a single group whose content
+// consists of the provided lines, followed by a trailing NULL/sentinel
+// line. The group's NrLines field counts only the real content lines
+// (len(lines)); the extra sentinel line (with FLink == nil) is added at
+// the end of the linked list to match the editor's internal layout.
+func contentLinesInFrame(lines []string) (*FrameObject, []*LineHdrObject) {
 	frame := &FrameObject{
 		SpaceLeft:   MaxSpace,
 		SpaceLimit:  MaxSpace,
@@ -28,6 +34,7 @@ func contentLinesInFrame(lines []string) *FrameObject {
 
 	var prevLine *LineHdrObject
 	var firstLine *LineHdrObject
+	var textLines []*LineHdrObject = make([]*LineHdrObject, len(lines))
 
 	for i, content := range lines {
 		line := &LineHdrObject{
@@ -37,6 +44,8 @@ func contentLinesInFrame(lines []string) *FrameObject {
 			Str:      NewBlankStrObject(MaxStrLen),
 			Marks:    make([]*MarkObject, 0), // Initialize marks slice
 		}
+
+		textLines[i] = line
 
 		// Copy content
 		line.Str.Assign(content)
@@ -69,5 +78,5 @@ func contentLinesInFrame(lines []string) *FrameObject {
 	// Create dot mark using MarkCreate
 	MarkCreate(firstLine, 1, &frame.Dot)
 
-	return frame
+	return frame, textLines
 }

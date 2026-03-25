@@ -12,8 +12,7 @@ import (
 
 func TestCharcmdInsert(t *testing.T) {
 	t.Run("InsertSingleSpaceInMiddle", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("hello")
 
 		frame.Dot.Col = 3 // After "he"
 
@@ -28,8 +27,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertMultipleSpaces", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("hello")
 
 		frame.Dot.Col = 3 // After "he"
 
@@ -42,8 +40,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertAtStartOfLine", func(t *testing.T) {
-		frame := contentLineInFrame("world")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("world")
 
 		frame.Dot.Col = 1
 
@@ -55,8 +52,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertWithNegativeCount", func(t *testing.T) {
-		frame := contentLineInFrame("test")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("test")
 
 		frame.Dot.Col = 3
 
@@ -73,7 +69,7 @@ func TestCharcmdInsert(t *testing.T) {
 		for i := range MaxStrLen - 5 {
 			longContent = longContent[:i] + "x" + longContent[i+1:]
 		}
-		frame := contentLineInFrame(longContent)
+		frame, _ := contentLineInFrame(longContent)
 
 		frame.Dot.Col = MaxStrLen - 4
 
@@ -85,8 +81,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertWithLeadParamNInt", func(t *testing.T) {
-		frame := contentLineInFrame("text")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("text")
 
 		frame.Dot.Col = 3
 
@@ -99,7 +94,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertCreatesModifiedMark", func(t *testing.T) {
-		frame := contentLineInFrame("test")
+		frame, _ := contentLineInFrame("test")
 
 		frame.Dot.Col = 2
 
@@ -111,7 +106,7 @@ func TestCharcmdInsert(t *testing.T) {
 	})
 
 	t.Run("InsertCreatesEqualsMark", func(t *testing.T) {
-		frame := contentLineInFrame("test")
+		frame, _ := contentLineInFrame("test")
 
 		frame.Dot.Col = 2
 
@@ -126,8 +121,7 @@ func TestCharcmdInsert(t *testing.T) {
 
 func TestCharcmdDelete(t *testing.T) {
 	t.Run("DeleteSingleChar", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("hello")
 
 		frame.Dot.Col = 2 // At 'e'
 
@@ -141,8 +135,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteMultipleChars", func(t *testing.T) {
-		frame := contentLineInFrame("testing")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("testing")
 
 		frame.Dot.Col = 3 // At 's'
 
@@ -155,8 +148,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteBackward", func(t *testing.T) {
-		frame := contentLineInFrame("world")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("world")
 
 		frame.Dot.Col = 4 // At 'l'
 
@@ -171,8 +163,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteToEndOfLine", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("hello")
 
 		frame.Dot.Col = 3
 
@@ -185,8 +176,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteToStartOfLine", func(t *testing.T) {
-		frame := contentLineInFrame("testing")
-		line := frame.Dot.Line
+		frame, line := contentLineInFrame("testing")
 
 		frame.Dot.Col = 5
 
@@ -200,7 +190,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteBeyondLineEnd", func(t *testing.T) {
-		frame := contentLineInFrame("hi")
+		frame, _ := contentLineInFrame("hi")
 
 		frame.Dot.Col = 2
 
@@ -216,7 +206,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteAtStartBackward", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"first", "second"})
+		frame, _ := contentLinesInFrame([]string{"first", "second"})
 		frame.Options.Set(OptNewLine)
 
 		// Second line, first column
@@ -231,7 +221,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteUpdatesModifiedMark", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
+		frame, _ := contentLineInFrame("hello")
 
 		frame.Dot.Col = 2
 
@@ -243,7 +233,7 @@ func TestCharcmdDelete(t *testing.T) {
 	})
 
 	t.Run("DeleteClearsEqualsMark", func(t *testing.T) {
-		frame := contentLineInFrame("test")
+		frame, _ := contentLineInFrame("test")
 
 		// Create an equals mark
 		MarkCreate(frame.Dot.Line, 3, &frame.Marks[MarkEquals])
@@ -260,13 +250,12 @@ func TestCharcmdDelete(t *testing.T) {
 
 func TestCharcmdRubout(t *testing.T) {
 	t.Run("RuboutInInsertMode", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
+		frame, line := contentLineInFrame("hello")
 		oldMode := EditMode
 		EditMode = ModeInsert
 		defer func() {
 			EditMode = oldMode
 		}()
-		line := frame.Dot.Line
 
 		frame.Dot.Col = 4
 
@@ -280,13 +269,12 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInOverwriteModeSingleChar", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
+		frame, line := contentLineInFrame("hello")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
 			EditMode = oldMode
 		}()
-		line := frame.Dot.Line
 
 		frame.Dot.Col = 4
 
@@ -300,13 +288,12 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInOverwriteModeMultiple", func(t *testing.T) {
-		frame := contentLineInFrame("testing")
+		frame, line := contentLineInFrame("testing")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
 			EditMode = oldMode
 		}()
-		line := frame.Dot.Line
 
 		frame.Dot.Col = 5
 
@@ -320,13 +307,12 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutAtStartOfLine", func(t *testing.T) {
-		frame := contentLineInFrame("test")
+		frame, line := contentLineInFrame("test")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
 			EditMode = oldMode
 		}()
-		line := frame.Dot.Line
 
 		frame.Dot.Col = 1
 
@@ -338,13 +324,12 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInInsertModeConvertsToDelete", func(t *testing.T) {
-		frame := contentLineInFrame("world")
+		frame, _ := contentLineInFrame("world")
 		oldMode := EditMode
 		EditMode = ModeInsert
 		defer func() {
 			EditMode = oldMode
 		}()
-		_ = frame.Dot.Line
 
 		frame.Dot.Col = 3
 
@@ -356,7 +341,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutInOverwriteModeCreatesMarks", func(t *testing.T) {
-		frame := contentLineInFrame("hello")
+		frame, _ := contentLineInFrame("hello")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -374,7 +359,7 @@ func TestCharcmdRubout(t *testing.T) {
 	})
 
 	t.Run("RuboutWithPIndefinite", func(t *testing.T) {
-		frame := contentLineInFrame("testing")
+		frame, _ := contentLineInFrame("testing")
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -395,7 +380,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 func TestJoinLines(t *testing.T) {
 	t.Run("JoinWithPreviousLine", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"hello", "world"})
+		frame, _ := contentLinesInFrame([]string{"hello", "world"})
 
 		// Set options to enable newline mode
 		frame.Options.Set(OptNewLine)
@@ -415,7 +400,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinFailsWithoutNewlineOption", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"hello", "world"})
+		frame, _ := contentLinesInFrame([]string{"hello", "world"})
 
 		// Explicitly clear newline option
 		frame.Options.Clear(OptNewLine)
@@ -430,7 +415,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinFailsAtFirstLine", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"hello", "world"})
+		frame, _ := contentLinesInFrame([]string{"hello", "world"})
 
 		frame.Options.Set(OptNewLine)
 		frame.Dot.Col = 1
@@ -441,7 +426,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinCreatesModifiedMark", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"line1", "line2"})
+		frame, _ := contentLinesInFrame([]string{"line1", "line2"})
 
 		frame.Options.Set(OptNewLine)
 
@@ -456,7 +441,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinWithEmptyLine", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"hello", ""})
+		frame, _ := contentLinesInFrame([]string{"hello", ""})
 
 		frame.Options.Set(OptNewLine)
 
@@ -476,7 +461,7 @@ func TestJoinLines(t *testing.T) {
 	})
 
 	t.Run("JoinVerifiesContentMerge", func(t *testing.T) {
-		frame := contentLinesInFrame([]string{"foo", "bar"})
+		frame, _ := contentLinesInFrame([]string{"foo", "bar"})
 
 		frame.Options.Set(OptNewLine)
 

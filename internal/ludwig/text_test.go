@@ -71,7 +71,7 @@ func setupLinkedLines(count int) (*FrameObject, []*LineHdrObject) {
 // TestTextReturnCol tests the TextReturnCol function
 func TestTextReturnCol(t *testing.T) {
 	t.Run("ColumnBeforeMarginLeft", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 10
 
 		newCol := TextReturnCol(frame.FirstGroup.FirstLine, 5, false)
@@ -79,7 +79,7 @@ func TestTextReturnCol(t *testing.T) {
 	})
 
 	t.Run("ColumnAtOrAfterMarginLeft", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 10
 
 		newCol := TextReturnCol(frame.FirstGroup.FirstLine, 15, false)
@@ -87,7 +87,7 @@ func TestTextReturnCol(t *testing.T) {
 	})
 
 	t.Run("AutoIndentDisabled", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 5
 		frame.Options = 0 // No auto-indent
 
@@ -109,7 +109,7 @@ func TestTextReturnCol(t *testing.T) {
 	})
 
 	t.Run("AutoIndentEnabled", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 1
 		frame.Options.Set(OptAutoIndent)
 
@@ -156,7 +156,7 @@ func TestTextRealizeNull(t *testing.T) {
 // TestTextInsert tests the TextInsert function
 func TestTextInsert(t *testing.T) {
 	t.Run("InsertIntoEmptyLine", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
 			Line: frame.FirstGroup.FirstLine,
@@ -176,7 +176,7 @@ func TestTextInsert(t *testing.T) {
 	})
 
 	t.Run("InsertInMiddleOfLine", func(t *testing.T) {
-		frame := contentLineInFrame("Hello")
+		frame, _ := contentLineInFrame("Hello")
 
 		mark := &MarkObject{
 			Line: frame.FirstGroup.FirstLine,
@@ -199,7 +199,7 @@ func TestTextInsert(t *testing.T) {
 	})
 
 	t.Run("InsertMultipleCopies", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
 			Line: frame.FirstGroup.FirstLine,
@@ -218,7 +218,7 @@ func TestTextInsert(t *testing.T) {
 	})
 
 	t.Run("InsertExceedsMaxLength", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
 			Line: frame.FirstGroup.FirstLine,
@@ -261,7 +261,7 @@ func TestTextInsert(t *testing.T) {
 // TestTextOvertype tests the TextOvertype function
 func TestTextOvertype(t *testing.T) {
 	t.Run("OvertypeEmptyLine", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
 			Line: frame.FirstGroup.FirstLine,
@@ -281,8 +281,7 @@ func TestTextOvertype(t *testing.T) {
 	})
 
 	t.Run("OvertypeExistingContent", func(t *testing.T) {
-		frame := contentLineInFrame("Hello")
-		line := frame.FirstGroup.FirstLine
+		_, line := contentLineInFrame("Hello")
 
 		mark := &MarkObject{
 			Line: line,
@@ -304,7 +303,7 @@ func TestTextOvertype(t *testing.T) {
 	})
 
 	t.Run("OvertypeMultipleCopies", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		line := frame.FirstGroup.FirstLine
 
 		mark := &MarkObject{
@@ -324,8 +323,7 @@ func TestTextOvertype(t *testing.T) {
 	})
 
 	t.Run("OvertypeExceedsMaxLength", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
-		line := frame.FirstGroup.FirstLine
+		_, line := emptyTestLineInFrame()
 
 		mark := &MarkObject{
 			Line: line,
@@ -342,8 +340,7 @@ func TestTextOvertype(t *testing.T) {
 // TestTextRemove tests the TextRemove function
 func TestTextRemove(t *testing.T) {
 	t.Run("RemoveWithinSingleLine", func(t *testing.T) {
-		frame := contentLineInFrame("Hello World")
-		line := frame.FirstGroup.FirstLine
+		_, line := contentLineInFrame("Hello World")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -368,8 +365,7 @@ func TestTextRemove(t *testing.T) {
 	})
 
 	t.Run("RemoveFromStartOfLine", func(t *testing.T) {
-		frame := contentLineInFrame("Test")
-		line := frame.FirstGroup.FirstLine
+		_, line := contentLineInFrame("Test")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -390,8 +386,7 @@ func TestTextRemove(t *testing.T) {
 	})
 
 	t.Run("RemoveEntireLine", func(t *testing.T) {
-		frame := contentLineInFrame("Test")
-		line := frame.FirstGroup.FirstLine
+		_, line := contentLineInFrame("Test")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -587,8 +582,7 @@ func TestTextSplitLine(t *testing.T) {
 // TestTextMove tests the TextMove function
 func TestTextMove(t *testing.T) {
 	t.Run("CopySingleLine", func(t *testing.T) {
-		frame := contentLineInFrame("Hello")
-		line := frame.FirstGroup.FirstLine
+		frame, line := contentLineInFrame("Hello")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -617,8 +611,7 @@ func TestTextMove(t *testing.T) {
 	})
 
 	t.Run("MoveWithinSameLine", func(t *testing.T) {
-		frame := contentLineInFrame("Hello World")
-		line := frame.FirstGroup.FirstLine
+		frame, line := contentLineInFrame("Hello World")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -648,8 +641,7 @@ func TestTextMove(t *testing.T) {
 	})
 
 	t.Run("CopyZeroCount", func(t *testing.T) {
-		frame := contentLineInFrame("Test")
-		line := frame.FirstGroup.FirstLine
+		_, line := contentLineInFrame("Test")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -789,7 +781,7 @@ func TestTextMove(t *testing.T) {
 // TestTextInsertTpar tests the TextInsertTpar function
 func TestTextInsertTpar(t *testing.T) {
 	t.Run("InsertSimpleTpar", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		line := frame.FirstGroup.FirstLine
 
 		mark := &MarkObject{
@@ -825,7 +817,7 @@ func TestTextInsertTpar(t *testing.T) {
 	})
 
 	t.Run("InsertEmptyTpar", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		line := frame.FirstGroup.FirstLine
 
 		mark := &MarkObject{
@@ -848,7 +840,7 @@ func TestTextInsertTpar(t *testing.T) {
 	})
 
 	t.Run("InsertMultiLineTpar", func(t *testing.T) {
-		frame := emptyTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		line := frame.FirstGroup.FirstLine
 
 		// Set some initial content on the line
