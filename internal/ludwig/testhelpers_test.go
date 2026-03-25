@@ -18,6 +18,9 @@ func contentLineInFrame(content string) (*FrameObject, *LineHdrObject) {
 // (len(lines)); the extra sentinel line (with FLink == nil) is added at
 // the end of the linked list to match the editor's internal layout.
 func contentLinesInFrame(lines []string) (*FrameObject, []*LineHdrObject) {
+	if len(lines) == 0 {
+		panic("Must have at least one line")
+	}
 	frame := &FrameObject{
 		SpaceLeft:   MaxSpace,
 		SpaceLimit:  MaxSpace,
