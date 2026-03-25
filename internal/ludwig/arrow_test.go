@@ -45,13 +45,12 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 1,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdLeft(LeadParamNone, 1, &newEql)
+		result := doCmdLeft(frame, LeadParamNone, 1, &newEql)
 
 		assert.True(t, result, "Expected move left to succeed")
-		assert.Equal(t, 9, CurrentFrame.Dot.Col, "Expected column to be 9")
+		assert.Equal(t, 9, frame.Dot.Col, "Expected column to be 9")
 		assert.Equal(t, 10, newEql.Col, "Expected newEql to store old position")
 	})
 
@@ -62,13 +61,12 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 1,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdLeft(LeadParamPInt, 5, &newEql)
+		result := doCmdLeft(frame, LeadParamPInt, 5, &newEql)
 
 		assert.True(t, result, "Expected move left to succeed")
-		assert.Equal(t, 5, CurrentFrame.Dot.Col, "Expected column to be 5")
+		assert.Equal(t, 5, frame.Dot.Col, "Expected column to be 5")
 	})
 
 	t.Run("MoveLeftBeyondBoundary", func(t *testing.T) {
@@ -78,13 +76,12 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 1,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdLeft(LeadParamNone, 5, &newEql)
+		result := doCmdLeft(frame, LeadParamNone, 5, &newEql)
 
 		assert.False(t, result, "Expected move left to fail at boundary")
-		assert.Equal(t, 3, CurrentFrame.Dot.Col, "Expected column unchanged")
+		assert.Equal(t, 3, frame.Dot.Col, "Expected column unchanged")
 	})
 
 	t.Run("MoveLeftToMargin", func(t *testing.T) {
@@ -94,13 +91,12 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 5,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdLeft(LeadParamPIndef, 0, &newEql)
+		result := doCmdLeft(frame, LeadParamPIndef, 0, &newEql)
 
 		assert.True(t, result, "Expected move to margin to succeed")
-		assert.Equal(t, 5, CurrentFrame.Dot.Col, "Expected column at left margin")
+		assert.Equal(t, 5, frame.Dot.Col, "Expected column at left margin")
 	})
 
 	t.Run("AlreadyAtMargin", func(t *testing.T) {
@@ -110,13 +106,12 @@ func TestDoCmdLeft(t *testing.T) {
 			},
 			MarginLeft: 10,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdLeft(LeadParamPIndef, 0, &newEql)
+		result := doCmdLeft(frame, LeadParamPIndef, 0, &newEql)
 
 		assert.False(t, result, "Expected move to fail when already beyond margin")
-		assert.Equal(t, 5, CurrentFrame.Dot.Col, "Expected column unchanged")
+		assert.Equal(t, 5, frame.Dot.Col, "Expected column unchanged")
 	})
 }
 
@@ -129,13 +124,12 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdRight(LeadParamNone, 1, &newEql)
+		result := doCmdRight(frame, LeadParamNone, 1, &newEql)
 
 		assert.True(t, result, "Expected move right to succeed")
-		assert.Equal(t, 11, CurrentFrame.Dot.Col, "Expected column to be 11")
+		assert.Equal(t, 11, frame.Dot.Col, "Expected column to be 11")
 		assert.Equal(t, 10, newEql.Col, "Expected newEql to store old position")
 	})
 
@@ -146,13 +140,12 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdRight(LeadParamPInt, 5, &newEql)
+		result := doCmdRight(frame, LeadParamPInt, 5, &newEql)
 
 		assert.True(t, result, "Expected move right to succeed")
-		assert.Equal(t, 15, CurrentFrame.Dot.Col, "Expected column to be 15")
+		assert.Equal(t, 15, frame.Dot.Col, "Expected column to be 15")
 	})
 
 	t.Run("MoveRightBeyondBoundary", func(t *testing.T) {
@@ -162,13 +155,12 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdRight(LeadParamNone, 5, &newEql)
+		result := doCmdRight(frame, LeadParamNone, 5, &newEql)
 
 		assert.False(t, result, "Expected move right to fail at boundary")
-		assert.Equal(t, MaxStrLenP-2, CurrentFrame.Dot.Col, "Expected column unchanged")
+		assert.Equal(t, MaxStrLenP-2, frame.Dot.Col, "Expected column unchanged")
 	})
 
 	t.Run("MoveRightToMargin", func(t *testing.T) {
@@ -178,13 +170,12 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: 80,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdRight(LeadParamPIndef, 0, &newEql)
+		result := doCmdRight(frame, LeadParamPIndef, 0, &newEql)
 
 		assert.True(t, result, "Expected move to margin to succeed")
-		assert.Equal(t, 80, CurrentFrame.Dot.Col, "Expected column at right margin")
+		assert.Equal(t, 80, frame.Dot.Col, "Expected column at right margin")
 	})
 
 	t.Run("AlreadyBeyondMargin", func(t *testing.T) {
@@ -194,13 +185,12 @@ func TestDoCmdRight(t *testing.T) {
 			},
 			MarginRight: 80,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdRight(LeadParamPIndef, 0, &newEql)
+		result := doCmdRight(frame, LeadParamPIndef, 0, &newEql)
 
 		assert.False(t, result, "Expected move to fail when already beyond margin")
-		assert.Equal(t, 90, CurrentFrame.Dot.Col, "Expected column unchanged")
+		assert.Equal(t, 90, frame.Dot.Col, "Expected column unchanged")
 	})
 }
 
@@ -220,13 +210,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(1, 1, &newEql)
+		result := doCmdTabBacktab(frame, 1, 1, &newEql)
 
 		assert.True(t, result, "Expected tab to succeed")
-		assert.Equal(t, 10, CurrentFrame.Dot.Col, "Expected column at tab stop 10")
+		assert.Equal(t, 10, frame.Dot.Col, "Expected column at tab stop 10")
 		assert.Equal(t, 5, newEql.Col, "Expected newEql to store old position")
 	})
 
@@ -244,13 +233,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(1, 2, &newEql)
+		result := doCmdTabBacktab(frame, 1, 2, &newEql)
 
 		assert.True(t, result, "Expected tab to succeed")
-		assert.Equal(t, 20, CurrentFrame.Dot.Col, "Expected column at tab stop 20")
+		assert.Equal(t, 20, frame.Dot.Col, "Expected column at tab stop 20")
 	})
 
 	t.Run("BacktabToPreviousStop", func(t *testing.T) {
@@ -267,13 +255,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(-1, 1, &newEql)
+		result := doCmdTabBacktab(frame, -1, 1, &newEql)
 
 		assert.True(t, result, "Expected backtab to succeed")
-		assert.Equal(t, 20, CurrentFrame.Dot.Col, "Expected column at tab stop 20")
+		assert.Equal(t, 20, frame.Dot.Col, "Expected column at tab stop 20")
 	})
 
 	t.Run("TabToMarginLeft", func(t *testing.T) {
@@ -288,13 +275,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  15,
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(1, 1, &newEql)
+		result := doCmdTabBacktab(frame, 1, 1, &newEql)
 
 		assert.True(t, result, "Expected tab to succeed")
-		assert.Equal(t, 15, CurrentFrame.Dot.Col, "Expected column at left margin")
+		assert.Equal(t, 15, frame.Dot.Col, "Expected column at left margin")
 	})
 
 	t.Run("TabToMarginRight", func(t *testing.T) {
@@ -309,13 +295,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: 80,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(1, 1, &newEql)
+		result := doCmdTabBacktab(frame, 1, 1, &newEql)
 
 		assert.True(t, result, "Expected tab to succeed")
-		assert.Equal(t, 80, CurrentFrame.Dot.Col, "Expected column at right margin")
+		assert.Equal(t, 80, frame.Dot.Col, "Expected column at right margin")
 	})
 
 	t.Run("TabBeyondBoundary", func(t *testing.T) {
@@ -330,13 +315,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  1,
 			MarginRight: MaxStrLenP + 10, // Beyond boundary
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(1, 1, &newEql)
+		result := doCmdTabBacktab(frame, 1, 1, &newEql)
 
 		assert.False(t, result, "Expected tab to fail at boundary")
-		assert.Equal(t, MaxStrLenP-2, CurrentFrame.Dot.Col, "Expected column unchanged")
+		assert.Equal(t, MaxStrLenP-2, frame.Dot.Col, "Expected column unchanged")
 	})
 
 	t.Run("BacktabBeyondBoundary", func(t *testing.T) {
@@ -351,13 +335,12 @@ func TestDoCmdTabBacktab(t *testing.T) {
 			MarginLeft:  -5, // Beyond boundary
 			MarginRight: MaxStrLenP,
 		}
-		withFrame(t, frame)
 
 		var newEql MarkObject
-		result := doCmdTabBacktab(-1, 1, &newEql)
+		result := doCmdTabBacktab(frame, -1, 1, &newEql)
 
 		assert.False(t, result, "Expected backtab to fail at boundary")
-		assert.Equal(t, 2, CurrentFrame.Dot.Col, "Expected column unchanged")
+		assert.Equal(t, 2, frame.Dot.Col, "Expected column unchanged")
 	})
 }
 
@@ -373,7 +356,6 @@ func TestDoCmdHome(t *testing.T) {
 			},
 			ScrOffset: 10,
 		}
-		withFrame(t, frame)
 
 		oldScrFrame := ScrFrame
 		oldScrTopLine := ScrTopLine
@@ -387,10 +369,10 @@ func TestDoCmdHome(t *testing.T) {
 		}()
 
 		var newEql MarkObject
-		doCmdHome(&newEql)
+		doCmdHome(frame, &newEql)
 
 		assert.Equal(t, 50, newEql.Col, "Expected newEql to store old column")
-		assert.Equal(t, 11, CurrentFrame.Dot.Col, "Expected column to be 1 after home")
+		assert.Equal(t, 11, frame.Dot.Col, "Expected column to be 1 after home")
 	})
 
 	t.Run("HomeInNonScreenFrame", func(t *testing.T) {
@@ -400,18 +382,17 @@ func TestDoCmdHome(t *testing.T) {
 				Col:  50,
 			},
 		}
-		withFrame(t, frame)
 
 		otherFrame := &FrameObject{}
 		oldScrFrame := ScrFrame
-		ScrFrame = otherFrame // Different from CurrentFrame
+		ScrFrame = otherFrame // Different from frame
 
 		defer func() {
 			ScrFrame = oldScrFrame
 		}()
 
 		var newEql MarkObject
-		doCmdHome(&newEql)
+		doCmdHome(frame, &newEql)
 
 		assert.Equal(t, 50, newEql.Col, "Expected newEql to store old column")
 	})

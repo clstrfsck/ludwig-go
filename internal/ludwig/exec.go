@@ -314,12 +314,12 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			CurrentFrame.Options.Has(OptNewLine) {
 			if CurrentFrame.Dot.Line.FLink == nil {
 				TextRealizeNull(CurrentFrame.Dot.Line)
-				cmdSuccess = ArrowCommand(command, rept, count, fromSpan)
+				cmdSuccess = ArrowCommand(CurrentFrame, command, rept, count, fromSpan)
 			} else {
 				cmdSuccess = Execute(CmdSplitLine, rept, count, tparam, fromSpan)
 			}
 		} else {
-			cmdSuccess = ArrowCommand(command, rept, count, fromSpan)
+			cmdSuccess = ArrowCommand(CurrentFrame, command, rept, count, fromSpan)
 		}
 
 	case CmdDump:
