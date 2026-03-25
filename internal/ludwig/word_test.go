@@ -8,14 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// withOops sets FrameOops to frame for the duration of a test.
-func withOops(t testing.TB, frame *FrameObject) {
-	t.Helper()
-	old := FrameOops
-	FrameOops = frame
-	t.Cleanup(func() { FrameOops = old })
-}
-
 // ---- WordLeft -----------------------------------------------------------
 
 func TestWordLeft(t *testing.T) {
@@ -417,7 +409,6 @@ func TestWordFill(t *testing.T) {
 		// "hello world" Used=11 > MarginRight=10 → split at space → "hello" + "world"
 		frame, lines := buildWordFrame([]string{"hello world"})
 		frame.MarginRight = 10
-		withFrame(t, frame)
 
 		ok := WordFill(frame, LeadParamNone, 1)
 
@@ -430,7 +421,6 @@ func TestWordFill(t *testing.T) {
 		// "hello" (5) + "hi" (2): spaceToAdd=4, word fits → "hello hi"; FLink deleted
 		frame, lines := buildWordFrame([]string{"hello", "hi"})
 		frame.MarginRight = 10
-		withFrame(t, frame)
 
 		ok := WordFill(frame, LeadParamNone, 1)
 
@@ -442,7 +432,6 @@ func TestWordFill(t *testing.T) {
 		// "hello" (5 <= 10), FLink is blank → no change, returns true
 		frame, lines := buildWordFrame([]string{"hello"})
 		frame.MarginRight = 10
-		withFrame(t, frame)
 
 		ok := WordFill(frame, LeadParamNone, 1)
 
@@ -473,7 +462,6 @@ func TestWordFill(t *testing.T) {
 		// With PIndef, processes both lines; "hello world" split gives count++
 		frame, lines := buildWordFrame([]string{"hello world", "foo"})
 		frame.MarginRight = 10
-		withFrame(t, frame)
 
 		ok := WordFill(frame, LeadParamPIndef, 0)
 
