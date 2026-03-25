@@ -15,6 +15,20 @@ import (
 func buildWordFrame(contents []string) (*FrameObject, []*LineHdrObject) {
 	n := len(contents)
 	frame, lines := setupTestFrame(n)
+
+	// Adjust the frame to match production invariants: in the real editor,
+	// the null/EOP line is part of the group and is the group's LastLine.
+	// setupTestFrame leaves the EOP line as a separate FLink-only node
+	// after the last real line, so we reattach it here.
+	if frame != nil && frame.LastGroup != nil && frame.LastGroup.LastLine != nil {
+		lastReal := frame.LastGroup.LastLine
+		if lastReal.FLink != nil {
+			eop := lastReal.FLink
+			frame.LastGroup.LastLine = eop
+			// Ensure the EOP line is associated with the group, if applicable.
+			eop.Group = frame.LastGroup
+		}
+	}
 	for i, s := range contents {
 		if s != "" {
 			setLineContent(lines[i], s)
