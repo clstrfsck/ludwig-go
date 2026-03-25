@@ -156,9 +156,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 3}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(0, createTestTpar("x"), false)
+		ok := NextbridgeCommand(frame, 0, createTestTpar("x"), false)
 
 		assert.True(t, ok)
 		assert.NotNil(t, frame.Marks[MarkEquals])
@@ -171,9 +170,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(1, createTestTpar(" "), false)
+		ok := NextbridgeCommand(frame, 1, createTestTpar(" "), false)
 
 		assert.True(t, ok)
 		assert.Equal(t, 6, frame.Dot.Col)
@@ -184,9 +182,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world test")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(2, createTestTpar(" "), false)
+		ok := NextbridgeCommand(frame, 2, createTestTpar(" "), false)
 
 		assert.True(t, ok)
 		assert.Equal(t, 12, frame.Dot.Col)
@@ -196,9 +193,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(1, createTestTpar("x"), false)
+		ok := NextbridgeCommand(frame, 1, createTestTpar("x"), false)
 
 		assert.False(t, ok)
 	})
@@ -209,9 +205,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 8}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(-1, createTestTpar(" "), false)
+		ok := NextbridgeCommand(frame, -1, createTestTpar(" "), false)
 
 		assert.True(t, ok)
 		assert.Equal(t, 7, frame.Dot.Col)
@@ -221,9 +216,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 3}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(-1, createTestTpar("x"), false)
+		ok := NextbridgeCommand(frame, -1, createTestTpar("x"), false)
 
 		assert.False(t, ok)
 	})
@@ -234,9 +228,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 2}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(1, createTestTpar("aeiou"), true)
+		ok := NextbridgeCommand(frame, 1, createTestTpar("aeiou"), true)
 
 		assert.True(t, ok)
 		assert.Equal(t, 3, frame.Dot.Col)
@@ -247,9 +240,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "HELLO world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(1, createTestTpar("a..z"), false)
+		ok := NextbridgeCommand(frame, 1, createTestTpar("a..z"), false)
 
 		assert.True(t, ok)
 		assert.Equal(t, 7, frame.Dot.Col)
@@ -259,9 +251,8 @@ func TestNextbridgeCommand(t *testing.T) {
 		frame, lines := setupTestFrame(1)
 		setLineContent(lines[0], "hello world")
 		frame.Dot = &MarkObject{Line: lines[0], Col: 1}
-		withFrame(t, frame)
 
-		ok := NextbridgeCommand(1, createTestTpar(" "), false)
+		ok := NextbridgeCommand(frame, 1, createTestTpar(" "), false)
 
 		assert.True(t, ok)
 		assert.NotNil(t, frame.Marks[MarkEquals])
