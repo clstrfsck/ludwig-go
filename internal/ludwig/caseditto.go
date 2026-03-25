@@ -34,27 +34,27 @@ func getCommandType(command Commands) commandType {
 }
 
 // CaseDittoCommand handles case change and ditto commands
-func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool) bool {
+func CaseDittoCommand(frame *FrameObject, command Commands, rept LeadParam, count int, fromSpan bool) bool {
 	cmdStatus := false
 	insert := (command == CmdDittoUp || command == CmdDittoDown) &&
 		((EditMode == ModeInsert) ||
 			((EditMode == ModeCommand) && (PreviousMode == ModeInsert)))
 
 	// Remember current line
-	oldDotCol := CurrentFrame.Dot.Col
+	oldDotCol := frame.Dot.Col
 
 	oldStr := NewStrObjectCopy(
-		CurrentFrame.Dot.Line.Str,
+		frame.Dot.Line.Str,
 		1,
-		CurrentFrame.Dot.Line.Used,
-		CurrentFrame.Dot.Line.Used,
+		frame.Dot.Line.Used,
+		frame.Dot.Line.Used,
 	)
 
 	cmdType := getCommandType(command)
 	var otherLine *LineHdrObject
 	switch command {
 	case CmdCaseUp, CmdCaseLow, CmdCaseEdit:
-		otherLine = CurrentFrame.Dot.Line
+		otherLine = frame.Dot.Line
 	case CmdDittoUp, CmdDittoDown:
 		if insert && (rept == LeadParamMinus || rept == LeadParamNInt ||
 			rept == LeadParamNIndef) {
@@ -66,9 +66,9 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 	for {
 		switch command {
 		case CmdDittoUp:
-			otherLine = CurrentFrame.Dot.Line.BLink
+			otherLine = frame.Dot.Line.BLink
 		case CmdDittoDown:
-			otherLine = CurrentFrame.Dot.Line.FLink
+			otherLine = frame.Dot.Line.FLink
 		}
 
 		cmdValid := true
@@ -77,31 +77,31 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 		if otherLine != nil {
 			switch rept {
 			case LeadParamNone, LeadParamPlus, LeadParamPInt:
-				if (count != 0) && (CurrentFrame.Dot.Col+count > otherLine.Used+1) {
+				if (count != 0) && (frame.Dot.Col+count > otherLine.Used+1) {
 					cmdValid = false
 				}
-				firstCol = CurrentFrame.Dot.Col
-				newCol = CurrentFrame.Dot.Col + count
+				firstCol = frame.Dot.Col
+				newCol = frame.Dot.Col + count
 
 			case LeadParamPIndef:
-				count = otherLine.Used + 1 - CurrentFrame.Dot.Col
+				count = otherLine.Used + 1 - frame.Dot.Col
 				if count < 0 {
 					cmdValid = false
 				}
-				firstCol = CurrentFrame.Dot.Col
+				firstCol = frame.Dot.Col
 				newCol = otherLine.Used + 1
 
 			case LeadParamMinus, LeadParamNInt:
 				count = -count
-				if count >= CurrentFrame.Dot.Col {
+				if count >= frame.Dot.Col {
 					cmdValid = false
 				} else {
-					firstCol = CurrentFrame.Dot.Col - count
+					firstCol = frame.Dot.Col - count
 				}
 				newCol = firstCol
 
 			case LeadParamNIndef:
-				count = CurrentFrame.Dot.Col - 1
+				count = frame.Dot.Col - 1
 				firstCol = 1
 				newCol = 1
 			}
@@ -146,18 +146,18 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 				// No massaging required
 			}
 
-			CurrentFrame.Dot.Col = firstCol
+			frame.Dot.Col = firstCol
 			if insert {
-				if !TextInsert(true, 1, newStr, count, CurrentFrame.Dot) {
+				if !TextInsert(true, 1, newStr, count, frame.Dot) {
 					break
 				}
 			} else {
-				if !TextOvertype(true, 1, newStr, count, CurrentFrame.Dot) {
+				if !TextOvertype(true, 1, newStr, count, frame.Dot) {
 					break
 				}
 			}
 			// Reposition dot
-			CurrentFrame.Dot.Col = newCol
+			frame.Dot.Col = newCol
 			cmdStatus = true
 		}
 
@@ -205,16 +205,16 @@ func CaseDittoCommand(command Commands, rept LeadParam, count int, fromSpan bool
 
 	if TtControlC {
 		cmdStatus = false
-		CurrentFrame.Dot.Col = 1
-		TextOvertype(false, 1, oldStr, oldStr.Len(), CurrentFrame.Dot)
-		CurrentFrame.Dot.Col = oldDotCol
+		frame.Dot.Col = 1
+		TextOvertype(false, 1, oldStr, oldStr.Len(), frame.Dot)
+		frame.Dot.Col = oldDotCol
 	} else if cmdStatus {
-		CurrentFrame.TextModified = true
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+		frame.TextModified = true
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
 		MarkCreate(
-			CurrentFrame.Dot.Line,
+			frame.Dot.Line,
 			oldDotCol,
-			&CurrentFrame.Marks[MarkEquals],
+			&frame.Marks[MarkEquals],
 		)
 	}
 	return cmdStatus || !fromSpan
