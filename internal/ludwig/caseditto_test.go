@@ -120,7 +120,6 @@ func TestCaseDittoCommand(t *testing.T) {
 
 	t.Run("InsertMode_NotAllowedWithNegativeParams_Minus", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeInsert
 		PreviousMode = ModeCommand
 		TtControlC = false
@@ -130,13 +129,12 @@ func TestCaseDittoCommand(t *testing.T) {
 		frame.Dot.Col = 1
 
 		// Try DittoUp with LeadParamMinus in insert mode - should be rejected
-		result := CaseDittoCommand(CmdDittoUp, LeadParamMinus, -5, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamMinus, -5, true)
 		assert.False(t, result, "Should reject LeadParamMinus in insert mode")
 	})
 
 	t.Run("InsertMode_NotAllowedWithNInt", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeInsert
 		TtControlC = false
 
@@ -144,13 +142,12 @@ func TestCaseDittoCommand(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoDown, LeadParamNInt, -5, true)
+		result := CaseDittoCommand(frame, CmdDittoDown, LeadParamNInt, -5, true)
 		assert.False(t, result, "Should reject LeadParamNInt in insert mode")
 	})
 
 	t.Run("InsertMode_NotAllowedWithNIndef", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeInsert
 		TtControlC = false
 
@@ -158,13 +155,12 @@ func TestCaseDittoCommand(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNIndef, 0, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNIndef, 0, true)
 		assert.False(t, result, "Should reject LeadParamNIndef in insert mode")
 	})
 
 	t.Run("InsertMode_AllowedWithPositiveParams", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeInsert
 		TtControlC = false
 
@@ -173,13 +169,12 @@ func TestCaseDittoCommand(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNIndef, 0, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNIndef, 0, true)
 		assert.False(t, result, "Should reject LeadParamNIndef in insert mode")
 	})
 
 	t.Run("DittoInsertModeDetection", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		TtControlC = false
 
 		setLineContent(lines[0], "UPPER")
@@ -190,13 +185,13 @@ func TestCaseDittoCommand(t *testing.T) {
 		// Test insert mode detection: EditMode == ModeInsert
 		EditMode = ModeInsert
 		PreviousMode = ModeCommand
-		result1 := CaseDittoCommand(CmdDittoUp, LeadParamMinus, -1, true)
+		result1 := CaseDittoCommand(frame, CmdDittoUp, LeadParamMinus, -1, true)
 		assert.False(t, result1, "Should reject in pure insert mode")
 
 		// Test insert mode detection: EditMode == ModeCommand && PreviousMode == ModeInsert
 		EditMode = ModeCommand
 		PreviousMode = ModeInsert
-		result2 := CaseDittoCommand(CmdDittoDown, LeadParamNInt, -1, true)
+		result2 := CaseDittoCommand(frame, CmdDittoDown, LeadParamNInt, -1, true)
 		assert.False(t, result2, "Should reject when previous mode was insert")
 	})
 }
@@ -211,7 +206,6 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseUp_CommandSetup", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -219,7 +213,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdCaseUp, LeadParamNone, 5, true)
+		result := CaseDittoCommand(frame, CmdCaseUp, LeadParamNone, 5, true)
 		assert.True(t, result, "CaseUp should succeed")
 
 		// Verify the first 5 chars were converted to uppercase
@@ -230,7 +224,6 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseLow_CommandSetup", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -238,7 +231,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdCaseLow, LeadParamNone, 5, true)
+		result := CaseDittoCommand(frame, CmdCaseLow, LeadParamNone, 5, true)
 		assert.True(t, result, "CaseLow should succeed")
 
 		// Verify the first 5 chars were converted to lowercase
@@ -249,7 +242,6 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseEdit_CommandSetup", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -257,7 +249,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdCaseEdit, LeadParamNone, 5, true)
+		result := CaseDittoCommand(frame, CmdCaseEdit, LeadParamNone, 5, true)
 		assert.True(t, result, "CaseEdit should succeed")
 
 		// CaseEdit: uppercase after non-letter, lowercase after letter
@@ -267,7 +259,6 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseUp_WithCount", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -275,7 +266,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdCaseUp, LeadParamPInt, 10, true)
+		result := CaseDittoCommand(frame, CmdCaseUp, LeadParamPInt, 10, true)
 		assert.True(t, result, "CaseUp should succeed")
 
 		content := getLineContent(lines[0])
@@ -284,7 +275,6 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseLow_WithOffset", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -292,7 +282,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 5 // Start from column 5
 
-		result := CaseDittoCommand(CmdCaseLow, LeadParamNone, 4, true)
+		result := CaseDittoCommand(frame, CmdCaseLow, LeadParamNone, 4, true)
 		assert.True(t, result, "CaseLow should succeed")
 
 		content := getLineContent(lines[0])
@@ -302,7 +292,6 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 
 	t.Run("CaseEdit_AlternatingCase", func(t *testing.T) {
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -310,7 +299,7 @@ func TestCaseDittoCommand_CaseCommands(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdCaseEdit, LeadParamPInt, 8, true)
+		result := CaseDittoCommand(frame, CmdCaseEdit, LeadParamPInt, 8, true)
 		assert.True(t, result, "CaseEdit should succeed")
 
 		content := getLineContent(lines[0])
@@ -328,7 +317,6 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoUp_ValidLineAbove", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -337,7 +325,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNone, 5, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNone, 5, true)
 		assert.True(t, result, "DittoUp should succeed")
 
 		// Verify characters were copied from line above
@@ -347,7 +335,6 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoDown_ValidLineBelow", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -356,7 +343,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoDown, LeadParamNone, 5, true)
+		result := CaseDittoCommand(frame, CmdDittoDown, LeadParamNone, 5, true)
 		assert.True(t, result, "DittoDown should succeed")
 
 		// Verify characters were copied from line below
@@ -366,7 +353,6 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoUp_WithLeadParamPlus", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -375,7 +361,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 3
 
-		result := CaseDittoCommand(CmdDittoUp, LeadParamPlus, 4, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamPlus, 4, true)
 		assert.True(t, result, "DittoUp should succeed")
 
 		content := getLineContent(lines[1])
@@ -384,7 +370,6 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoDown_WithLeadParamPInt", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -393,7 +378,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoDown, LeadParamPInt, 7, true)
+		result := CaseDittoCommand(frame, CmdDittoDown, LeadParamPInt, 7, true)
 		assert.True(t, result, "DittoDown should succeed")
 
 		content := getLineContent(lines[1])
@@ -402,7 +387,6 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoUp_WithLeadParamPIndef", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -412,7 +396,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 		frame.Dot.Col = 3
 
 		// LeadParamPIndef should copy from dot to end of other line
-		result := CaseDittoCommand(CmdDittoUp, LeadParamPIndef, 0, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamPIndef, 0, true)
 		assert.True(t, result, "DittoUp with PIndef should succeed")
 
 		content := getLineContent(lines[1])
@@ -422,7 +406,6 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 
 	t.Run("DittoDown_FromMiddleOfLine", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -431,7 +414,7 @@ func TestCaseDittoCommand_SuccessfulDittoCases(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 5 // Start from middle
 
-		result := CaseDittoCommand(CmdDittoDown, LeadParamNone, 3, true)
+		result := CaseDittoCommand(frame, CmdDittoDown, LeadParamNone, 3, true)
 		assert.True(t, result, "DittoDown should succeed")
 
 		content := getLineContent(lines[1])
@@ -449,7 +432,6 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamNone_DefaultCount", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -458,7 +440,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNone, 3, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNone, 3, true)
 		assert.True(t, result, "LeadParamNone should succeed")
 
 		content := getLineContent(lines[1])
@@ -468,7 +450,6 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamPlus_PositiveCount", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -476,7 +457,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdCaseUp, LeadParamPlus, 5, true)
+		result := CaseDittoCommand(frame, CmdCaseUp, LeadParamPlus, 5, true)
 		assert.True(t, result, "LeadParamPlus should succeed")
 
 		content := getLineContent(lines[0])
@@ -485,7 +466,6 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("ZeroCount_Handling", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -495,13 +475,12 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		frame.Dot.Col = 1
 
 		// Zero count should be handled
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNone, 0, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNone, 0, true)
 		assert.True(t, result, "Zero count should succeed")
 	})
 
 	t.Run("DittoUp_EmptySourceLine", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -510,14 +489,13 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		frame.Dot.Line = lines[1]
 		frame.Dot.Col = 1
 
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNone, 3, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNone, 3, true)
 		// Validation fails: Dot.Col + count > otherLine.Used + 1 (1+3 > 0+1)
 		assert.False(t, result, "Should fail when trying to copy beyond empty source")
 	})
 
 	t.Run("LeadParamMinus_BackwardCopy", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -531,7 +509,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		// - firstCol = 6 - 3 = 3
 		// - Copy 3 chars from source starting at column 3 ("CDE")
 		// - Overtype current line starting at column 3
-		result := CaseDittoCommand(CmdDittoUp, LeadParamMinus, -3, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamMinus, -3, true)
 		assert.True(t, result, "LeadParamMinus should succeed")
 
 		content := getLineContent(lines[1])
@@ -542,7 +520,6 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamNInt_BackwardCopy", func(t *testing.T) {
 		frame, lines := setupTestFrame(3)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -555,7 +532,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		// - count becomes 4
 		// - firstCol = 8 - 4 = 4
 		// - Copy 4 chars from line below starting at column 4: "WVUT"
-		result := CaseDittoCommand(CmdDittoDown, LeadParamNInt, -4, true)
+		result := CaseDittoCommand(frame, CmdDittoDown, LeadParamNInt, -4, true)
 		assert.True(t, result, "LeadParamNInt should succeed")
 
 		content := getLineContent(lines[1])
@@ -567,7 +544,6 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamNIndef_CopyFromStart", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -578,7 +554,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 		// LeadParamNIndef copies from column 1 to (Dot.Col - 1)
 		// So copy 6 chars from source line
-		result := CaseDittoCommand(CmdDittoUp, LeadParamNIndef, 0, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamNIndef, 0, true)
 		assert.True(t, result, "LeadParamNIndef should succeed")
 
 		content := getLineContent(lines[1])
@@ -588,7 +564,6 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 
 	t.Run("LeadParamMinus_AtStartOfLine", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 
@@ -598,7 +573,7 @@ func TestCaseDittoCommand_ParameterCalculations(t *testing.T) {
 		frame.Dot.Col = 3
 
 		// LeadParamMinus with count=-3 would try to start at column 0 (invalid)
-		result := CaseDittoCommand(CmdDittoUp, LeadParamMinus, -3, true)
+		result := CaseDittoCommand(frame, CmdDittoUp, LeadParamMinus, -3, true)
 		assert.False(t, result, "Should fail when going before column 1")
 	})
 }
@@ -613,7 +588,6 @@ func TestCaseDittoCommandValidation(t *testing.T) {
 
 	t.Run("DittoInInsertMode_RejectsNegativeLeadParams", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		TtControlC = false
 		setLineContent(lines[0], "test")
 		frame.Dot.Line = lines[0]
@@ -642,7 +616,7 @@ func TestCaseDittoCommandValidation(t *testing.T) {
 				EditMode = tc.editMode
 				PreviousMode = tc.prevMode
 
-				result := CaseDittoCommand(tc.command, tc.leadParam, tc.count, true)
+				result := CaseDittoCommand(frame, tc.command, tc.leadParam, tc.count, true)
 				assert.False(t, result, "Should reject %s with %v in insert mode context", tc.command, tc.leadParam)
 			})
 		}
@@ -652,7 +626,6 @@ func TestCaseDittoCommandValidation(t *testing.T) {
 		// This tests that the function recognizes and groups commands correctly
 		// by checking the validation that rejects invalid commands
 		frame, lines := setupTestFrame(1)
-		withFrame(t, frame)
 		EditMode = ModeCommand
 		TtControlC = false
 		setLineContent(lines[0], "test")
@@ -685,7 +658,6 @@ func TestInsertModeRestrictions(t *testing.T) {
 
 	t.Run("AllNegativeParamCombinations", func(t *testing.T) {
 		frame, lines := setupTestFrame(2)
-		withFrame(t, frame)
 		TtControlC = false
 		setLineContent(lines[0], "above")
 		setLineContent(lines[1], "current")
@@ -710,7 +682,7 @@ func TestInsertModeRestrictions(t *testing.T) {
 						EditMode = mode.edit
 						PreviousMode = mode.prev
 
-						result := CaseDittoCommand(cmd, param, -1, true)
+						result := CaseDittoCommand(frame, cmd, param, -1, true)
 						assert.False(t, result, "Should reject command %d with param %d in %s", cmd, param, mode.desc)
 					})
 				}

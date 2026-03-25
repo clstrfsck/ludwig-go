@@ -247,7 +247,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdCaseEdit, CmdCaseLow, CmdCaseUp, CmdDittoDown, CmdDittoUp:
-		cmdSuccess = CaseDittoCommand(command, rept, count, fromSpan)
+		cmdSuccess = CaseDittoCommand(CurrentFrame, command, rept, count, fromSpan)
 
 	case CmdDeleteChar:
 		if rept != LeadParamMarker {
