@@ -118,13 +118,13 @@ func previousWord(dot *MarkObject) bool {
 }
 
 // NewwordAdvanceWord advances cursor by word count
-func NewwordAdvanceWord(rept LeadParam, count int) bool {
+func NewwordAdvanceWord(frame *FrameObject, rept LeadParam, count int) bool {
 	var newDot *MarkObject
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newDot)
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &newDot)
 	defer MarkDestroy(&newDot)
 
 	if rept == LeadParamMarker {
-		MarkCreate(CurrentFrame.Marks[count].Line, CurrentFrame.Marks[count].Col, &newDot)
+		MarkCreate(frame.Marks[count].Line, frame.Marks[count].Col, &newDot)
 		rept = LeadParamNInt
 		count = 0
 	}
@@ -140,7 +140,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 				return false
 			}
 		}
-		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 
 	case LeadParamMinus, LeadParamNInt:
 		count = -count
@@ -153,7 +153,7 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 				return false
 			}
 		}
-		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 
 	case LeadParamPIndef:
 		if newDot.Line.Used == 0 { // Fail if we are on a blank line
@@ -171,24 +171,24 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 			newDot.Col = newDot.Line.Used
 		}
 		for nextWord(newDot) {
-			MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+			MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 		}
 		// now on last word of paragraph
 		//*** next statement should be more sophisticated
 		//    what about the right margin??
 		if newDot.Line.Used+2 > MaxStrLenP {
-			MarkCreate(newDot.Line, MaxStrLenP, &CurrentFrame.Dot)
+			MarkCreate(newDot.Line, MaxStrLenP, &frame.Dot)
 		} else {
-			MarkCreate(newDot.Line, newDot.Line.Used+2, &CurrentFrame.Dot)
+			MarkCreate(newDot.Line, newDot.Line.Used+2, &frame.Dot)
 		}
 
 	case LeadParamNIndef:
 		if !currentWord(newDot) {
 			return false
 		}
-		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 		for previousWord(newDot) {
-			MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+			MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 		}
 
 	default:
@@ -199,12 +199,12 @@ func NewwordAdvanceWord(rept LeadParam, count int) bool {
 }
 
 // NewwordDeleteWord deletes words (same words as advance word advances over)
-func NewwordDeleteWord(rept LeadParam, count int) bool {
+func NewwordDeleteWord(frame *FrameObject, rept LeadParam, count int) bool {
 	result := false
 	var oldPos *MarkObject
 	var here *MarkObject
 	var theOtherMark *MarkObject
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &oldPos)
 
 	defer func() {
 		MarkDestroy(&oldPos)
@@ -213,19 +213,19 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 	}()
 
 	// First Step: Get to the beginning of the word if we are in the middle of it
-	if !NewwordAdvanceWord(LeadParamPInt, 0) {
+	if !NewwordAdvanceWord(frame, LeadParamPInt, 0) {
 		return false
 	}
 	// ASSERTION: We are on the beginning of a word
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &here)
-	if !NewwordAdvanceWord(rept, count) {
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &here)
+	if !NewwordAdvanceWord(frame, rept, count) {
 		// Put Dot back and bail out
-		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
+		MarkCreate(oldPos.Line, oldPos.Col, &frame.Dot)
 		return false
 	}
 	// OK. We now wipe out everything from Dot to here
-	oldDotCol := CurrentFrame.Dot.Col
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &theOtherMark)
+	oldDotCol := frame.Dot.Col
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &theOtherMark)
 	lineNr := LineToNumber(theOtherMark.Line)
 	newLineNr := LineToNumber(here.Line)
 	if (lineNr > newLineNr) || ((lineNr == newLineNr) && (theOtherMark.Col > here.Col)) {
@@ -234,7 +234,7 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 		here = theOtherMark
 		theOtherMark = anotherMark
 	}
-	if CurrentFrame != FrameOops {
+	if frame != FrameOops {
 		// Make sure oops_span is okay.
 		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
 		result = TextMove(
@@ -253,7 +253,7 @@ func NewwordDeleteWord(rept LeadParam, count int) bool {
 		)
 	}
 	if lineNr != newLineNr {
-		result = TextSplitLine(CurrentFrame.Dot, oldDotCol, &here)
+		result = TextSplitLine(frame.Dot, oldDotCol, &here)
 	}
 	return result
 }
@@ -335,13 +335,13 @@ func nextParagraph(dot *MarkObject) bool {
 }
 
 // NewwordAdvanceParagraph advances cursor by paragraph count
-func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
+func NewwordAdvanceParagraph(frame *FrameObject, rept LeadParam, count int) bool {
 	var newDot *MarkObject
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &newDot)
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &newDot)
 	defer MarkDestroy(&newDot)
 
 	if rept == LeadParamMarker {
-		MarkCreate(CurrentFrame.Marks[count].Line, CurrentFrame.Marks[count].Col, &newDot)
+		MarkCreate(frame.Marks[count].Line, frame.Marks[count].Col, &newDot)
 		rept = LeadParamNInt
 		count = 0
 	}
@@ -357,7 +357,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 				return false
 			}
 		}
-		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 
 	case LeadParamMinus, LeadParamNInt:
 		count = -count
@@ -374,10 +374,10 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 				return false
 			}
 		}
-		MarkCreate(newDot.Line, newDot.Col, &CurrentFrame.Dot)
+		MarkCreate(newDot.Line, newDot.Col, &frame.Dot)
 
 	case LeadParamPIndef:
-		MarkCreate(CurrentFrame.LastGroup.LastLine, CurrentFrame.MarginLeft, &CurrentFrame.Dot)
+		MarkCreate(frame.LastGroup.LastLine, frame.MarginLeft, &frame.Dot)
 
 	case LeadParamNIndef:
 		newLine := newDot.Line
@@ -389,7 +389,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 		}
 		// OK we know that there is a paragraph behind us, so goto
 		// the top of the file and go down to the first paragraph
-		newLine = CurrentFrame.FirstGroup.FirstLine
+		newLine = frame.FirstGroup.FirstLine
 		for newLine.Used == 0 {
 			newLine = newLine.FLink
 		}
@@ -397,7 +397,7 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 		for ChIsWordElement(0, rune(newLine.Str.Get(pos))) {
 			pos++
 		}
-		MarkCreate(newLine, pos, &CurrentFrame.Dot)
+		MarkCreate(newLine, pos, &frame.Dot)
 
 	default:
 		// Others handled elsewhere (marker) or ignored.
@@ -407,11 +407,11 @@ func NewwordAdvanceParagraph(rept LeadParam, count int) bool {
 }
 
 // NewwordDeleteParagraph deletes paragraphs
-func NewwordDeleteParagraph(rept LeadParam, count int) bool {
+func NewwordDeleteParagraph(frame *FrameObject, rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject
 	var theOtherMark *MarkObject
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldPos)
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &oldPos)
 
 	defer func() {
 		MarkDestroy(&oldPos)
@@ -420,18 +420,18 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 	}()
 
 	// Get to the beginning of the paragraph
-	if !NewwordAdvanceParagraph(LeadParamPInt, 0) {
+	if !NewwordAdvanceParagraph(frame, LeadParamPInt, 0) {
 		return false
 	}
-	MarkCreate(CurrentFrame.Dot.Line, 1, &here)
-	if !NewwordAdvanceParagraph(rept, count) {
+	MarkCreate(frame.Dot.Line, 1, &here)
+	if !NewwordAdvanceParagraph(frame, rept, count) {
 		// Something wrong so put dot back and abort
-		MarkCreate(oldPos.Line, oldPos.Col, &CurrentFrame.Dot)
+		MarkCreate(oldPos.Line, oldPos.Col, &frame.Dot)
 		return false
 	}
 
 	// Now delete all the lines between marks dot and here
-	MarkCreate(CurrentFrame.Dot.Line, 1, &theOtherMark)
+	MarkCreate(frame.Dot.Line, 1, &theOtherMark)
 	lineNr := LineToNumber(theOtherMark.Line)
 	newLineNr := LineToNumber(here.Line)
 	if lineNr > newLineNr {
@@ -440,7 +440,7 @@ func NewwordDeleteParagraph(rept LeadParam, count int) bool {
 		here = theOtherMark
 		theOtherMark = anotherMark
 	}
-	if CurrentFrame != FrameOops {
+	if frame != FrameOops {
 		// Make sure oops_span is okay.
 		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
 		return TextMove(

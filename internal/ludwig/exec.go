@@ -698,21 +698,21 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		if FileData.OldCmds {
 			cmdSuccess = WordAdvanceWord(rept, count)
 		} else {
-			cmdSuccess = NewwordAdvanceWord(rept, count)
+			cmdSuccess = NewwordAdvanceWord(CurrentFrame, rept, count)
 		}
 
 	case CmdWordDelete:
 		if FileData.OldCmds {
 			cmdSuccess = WordDeleteWord(rept, count)
 		} else {
-			cmdSuccess = NewwordDeleteWord(rept, count)
+			cmdSuccess = NewwordDeleteWord(CurrentFrame, rept, count)
 		}
 
 	case CmdAdvanceParagraph:
-		cmdSuccess = NewwordAdvanceParagraph(rept, count)
+		cmdSuccess = NewwordAdvanceParagraph(CurrentFrame, rept, count)
 
 	case CmdDeleteParagraph:
-		cmdSuccess = NewwordDeleteParagraph(rept, count)
+		cmdSuccess = NewwordDeleteParagraph(CurrentFrame, rept, count)
 
 	case CmdMark:
 		cmdSuccess = true
