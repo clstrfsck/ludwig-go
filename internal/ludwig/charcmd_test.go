@@ -148,12 +148,11 @@ func setupMultiLineFrame(lines []string) *FrameObject {
 func TestCharcmdInsert(t *testing.T) {
 	t.Run("InsertSingleSpaceInMiddle", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // After "he"
 
-		result := CharcmdInsert(LeadParamNone, 1, true)
+		result := CharcmdInsert(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.Equal(t, 6, line.Used, "Expected line length to be 6")
@@ -165,12 +164,11 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertMultipleSpaces", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // After "he"
 
-		result := CharcmdInsert(LeadParamPInt, 3, true)
+		result := CharcmdInsert(frame, LeadParamPInt, 3, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.Equal(t, 8, line.Used, "Expected line length to increase by 3")
@@ -180,12 +178,11 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertAtStartOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("world")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 1
 
-		result := CharcmdInsert(LeadParamPInt, 2, true)
+		result := CharcmdInsert(frame, LeadParamPInt, 2, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.Equal(t, 7, line.Used, "Expected line length to increase")
@@ -194,13 +191,12 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertWithNegativeCount", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
 
 		// Negative count should be converted to positive
-		result := CharcmdInsert(LeadParamMinus, -2, true)
+		result := CharcmdInsert(frame, LeadParamMinus, -2, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.Equal(t, 6, line.Used, "Expected line length to increase")
@@ -213,12 +209,11 @@ func TestCharcmdInsert(t *testing.T) {
 			longContent = longContent[:i] + "x" + longContent[i+1:]
 		}
 		frame, _ := setupTestFrameForCharCmd(longContent)
-		withFrame(t, frame)
 
 		frame.Dot.Col = MaxStrLen - 4
 
 		// Try to insert more than we have space for
-		result := CharcmdInsert(LeadParamPInt, 10, true)
+		result := CharcmdInsert(frame, LeadParamPInt, 10, true)
 
 		// Should fail when exceeding MaxStrLen
 		assert.False(t, result, "Expected insert to fail when exceeding MaxStrLen")
@@ -226,12 +221,11 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertWithLeadParamNInt", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("text")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
 
-		result := CharcmdInsert(LeadParamNInt, 2, true)
+		result := CharcmdInsert(frame, LeadParamNInt, 2, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.Equal(t, 6, line.Used, "Expected line length to increase")
@@ -241,11 +235,10 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertCreatesModifiedMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
-		result := CharcmdInsert(LeadParamNone, 1, true)
+		result := CharcmdInsert(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.NotNil(t, frame.Marks[MarkModified], "Expected modified mark to be created")
@@ -254,11 +247,10 @@ func TestCharcmdInsert(t *testing.T) {
 
 	t.Run("InsertCreatesEqualsMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
-		result := CharcmdInsert(LeadParamNone, 2, true)
+		result := CharcmdInsert(frame, LeadParamNone, 2, true)
 
 		assert.True(t, result, "Expected insert to succeed")
 		assert.NotNil(t, frame.Marks[MarkEquals], "Expected equals mark to be created")
@@ -270,12 +262,11 @@ func TestCharcmdInsert(t *testing.T) {
 func TestCharcmdDelete(t *testing.T) {
 	t.Run("DeleteSingleChar", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 2 // At 'e'
 
-		result := CharcmdDelete(LeadParamNone, 1, true)
+		result := CharcmdDelete(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.Equal(t, 4, line.Used, "Expected line length to decrease by 1")
@@ -286,12 +277,11 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteMultipleChars", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3 // At 's'
 
-		result := CharcmdDelete(LeadParamPInt, 3, true)
+		result := CharcmdDelete(frame, LeadParamPInt, 3, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.Equal(t, 4, line.Used, "Expected line length to decrease by 3")
@@ -301,13 +291,12 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteBackward", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("world")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 4 // At 'l'
 
 		// Test backward delete - note: behavior with LeadParamNInt seems problematic
-		result := CharcmdDelete(LeadParamNInt, -2, true)
+		result := CharcmdDelete(frame, LeadParamNInt, -2, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		// assert.Equal(t, 3, line.Used, "Expected line length to decrease")
@@ -318,12 +307,11 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteToEndOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 3
 
-		result := CharcmdDelete(LeadParamPIndef, 0, true)
+		result := CharcmdDelete(frame, LeadParamPIndef, 0, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.Equal(t, 2, line.Used, "Expected only first 2 chars to remain")
@@ -333,12 +321,11 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteToStartOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		withFrame(t, frame)
 		line := frame.Dot.Line
 
 		frame.Dot.Col = 5
 
-		result := CharcmdDelete(LeadParamNIndef, 0, true)
+		result := CharcmdDelete(frame, LeadParamNIndef, 0, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.Equal(t, 1, frame.Dot.Col, "Expected cursor at start")
@@ -349,12 +336,11 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteBeyondLineEnd", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hi")
-		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
 		// Delete forward with count that might exceed line - let's see what happens
-		result := CharcmdDelete(LeadParamPInt, 10, true)
+		result := CharcmdDelete(frame, LeadParamPInt, 10, true)
 
 		// The function will try to delete, behavior depends on impl details
 		// Check if it completed without crashing
@@ -367,14 +353,13 @@ func TestCharcmdDelete(t *testing.T) {
 	t.Run("DeleteAtStartBackward", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"first", "second"})
 		frame.Options.Set(OptNewLine)
-		withFrame(t, frame)
 
 		// Second line, first column
 		frame.Dot.Line = frame.FirstGroup.FirstLine.FLink
 		frame.Dot.Col = 1
 
 		// Try to delete backward from start - should fail or join lines
-		result := CharcmdDelete(LeadParamNInt, -1, false)
+		result := CharcmdDelete(frame, LeadParamNInt, -1, false)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.Equal(t, getLineContent(frame.FirstGroup.FirstLine), "firstsecond", "Expected lines to be joined")
@@ -382,11 +367,10 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteUpdatesModifiedMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 
 		frame.Dot.Col = 2
 
-		result := CharcmdDelete(LeadParamNone, 1, true)
+		result := CharcmdDelete(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.True(t, frame.TextModified, "Expected frame to be marked as modified")
@@ -395,13 +379,12 @@ func TestCharcmdDelete(t *testing.T) {
 
 	t.Run("DeleteClearsEqualsMark", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		withFrame(t, frame)
 
 		// Create an equals mark
 		MarkCreate(frame.Dot.Line, 3, &frame.Marks[MarkEquals])
 		frame.Dot.Col = 2
 
-		result := CharcmdDelete(LeadParamNone, 1, true)
+		result := CharcmdDelete(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected delete to succeed")
 		assert.Nil(t, frame.Marks[MarkEquals], "Expected equals mark to be destroyed")
@@ -413,7 +396,6 @@ func TestCharcmdDelete(t *testing.T) {
 func TestCharcmdRubout(t *testing.T) {
 	t.Run("RuboutInInsertMode", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeInsert
 		defer func() {
@@ -423,7 +405,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 4
 
-		result := CharcmdRubout(LeadParamNone, 1, true)
+		result := CharcmdRubout(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected rubout to succeed")
 		assert.Equal(t, 4, line.Used, "Expected line length to decrease")
@@ -434,7 +416,6 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInOverwriteModeSingleChar", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -444,7 +425,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 4
 
-		result := CharcmdRubout(LeadParamNone, 1, true)
+		result := CharcmdRubout(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected rubout to succeed")
 		assert.Equal(t, 3, frame.Dot.Col, "Expected cursor to move backward")
@@ -455,7 +436,6 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInOverwriteModeMultiple", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -465,7 +445,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 5
 
-		result := CharcmdRubout(LeadParamNone, 3, true)
+		result := CharcmdRubout(frame, LeadParamNone, 3, true)
 
 		assert.True(t, result, "Expected rubout to succeed")
 		// assert.Equal(t, 2, frame.Dot.Col, "Expected cursor to move backward by 3")
@@ -476,7 +456,6 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutAtStartOfLine", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("test")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -486,7 +465,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 1
 
-		result := CharcmdRubout(LeadParamNone, 1, true)
+		result := CharcmdRubout(frame, LeadParamNone, 1, true)
 
 		// Should fail at start of line
 		assert.False(t, result, "Expected rubout to fail at start of line")
@@ -495,7 +474,6 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInInsertModeConvertsToDelete", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("world")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeInsert
 		defer func() {
@@ -505,7 +483,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 3
 
-		result := CharcmdRubout(LeadParamNone, 2, true)
+		result := CharcmdRubout(frame, LeadParamNone, 2, true)
 
 		assert.True(t, result, "Expected rubout to succeed")
 		assert.Equal(t, 1, frame.Dot.Col, "Expected cursor to move to position 1")
@@ -514,7 +492,6 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutInOverwriteModeCreatesMarks", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("hello")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -523,7 +500,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 3
 
-		result := CharcmdRubout(LeadParamNone, 1, true)
+		result := CharcmdRubout(frame, LeadParamNone, 1, true)
 
 		assert.True(t, result, "Expected rubout to succeed")
 		assert.True(t, frame.TextModified, "Expected frame to be marked as modified")
@@ -533,7 +510,6 @@ func TestCharcmdRubout(t *testing.T) {
 
 	t.Run("RuboutWithPIndefinite", func(t *testing.T) {
 		frame, _ := setupTestFrameForCharCmd("testing")
-		withFrame(t, frame)
 		oldMode := EditMode
 		EditMode = ModeOvertype
 		defer func() {
@@ -542,7 +518,7 @@ func TestCharcmdRubout(t *testing.T) {
 
 		frame.Dot.Col = 5
 
-		result := CharcmdRubout(LeadParamPIndef, 0, true)
+		result := CharcmdRubout(frame, LeadParamPIndef, 0, true)
 
 		assert.True(t, result, "Expected rubout to succeed")
 		// Should rubout all characters before current position
@@ -555,7 +531,6 @@ func TestCharcmdRubout(t *testing.T) {
 func TestJoinLines(t *testing.T) {
 	t.Run("JoinWithPreviousLine", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", "world"})
-		withFrame(t, frame)
 
 		// Set options to enable newline mode
 		frame.Options.Set(OptNewLine)
@@ -565,7 +540,7 @@ func TestJoinLines(t *testing.T) {
 		frame.Dot.Line = secondLine
 		frame.Dot.Col = 1
 
-		result := joinLines()
+		result := joinLines(frame)
 
 		assert.True(t, result, "Expected join to succeed")
 		assert.True(t, frame.TextModified, "Expected frame to be marked as modified")
@@ -576,7 +551,6 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinFailsWithoutNewlineOption", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", "world"})
-		withFrame(t, frame)
 
 		// Explicitly clear newline option
 		frame.Options.Clear(OptNewLine)
@@ -585,26 +559,24 @@ func TestJoinLines(t *testing.T) {
 		frame.Dot.Line = secondLine
 		frame.Dot.Col = 1
 
-		result := joinLines()
+		result := joinLines(frame)
 
 		assert.False(t, result, "Expected join to fail without newline option")
 	})
 
 	t.Run("JoinFailsAtFirstLine", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", "world"})
-		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 		frame.Dot.Col = 1
 
-		result := joinLines()
+		result := joinLines(frame)
 
 		assert.False(t, result, "Expected join to fail at first line")
 	})
 
 	t.Run("JoinCreatesModifiedMark", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"line1", "line2"})
-		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 
@@ -612,7 +584,7 @@ func TestJoinLines(t *testing.T) {
 		frame.Dot.Line = secondLine
 		frame.Dot.Col = 1
 
-		result := joinLines()
+		result := joinLines(frame)
 
 		assert.True(t, result, "Expected join to succeed")
 		assert.NotNil(t, frame.Marks[MarkModified], "Expected modified mark to be created")
@@ -620,7 +592,6 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinWithEmptyLine", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"hello", ""})
-		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 
@@ -629,7 +600,7 @@ func TestJoinLines(t *testing.T) {
 		frame.Dot.Line = secondLine
 		frame.Dot.Col = 1
 
-		result := joinLines()
+		result := joinLines(frame)
 
 		assert.True(t, result, "Expected join with empty line to succeed")
 		assert.True(t, frame.TextModified, "Expected frame to be marked as modified")
@@ -641,7 +612,6 @@ func TestJoinLines(t *testing.T) {
 
 	t.Run("JoinVerifiesContentMerge", func(t *testing.T) {
 		frame := setupMultiLineFrame([]string{"foo", "bar"})
-		withFrame(t, frame)
 
 		frame.Options.Set(OptNewLine)
 
@@ -649,7 +619,7 @@ func TestJoinLines(t *testing.T) {
 		frame.Dot.Line = secondLine
 		frame.Dot.Col = 1
 
-		result := joinLines()
+		result := joinLines(frame)
 
 		assert.True(t, result, "Expected join to succeed")
 		firstLine := frame.FirstGroup.FirstLine

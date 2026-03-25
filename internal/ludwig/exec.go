@@ -251,7 +251,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdDeleteChar:
 		if rept != LeadParamMarker {
-			cmdSuccess = CharcmdDelete(rept, count, fromSpan)
+			cmdSuccess = CharcmdDelete(CurrentFrame, rept, count, fromSpan)
 		} else {
 			theOtherMark := CurrentFrame.Dot
 			lineNr := LineToNumber(CurrentFrame.Dot.Line)
@@ -557,7 +557,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdInsertChar:
-		cmdSuccess = CharcmdInsert(rept, count, fromSpan)
+		cmdSuccess = CharcmdInsert(CurrentFrame, rept, count, fromSpan)
 
 	case CmdInsertLine:
 		if count != 0 {
@@ -839,7 +839,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdRubout:
-		cmdSuccess = CharcmdRubout(rept, count, fromSpan)
+		cmdSuccess = CharcmdRubout(CurrentFrame, rept, count, fromSpan)
 
 	case CmdSetMarginLeft:
 		if rept == LeadParamMinus {
