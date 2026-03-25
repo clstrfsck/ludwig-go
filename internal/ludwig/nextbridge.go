@@ -77,7 +77,7 @@ func searchBackward(contained Predicate, line *LineHdrObject, col int, bridge bo
 
 // NextbridgeCommand implements the NEXT and BRIDGE commands
 // NEXT searches for characters in the set, BRIDGE searches for characters NOT in the set
-func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
+func NextbridgeCommand(frame *FrameObject, count int, tpar *TParObject, bridge bool) bool {
 	// Form the character set
 	chars := make(map[rune]struct{})
 	runes := []rune(tpar.Str.Slice(1, tpar.Len))
@@ -107,11 +107,11 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 	}
 
 	// Search for a character in the set
-	newLine := CurrentFrame.Dot.Line
+	newLine := frame.Dot.Line
 	var newCol int
 
 	if count > 0 {
-		newCol = CurrentFrame.Dot.Col
+		newCol = frame.Dot.Col
 		if !bridge {
 			newCol++
 		}
@@ -127,9 +127,9 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		newCol--
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
 	} else if count < 0 {
-		newCol = CurrentFrame.Dot.Col - 1
+		newCol = frame.Dot.Col - 1
 		if !bridge {
 			newCol--
 		}
@@ -145,13 +145,13 @@ func NextbridgeCommand(count int, tpar *TParObject, bridge bool) bool {
 			}
 		}
 		newCol += 2
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
 	} else {
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
 		return true
 	}
 
 	// Found it, move dot to new point
-	MarkCreate(newLine, newCol, &CurrentFrame.Dot)
+	MarkCreate(newLine, newCol, &frame.Dot)
 	return true
 }

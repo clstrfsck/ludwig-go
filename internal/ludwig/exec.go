@@ -243,7 +243,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdBridge, CmdNext:
 		var request TParObject
 		if TparGet1(tparam, command, &request) {
-			cmdSuccess = NextbridgeCommand(count, &request, command == CmdBridge)
+			cmdSuccess = NextbridgeCommand(CurrentFrame, count, &request, command == CmdBridge)
 		}
 
 	case CmdCaseEdit, CmdCaseLow, CmdCaseUp, CmdDittoDown, CmdDittoUp:
