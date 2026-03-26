@@ -59,7 +59,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 		dot := frame.Dot
 		if lineNr+frame.ScrHeight*count >
 			lastGroup.FirstLineNr+lastGroup.LastLine.OffsetNr {
-			MarkCreate(lastGroup.LastLine, dot.Col, &dot)
+			MarkCreate(lastGroup.LastLine, dot.Col, &frame.Dot)
 		} else {
 			newLine := dot.Line
 			for i := 1; i <= frame.ScrHeight*count; i++ {
