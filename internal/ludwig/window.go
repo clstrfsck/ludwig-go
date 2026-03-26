@@ -15,94 +15,94 @@
 package ludwig
 
 // WindowCommand implements all window-related commands
-func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) bool {
+func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count int, fromSpan bool) bool {
 	cmdSuccess := false
 
 	switch command {
 	case CmdWindowBackward:
-		lineNr := LineToNumber(CurrentFrame.Dot.Line)
-		if lineNr <= CurrentFrame.ScrHeight*count {
+		lineNr := LineToNumber(frame.Dot.Line)
+		if lineNr <= frame.ScrHeight*count {
 			MarkCreate(
-				CurrentFrame.FirstGroup.FirstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot,
+				frame.FirstGroup.FirstLine, frame.Dot.Col, &frame.Dot,
 			)
 		} else {
-			newLine := CurrentFrame.Dot.Line
-			for i := 1; i <= CurrentFrame.ScrHeight*count; i++ {
+			newLine := frame.Dot.Line
+			for i := 1; i <= frame.ScrHeight*count; i++ {
 				newLine = newLine.BLink
 			}
 			if count == 1 {
-				line := CurrentFrame.Dot.Line
+				line := frame.Dot.Line
 				if line.ScrRowNr != 0 {
-					if line.ScrRowNr > CurrentFrame.ScrHeight-CurrentFrame.MarginBottom {
+					if line.ScrRowNr > frame.ScrHeight-frame.MarginBottom {
 						ScreenScroll(
-							-2*CurrentFrame.ScrHeight+line.ScrRowNr+CurrentFrame.MarginBottom,
+							-2*frame.ScrHeight+line.ScrRowNr+frame.MarginBottom,
 							true,
 						)
 					} else {
-						ScreenScroll(-CurrentFrame.ScrHeight, true)
+						ScreenScroll(-frame.ScrHeight, true)
 					}
 				}
 			} else {
 				ScreenUnload()
 			}
-			MarkCreate(newLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+			MarkCreate(newLine, frame.Dot.Col, &frame.Dot)
 		}
 		cmdSuccess = true
 
 	case CmdWindowEnd:
-		MarkCreate(CurrentFrame.LastGroup.LastLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+		MarkCreate(frame.LastGroup.LastLine, frame.Dot.Col, &frame.Dot)
 		cmdSuccess = true
 
 	case CmdWindowForward:
-		lineNr := LineToNumber(CurrentFrame.Dot.Line)
-		lastGroup := CurrentFrame.LastGroup
-		dot := CurrentFrame.Dot
-		if lineNr+CurrentFrame.ScrHeight*count >
+		lineNr := LineToNumber(frame.Dot.Line)
+		lastGroup := frame.LastGroup
+		dot := frame.Dot
+		if lineNr+frame.ScrHeight*count >
 			lastGroup.FirstLineNr+lastGroup.LastLine.OffsetNr {
-			MarkCreate(lastGroup.LastLine, dot.Col, &dot)
+			MarkCreate(lastGroup.LastLine, dot.Col, &frame.Dot)
 		} else {
 			newLine := dot.Line
-			for i := 1; i <= CurrentFrame.ScrHeight*count; i++ {
+			for i := 1; i <= frame.ScrHeight*count; i++ {
 				newLine = newLine.FLink
 			}
 			if count == 1 {
 				line := dot.Line
 				if line.ScrRowNr != 0 {
-					if line.ScrRowNr <= CurrentFrame.MarginTop {
+					if line.ScrRowNr <= frame.MarginTop {
 						ScreenScroll(
-							CurrentFrame.ScrHeight+line.ScrRowNr-CurrentFrame.MarginTop-1,
+							frame.ScrHeight+line.ScrRowNr-frame.MarginTop-1,
 							true,
 						)
 					} else {
-						ScreenScroll(CurrentFrame.ScrHeight, true)
+						ScreenScroll(frame.ScrHeight, true)
 					}
 				}
 			} else {
 				ScreenUnload()
 			}
-			MarkCreate(newLine, dot.Col, &CurrentFrame.Dot)
+			MarkCreate(newLine, dot.Col, &frame.Dot)
 		}
 		cmdSuccess = true
 
 	case CmdWindowLeft:
 		cmdSuccess = true
-		if ScrFrame == CurrentFrame {
+		if ScrFrame == frame {
 			if rept == LeadParamNone {
-				count = CurrentFrame.ScrWidth / 2
+				count = frame.ScrWidth / 2
 			}
-			if CurrentFrame.ScrOffset < count {
-				count = CurrentFrame.ScrOffset
+			if frame.ScrOffset < count {
+				count = frame.ScrOffset
 			}
 			ScreenSlide(-count)
-			if CurrentFrame.ScrOffset+CurrentFrame.ScrWidth < CurrentFrame.Dot.Col {
-				CurrentFrame.Dot.Col = CurrentFrame.ScrOffset + CurrentFrame.ScrWidth
+			if frame.ScrOffset+frame.ScrWidth < frame.Dot.Col {
+				frame.Dot.Col = frame.ScrOffset + frame.ScrWidth
 			}
 		}
 
 	case CmdWindowMiddle:
 		cmdSuccess = true
-		if ScrFrame == CurrentFrame {
-			lineNr := LineToNumber(CurrentFrame.Dot.Line)
+		if ScrFrame == frame {
+			lineNr := LineToNumber(frame.Dot.Line)
 			line2Nr := LineToNumber(ScrTopLine)
 			line3Nr := LineToNumber(ScrBotLine)
 			ScreenScroll(lineNr-((line2Nr+line3Nr)/2), true)
@@ -114,29 +114,29 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 
 	case CmdWindowRight:
 		cmdSuccess = true
-		if ScrFrame == CurrentFrame {
+		if ScrFrame == frame {
 			if rept == LeadParamNone {
-				count = CurrentFrame.ScrWidth / 2
+				count = frame.ScrWidth / 2
 			}
-			if MaxStrLenP < (CurrentFrame.ScrOffset+CurrentFrame.ScrWidth)+count {
-				count = MaxStrLenP - (CurrentFrame.ScrOffset + CurrentFrame.ScrWidth)
+			if MaxStrLenP < (frame.ScrOffset+frame.ScrWidth)+count {
+				count = MaxStrLenP - (frame.ScrOffset + frame.ScrWidth)
 			}
 			ScreenSlide(count)
-			if CurrentFrame.Dot.Col <= CurrentFrame.ScrOffset {
-				CurrentFrame.Dot.Col = CurrentFrame.ScrOffset + 1
+			if frame.Dot.Col <= frame.ScrOffset {
+				frame.Dot.Col = frame.ScrOffset + 1
 			}
 		}
 
 	case CmdWindowScroll:
 		cmdSuccess = true
-		if CurrentFrame == ScrFrame {
+		if frame == ScrFrame {
 			var key int
 			for {
 				switch rept {
 				case LeadParamPIndef:
-					count = max(CurrentFrame.Dot.Line.ScrRowNr-1, 0)
+					count = max(frame.Dot.Line.ScrRowNr-1, 0)
 				case LeadParamNIndef:
-					count = CurrentFrame.Dot.Line.ScrRowNr - CurrentFrame.ScrHeight
+					count = frame.Dot.Line.ScrRowNr - frame.ScrHeight
 				}
 				if rept != LeadParamNone {
 					ScreenScroll(count, true)
@@ -145,16 +145,16 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 
 				// If the dot is still visible and the command is interactive
 				// then support stay-behind mode
-				if !fromSpan && (CurrentFrame.Dot.Line.ScrRowNr != 0) &&
-					(CurrentFrame.ScrOffset < CurrentFrame.Dot.Col) &&
-					(CurrentFrame.Dot.Col <= CurrentFrame.ScrOffset+CurrentFrame.ScrWidth) {
+				if !fromSpan && (frame.Dot.Line.ScrRowNr != 0) &&
+					(frame.ScrOffset < frame.Dot.Col) &&
+					(frame.Dot.Col <= frame.ScrOffset+frame.ScrWidth) {
 					if !cmdSuccess {
 						VduBeep()
 						cmdSuccess = true
 					}
 					VduMoveCurs(
-						CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
-						CurrentFrame.Dot.Line.ScrRowNr,
+						frame.Dot.Col-frame.ScrOffset,
+						frame.Dot.Line.ScrRowNr,
 					)
 					key = VduGetKey()
 					if TtControlC {
@@ -183,7 +183,7 @@ func WindowCommand(command Commands, rept LeadParam, count int, fromSpan bool) b
 		cmdSuccess = FrameSetHeight(count, false)
 
 	case CmdWindowTop:
-		MarkCreate(CurrentFrame.FirstGroup.FirstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
+		MarkCreate(frame.FirstGroup.FirstLine, frame.Dot.Col, &frame.Dot)
 		cmdSuccess = true
 
 	case CmdWindowUpdate:
