@@ -464,8 +464,11 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 	return true
 }
 
-// FrameEdit creates or edits a frame with the specified name.
-// This is the \ED command. If frame_name doesn't exist, then it is created.
+// This implements the \ED command. If frameName is empty, DefaultFrameName is
+// used. It returns the selected (or newly created) frame and an ok flag
+// indicating success.
+// When ok == true, the caller is responsible for making the returned frame the
+// CurrentFrame; FrameEdit itself does not change the current frame.
 func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 	fname := frameName
 	if fname == "" {
