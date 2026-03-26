@@ -89,46 +89,46 @@ func eqsgetrepPatternBuild(tpar TParObject, patternPtr **DFATableObject) bool {
 	return true
 }
 
-func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
+func EqsGetRepEqs(frame *FrameObject, rept LeadParam, tpar TParObject) bool {
 	success := false
 
 	if tpar.Dlm == TpdSmart {
-		if !eqsgetrepPatternBuild(tpar, &CurrentFrame.EqsPatternPtr) {
+		if !eqsgetrepPatternBuild(tpar, &frame.EqsPatternPtr) {
 			return false
 		}
 		markFlag := false
 		var startCol int
 		var endPos int
 		found := PatternRecognize(
-			CurrentFrame.EqsPatternPtr,
-			CurrentFrame.Dot.Line,
-			CurrentFrame.Dot.Col,
+			frame.EqsPatternPtr,
+			frame.Dot.Line,
+			frame.Dot.Col,
 			&markFlag,
 			&startCol,
 			&endPos,
 		)
 		switch rept {
 		case LeadParamNone, LeadParamPlus:
-			success = (CurrentFrame.Dot.Col == startCol) && found
+			success = (frame.Dot.Col == startCol) && found
 		case LeadParamMinus:
-			success = !((CurrentFrame.Dot.Col == startCol) && found)
+			success = !((frame.Dot.Col == startCol) && found)
 		case LeadParamPIndef:
-			success = (endPos <= CurrentFrame.Dot.Line.Used) && found
+			success = (endPos <= frame.Dot.Line.Used) && found
 		case LeadParamNIndef:
-			success = (endPos >= CurrentFrame.Dot.Line.Used) && found
+			success = (endPos >= frame.Dot.Line.Used) && found
 		}
 		if success && rept != LeadParamMinus {
-			MarkCreate(CurrentFrame.Dot.Line, endPos, &CurrentFrame.Marks[MarkEquals])
+			MarkCreate(frame.Dot.Line, endPos, &frame.Marks[MarkEquals])
 		}
 	} else {
 		exactcase := eqsgetrepExactcase(&tpar)
-		startCol := CurrentFrame.Dot.Col
+		startCol := frame.Dot.Col
 		var length int
-		if startCol > CurrentFrame.Dot.Line.Used {
+		if startCol > frame.Dot.Line.Used {
 			length = 0
 			startCol = 1
 		} else {
-			length = CurrentFrame.Dot.Line.Used + 1 - CurrentFrame.Dot.Col
+			length = frame.Dot.Line.Used + 1 - frame.Dot.Col
 		}
 		if length > tpar.Len {
 			length = tpar.Len
@@ -139,7 +139,7 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 			tpar.Str,
 			1,
 			tpar.Len,
-			CurrentFrame.Dot.Line.Str,
+			frame.Dot.Line.Str,
 			startCol,
 			length,
 			exactcase,
@@ -157,20 +157,20 @@ func EqsGetRepEqs(rept LeadParam, tpar TParObject) bool {
 		}
 		if success && rept != LeadParamMinus {
 			MarkCreate(
-				CurrentFrame.Dot.Line,
-				CurrentFrame.Dot.Col+nchIdent,
-				&CurrentFrame.Marks[MarkEquals],
+				frame.Dot.Line,
+				frame.Dot.Col+nchIdent,
+				&frame.Marks[MarkEquals],
 			)
 		}
 	}
 	return success
 }
 
-func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
+func eqsgetrepDumbGet(frame *FrameObject, count int, tpar TParObject, fromSpan bool) bool {
 	result := (count == 0)
 
-	dotLine := CurrentFrame.Dot.Line
-	dotCol := CurrentFrame.Dot.Col
+	dotLine := frame.Dot.Line
+	dotCol := frame.Dot.Col
 	exactcase := eqsgetrepExactcase(&tpar)
 	line := dotLine
 	newlen := tpar.Len
@@ -190,11 +190,11 @@ func eqsgetrepDumbGet(count int, tpar TParObject, fromSpan bool) bool {
 		ChReverseStr(tpar.Str, newstr, newlen)
 		backwards = true
 		startCol = 1
-		length = min(CurrentFrame.Dot.Col-1, line.Used)
+		length = min(frame.Dot.Col-1, line.Used)
 	} else {
 		newstr = tpar.Str
 		backwards = false
-		startCol = CurrentFrame.Dot.Col
+		startCol = frame.Dot.Col
 		if startCol > line.Used {
 			length = 0
 		} else {
@@ -252,7 +252,7 @@ outerLoop:
 				}
 				count--
 				if count == 0 {
-					MarkCreate(line, startCol, &CurrentFrame.Dot)
+					MarkCreate(line, startCol, &frame.Dot)
 					verified := true
 					if !fromSpan {
 						switch ScreenVerify(thisOne) {
@@ -260,7 +260,7 @@ outerLoop:
 							// accepted
 						case VerifyReplyQuit, VerifyReplyNo:
 							count = 1
-							MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
+							MarkCreate(dotLine, dotCol, &frame.Dot)
 							verified = false
 							if ExitAbort {
 								break outerLoop
@@ -269,9 +269,9 @@ outerLoop:
 					}
 					if verified {
 						if backwards {
-							MarkCreate(line, startCol+tpar.Len, &CurrentFrame.Marks[MarkEquals])
+							MarkCreate(line, startCol+tpar.Len, &frame.Marks[MarkEquals])
 						} else {
-							MarkCreate(line, startCol-tpar.Len, &CurrentFrame.Marks[MarkEquals])
+							MarkCreate(line, startCol-tpar.Len, &frame.Marks[MarkEquals])
 						}
 						result = true
 						break outerLoop
@@ -303,21 +303,27 @@ outerLoop:
 	return result
 }
 
-func eqsgetrepPatternGet(count int, tpar TParObject, fromSpan bool, replaceFlag bool) bool {
+func eqsgetrepPatternGet(
+	frame *FrameObject,
+	count int,
+	tpar TParObject,
+	fromSpan bool,
+	replaceFlag bool,
+) bool {
 	result := (count == 0)
 
 	var patternPtr *DFATableObject
 	if !replaceFlag {
-		if !eqsgetrepPatternBuild(tpar, &CurrentFrame.GetPatternPtr) {
+		if !eqsgetrepPatternBuild(tpar, &frame.GetPatternPtr) {
 			return result
 		}
-		patternPtr = CurrentFrame.GetPatternPtr
+		patternPtr = frame.GetPatternPtr
 	} else {
-		patternPtr = CurrentFrame.RepPatternPtr
+		patternPtr = frame.RepPatternPtr
 	}
 
-	dotLine := CurrentFrame.Dot.Line
-	dotCol := CurrentFrame.Dot.Col
+	dotLine := frame.Dot.Line
+	dotCol := frame.Dot.Col
 	line := dotLine
 	markFlag := false
 	backwards := count < 0
@@ -348,9 +354,9 @@ outerLoop:
 				count--
 				if count == 0 {
 					if backwards {
-						MarkCreate(line, matchedStartCol, &CurrentFrame.Dot)
+						MarkCreate(line, matchedStartCol, &frame.Dot)
 					} else {
-						MarkCreate(line, matchedFinishCol, &CurrentFrame.Dot)
+						MarkCreate(line, matchedFinishCol, &frame.Dot)
 					}
 					verified := true
 					if !fromSpan {
@@ -359,7 +365,7 @@ outerLoop:
 							// accepted
 						case VerifyReplyQuit, VerifyReplyNo:
 							count = 1
-							MarkCreate(dotLine, dotCol, &CurrentFrame.Dot)
+							MarkCreate(dotLine, dotCol, &frame.Dot)
 							verified = false
 							if ExitAbort {
 								break outerLoop
@@ -368,9 +374,9 @@ outerLoop:
 					}
 					if verified {
 						if backwards {
-							MarkCreate(line, matchedFinishCol, &CurrentFrame.Marks[MarkEquals])
+							MarkCreate(line, matchedFinishCol, &frame.Marks[MarkEquals])
 						} else {
-							MarkCreate(line, matchedStartCol, &CurrentFrame.Marks[MarkEquals])
+							MarkCreate(line, matchedStartCol, &frame.Marks[MarkEquals])
 						}
 						result = true
 						break outerLoop
@@ -416,24 +422,31 @@ outerLoop:
 	return result
 }
 
-func EqsGetRepGet(count int, tpar TParObject, fromSpan bool) bool {
+func EqsGetRepGet(frame *FrameObject, count int, tpar TParObject, fromSpan bool) bool {
 	if tpar.Dlm == TpdSmart {
-		return eqsgetrepPatternGet(count, tpar, fromSpan, false)
+		return eqsgetrepPatternGet(frame, count, tpar, fromSpan, false)
 	}
-	return eqsgetrepDumbGet(count, tpar, fromSpan)
+	return eqsgetrepDumbGet(frame, count, tpar, fromSpan)
 }
 
-func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, fromSpan bool) bool {
+func EqsGetRepRep(
+	frame *FrameObject,
+	rept LeadParam,
+	count int,
+	tpar TParObject,
+	tpar2 TParObject,
+	fromSpan bool,
+) bool {
 	result := false
 
 	var oldDot *MarkObject
 	var oldEquals *MarkObject
 
-	MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot)
-	if CurrentFrame.Marks[MarkEquals] != nil {
+	MarkCreate(frame.Dot.Line, frame.Dot.Col, &oldDot)
+	if frame.Marks[MarkEquals] != nil {
 		MarkCreate(
-			CurrentFrame.Marks[MarkEquals].Line,
-			CurrentFrame.Marks[MarkEquals].Col,
+			frame.Marks[MarkEquals].Line,
+			frame.Marks[MarkEquals].Col,
 			&oldEquals,
 		)
 	}
@@ -443,7 +456,7 @@ func EqsGetRepRep(rept LeadParam, count int, tpar TParObject, tpar2 TParObject, 
 	}()
 
 	if tpar.Dlm == TpdSmart {
-		if !eqsgetrepPatternBuild(tpar, &CurrentFrame.RepPatternPtr) {
+		if !eqsgetrepPatternBuild(tpar, &frame.RepPatternPtr) {
 			return result
 		}
 	}
@@ -466,10 +479,10 @@ outerLoop:
 				break outerLoop
 			}
 			if tpar.Dlm == TpdSmart {
-				if !eqsgetrepPatternGet(getcount, tpar, true, true) {
+				if !eqsgetrepPatternGet(frame, getcount, tpar, true, true) {
 					break outerLoop
 				}
-			} else if !eqsgetrepDumbGet(getcount, tpar, true) {
+			} else if !eqsgetrepDumbGet(frame, getcount, tpar, true) {
 				break outerLoop
 			}
 			if TtControlC || ExitAbort {
@@ -490,64 +503,64 @@ outerLoop:
 			}
 		}
 
-		length := CurrentFrame.Marks[MarkEquals].Col - CurrentFrame.Dot.Col
+		length := frame.Marks[MarkEquals].Col - frame.Dot.Col
 		if length < 0 {
-			CurrentFrame.Dot.Col = CurrentFrame.Marks[MarkEquals].Col
-			CurrentFrame.Marks[MarkEquals].Col = CurrentFrame.Dot.Col - length
+			frame.Dot.Col = frame.Marks[MarkEquals].Col
+			frame.Marks[MarkEquals].Col = frame.Dot.Col - length
 			length = -length
 		}
 		if tpar2.Con == nil {
-			startCol := CurrentFrame.Dot.Col
+			startCol := frame.Dot.Col
 			delta := length - tpar2.Len
 			if delta > 0 {
-				if CurrentFrame.Dot.Col+delta > CurrentFrame.Dot.Line.Used+1 {
-					delta = CurrentFrame.Dot.Line.Used + 1 - CurrentFrame.Dot.Col
+				if frame.Dot.Col+delta > frame.Dot.Line.Used+1 {
+					delta = frame.Dot.Line.Used + 1 - frame.Dot.Col
 				}
 				if delta > 0 {
-					if !CharcmdDelete(CurrentFrame, LeadParamPInt, delta, true) {
+					if !CharcmdDelete(frame, LeadParamPInt, delta, true) {
 						return result
 					}
 				}
 			} else if delta < 0 {
-				if !CharcmdInsert(CurrentFrame, LeadParamPInt, -delta, true) {
+				if !CharcmdInsert(frame, LeadParamPInt, -delta, true) {
 					return result
 				}
-				CurrentFrame.Dot.Col = startCol
+				frame.Dot.Col = startCol
 			}
-			if !TextOvertype(true, 1, tpar2.Str, tpar2.Len, CurrentFrame.Dot) {
+			if !TextOvertype(true, 1, tpar2.Str, tpar2.Len, frame.Dot) {
 				return result
 			}
 			if getcount > 0 {
-				MarkCreate(CurrentFrame.Dot.Line, startCol, &CurrentFrame.Marks[MarkEquals])
+				MarkCreate(frame.Dot.Line, startCol, &frame.Marks[MarkEquals])
 			} else {
-				MarkCreate(CurrentFrame.Dot.Line, startCol+tpar2.Len, &CurrentFrame.Marks[MarkEquals])
-				CurrentFrame.Dot.Col = startCol
+				MarkCreate(frame.Dot.Line, startCol+tpar2.Len, &frame.Marks[MarkEquals])
+				frame.Dot.Col = startCol
 			}
 		} else {
-			if !CharcmdDelete(CurrentFrame, LeadParamPInt, length, true) {
+			if !CharcmdDelete(frame, LeadParamPInt, length, true) {
 				return result
 			}
-			if !TextInsertTpar(&tpar2, CurrentFrame.Dot, &CurrentFrame.Marks[MarkEquals]) {
+			if !TextInsertTpar(&tpar2, frame.Dot, &frame.Marks[MarkEquals]) {
 				return result
 			}
 		}
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &oldDot)
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &oldDot)
 		MarkCreate(
-			CurrentFrame.Marks[MarkEquals].Line,
-			CurrentFrame.Marks[MarkEquals].Col,
+			frame.Marks[MarkEquals].Line,
+			frame.Marks[MarkEquals].Col,
 			&oldEquals,
 		)
-		CurrentFrame.TextModified = true
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+		frame.TextModified = true
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
 		count--
 	}
 
 	// Restore dot and equals to their last-saved positions (typically the final replacement)
-	MarkCreate(oldDot.Line, oldDot.Col, &CurrentFrame.Dot)
+	MarkCreate(oldDot.Line, oldDot.Col, &frame.Dot)
 	if oldEquals != nil {
-		MarkCreate(oldEquals.Line, oldEquals.Col, &CurrentFrame.Marks[MarkEquals])
+		MarkCreate(oldEquals.Line, oldEquals.Col, &frame.Marks[MarkEquals])
 	} else {
-		MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+		MarkDestroy(&frame.Marks[MarkEquals])
 	}
 	result = (count == 0) || rept == LeadParamPIndef || rept == LeadParamNIndef
 	return result

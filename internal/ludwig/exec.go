@@ -421,7 +421,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				CurrentFrame.EqsTpar = request // If did specify, save for next time
 			}
 		}
-		cmdSuccess = EqsGetRepEqs(rept, request)
+		cmdSuccess = EqsGetRepEqs(CurrentFrame, rept, request)
 
 	case CmdDoLastCommand, CmdExecuteString:
 		if CurrentFrame == FrameCmd {
@@ -547,7 +547,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			} else {
 				CurrentFrame.GetTpar = request // If did specify, save for next time
 			}
-			cmdSuccess = EqsGetRepGet(count, request, fromSpan)
+			cmdSuccess = EqsGetRepGet(CurrentFrame, count, request, fromSpan)
 		}
 
 	case CmdHelp:
@@ -839,8 +839,14 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				CurrentFrame.Rep2Tpar = request2
 				request2.Con = nil
 			}
-			cmdSuccess = EqsGetRepRep(rept, count, CurrentFrame.Rep1Tpar,
-				CurrentFrame.Rep2Tpar, fromSpan)
+			cmdSuccess = EqsGetRepRep(
+				CurrentFrame,
+				rept,
+				count,
+				CurrentFrame.Rep1Tpar,
+				CurrentFrame.Rep2Tpar,
+				fromSpan,
+			)
 		}
 
 	case CmdRubout:
