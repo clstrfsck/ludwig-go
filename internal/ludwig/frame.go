@@ -56,8 +56,8 @@ func (p *tparParser) toInt() (int, bool) {
 	return TparToInt(p.request, &p.pos)
 }
 
-// setOptions sets options on CurrentFrame and InitialOptions if requested
-func (p *tparParser) setOptions(setInitial bool) bool {
+// setOptions sets options on frame and InitialOptions if requested
+func (p *tparParser) setOptions(frame *FrameObject, setInitial bool) bool {
 	ok := false
 	ch := p.nextChar()
 	if ch == '(' {
@@ -69,9 +69,9 @@ func (p *tparParser) setOptions(setInitial bool) bool {
 				ch = p.nextChar()
 			}
 			if setInitial {
-				setOpt(ch, seton, &InitialOptions)
+				setOpt(frame, ch, seton, &InitialOptions)
 			}
-			ok = setOpt(ch, seton, &CurrentFrame.Options)
+			ok = setOpt(frame, ch, seton, &frame.Options)
 			ch = p.nextChar()
 			if ch != ',' && ch != ')' {
 				ScreenMessage(MsgSyntaxErrorInOptions)
@@ -89,9 +89,9 @@ func (p *tparParser) setOptions(setInitial bool) bool {
 			ch = p.nextChar()
 		}
 		if setInitial {
-			setOpt(ch, seton, &InitialOptions)
+			setOpt(frame, ch, seton, &InitialOptions)
 		}
-		ok = setOpt(ch, seton, &CurrentFrame.Options)
+		ok = setOpt(frame, ch, seton, &frame.Options)
 	}
 	return ok
 }
@@ -152,36 +152,36 @@ func (p *tparParser) setCmdIntr() bool {
 }
 
 // setTabs sets tab stops for the current frame
-func (p *tparParser) setTabs(setInitial bool) bool {
+func (p *tparParser) setTabs(frame *FrameObject, setInitial bool) bool {
 	ch := p.nextChar()
 	switch ch {
 	case 'D': // default tabs
 		if setInitial {
 			InitialTabStops = DefaultTabStops
 		}
-		CurrentFrame.TabStops = DefaultTabStops
+		frame.TabStops = DefaultTabStops
 
 	case 'T': // template match
-		if CurrentFrame.Dot.Line.Used > 0 {
-			ts := CurrentFrame.Dot.Line.Str.Get(1) != ' '
+		if frame.Dot.Line.Used > 0 {
+			ts := frame.Dot.Line.Str.Get(1) != ' '
 			if setInitial {
 				InitialTabStops[1] = ts
 			}
-			CurrentFrame.TabStops[1] = ts
+			frame.TabStops[1] = ts
 		}
-		for i := 2; i <= CurrentFrame.Dot.Line.Used; i++ {
-			chi := CurrentFrame.Dot.Line.Str.Get(i)
-			chim1 := CurrentFrame.Dot.Line.Str.Get(i - 1)
+		for i := 2; i <= frame.Dot.Line.Used; i++ {
+			chi := frame.Dot.Line.Str.Get(i)
+			chim1 := frame.Dot.Line.Str.Get(i - 1)
 			if setInitial {
 				InitialTabStops[i] = (chi != ' ') && (chim1 == ' ')
 			}
-			CurrentFrame.TabStops[i] = (chi != ' ') && (chim1 == ' ')
+			frame.TabStops[i] = (chi != ' ') && (chim1 == ' ')
 		}
-		for i := CurrentFrame.Dot.Line.Used; i <= MaxStrLen; i++ {
+		for i := frame.Dot.Line.Used; i <= MaxStrLen; i++ {
 			if setInitial {
 				InitialTabStops[i] = false
 			}
-			CurrentFrame.TabStops[i] = false
+			frame.TabStops[i] = false
 		}
 
 	case 'I': // insert tabs
@@ -197,19 +197,19 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 			firstLine.Str.Set(InitialMarginRight, 'R')
 		} else {
 			for i := 1; i < MaxStrLen; i++ {
-				if CurrentFrame.TabStops[i] {
+				if frame.TabStops[i] {
 					firstLine.Str.Set(i, 'T')
 				}
 			}
-			firstLine.Str.Set(CurrentFrame.MarginLeft, 'L')
-			firstLine.Str.Set(CurrentFrame.MarginRight, 'R')
+			firstLine.Str.Set(frame.MarginLeft, 'L')
+			firstLine.Str.Set(frame.MarginRight, 'R')
 		}
 		// Calculate used length
 		firstLine.Used = firstLine.Str.TrimmedLen(' ', MaxStrLen)
-		LinesInject(firstLine, lastLine, CurrentFrame.Dot.Line)
-		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Dot)
-		CurrentFrame.TextModified = true
-		MarkCreate(firstLine, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+		LinesInject(firstLine, lastLine, frame.Dot.Line)
+		MarkCreate(firstLine, frame.Dot.Col, &frame.Dot)
+		frame.TextModified = true
+		MarkCreate(firstLine, frame.Dot.Col, &frame.Marks[MarkModified])
 
 	case 'R': // Template Ruler
 		i := 1
@@ -220,8 +220,8 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 			lmRight
 		)
 		lastMargin := lmNone
-		for i <= CurrentFrame.Dot.Line.Used && legal {
-			chi := ChToUpper(CurrentFrame.Dot.Line.Str.Get(i))
+		for i <= frame.Dot.Line.Used && legal {
+			chi := ChToUpper(frame.Dot.Line.Str.Get(i))
 			legal = (chi == 'T') || (chi == 'L') || (chi == 'R') || (chi == ' ')
 			switch chi {
 			case 'L':
@@ -240,58 +240,58 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 		}
 
 		i = 1
-		for i <= CurrentFrame.Dot.Line.Used {
-			chi := ChToUpper(CurrentFrame.Dot.Line.Str.Get(i))
+		for i <= frame.Dot.Line.Used {
+			chi := ChToUpper(frame.Dot.Line.Str.Get(i))
 			if setInitial {
 				InitialTabStops[i] = (chi != ' ')
 			}
-			CurrentFrame.TabStops[i] = (chi != ' ')
+			frame.TabStops[i] = (chi != ' ')
 			switch chi {
 			case 'L':
 				if setInitial {
 					InitialMarginLeft = i
 				}
-				CurrentFrame.MarginLeft = i
+				frame.MarginLeft = i
 			case 'R':
 				if setInitial {
 					InitialMarginRight = i
 				}
-				CurrentFrame.MarginRight = i
+				frame.MarginRight = i
 			}
 			i++
 		}
-		for j := CurrentFrame.Dot.Line.Used + 1; j <= MaxStrLen; j++ {
+		for j := frame.Dot.Line.Used + 1; j <= MaxStrLen; j++ {
 			if setInitial {
 				InitialTabStops[j] = false
 			}
-			CurrentFrame.TabStops[j] = false
+			frame.TabStops[j] = false
 		}
 
-		firstLine := CurrentFrame.Dot.Line
-		dotCol := CurrentFrame.Dot.Col
+		firstLine := frame.Dot.Line
+		dotCol := frame.Dot.Col
 		MarksSqueeze(firstLine, 1, firstLine.FLink, 1)
 		LinesExtract(firstLine, firstLine)
-		CurrentFrame.Dot.Col = dotCol
+		frame.Dot.Col = dotCol
 
 	case 'S': // Set tab
-		if CurrentFrame.Dot.Col == MaxStrLenP {
+		if frame.Dot.Col == MaxStrLenP {
 			ScreenMessage(MsgOutOfRangeTabValue)
 			return false
 		}
 		if setInitial {
-			InitialTabStops[CurrentFrame.Dot.Col] = true
+			InitialTabStops[frame.Dot.Col] = true
 		}
-		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = true
+		frame.TabStops[frame.Dot.Col] = true
 
 	case 'C': // Clear tab
-		if CurrentFrame.Dot.Col == MaxStrLenP {
+		if frame.Dot.Col == MaxStrLenP {
 			ScreenMessage(MsgOutOfRangeTabValue)
 			return false
 		}
 		if setInitial {
-			InitialTabStops[CurrentFrame.Dot.Col] = false
+			InitialTabStops[frame.Dot.Col] = false
 		}
-		CurrentFrame.TabStops[CurrentFrame.Dot.Col] = false
+		frame.TabStops[frame.Dot.Col] = false
 
 	case 'W': // Regular width tabs
 		if w, found := p.toInt(); found && w > 1 {
@@ -306,7 +306,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 			if setInitial {
 				InitialTabStops = temptab
 			}
-			CurrentFrame.TabStops = temptab
+			frame.TabStops = temptab
 		} else {
 			return false
 		}
@@ -339,7 +339,7 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 		if setInitial {
 			InitialTabStops = temptab
 		}
-		CurrentFrame.TabStops = temptab
+		frame.TabStops = temptab
 
 	default:
 		ScreenMessage(MsgInvalidTOption)
@@ -349,16 +349,16 @@ func (p *tparParser) setTabs(setInitial bool) bool {
 }
 
 // setLRMargin sets the left and right margins
-func (p *tparParser) setLRMargin(setInitial bool) bool {
+func (p *tparParser) setLRMargin(frame *FrameObject, setInitial bool) bool {
 	var tl, tr int
 	if setInitial {
 		tl = InitialMarginLeft
 		tr = InitialMarginRight
 	} else {
-		tl = CurrentFrame.MarginLeft
-		tr = CurrentFrame.MarginRight
+		tl = frame.MarginLeft
+		tr = frame.MarginRight
 	}
-	if !p.getMargins(1, MaxStrLen, &tl, &tr, true) {
+	if !p.getMargins(frame, 1, MaxStrLen, &tl, &tr, true) {
 		return false
 	}
 	if tl < tr {
@@ -366,8 +366,8 @@ func (p *tparParser) setLRMargin(setInitial bool) bool {
 			InitialMarginLeft = tl
 			InitialMarginRight = tr
 		}
-		CurrentFrame.MarginLeft = tl
-		CurrentFrame.MarginRight = tr
+		frame.MarginLeft = tl
+		frame.MarginRight = tr
 	} else {
 		ScreenMessage(MsgLeftMarginGeRight)
 		return false
@@ -376,19 +376,19 @@ func (p *tparParser) setLRMargin(setInitial bool) bool {
 }
 
 // setTBMargin sets the top and bottom margins
-func (p *tparParser) setTBMargin(setInitial bool) bool {
+func (p *tparParser) setTBMargin(frame *FrameObject, setInitial bool) bool {
 	var tt, tb int
 	if setInitial {
 		tt = InitialMarginTop
 		tb = InitialMarginBottom
 	} else {
-		tt = CurrentFrame.MarginTop
-		tb = CurrentFrame.MarginBottom
+		tt = frame.MarginTop
+		tb = frame.MarginBottom
 	}
-	if !p.getMargins(0, CurrentFrame.ScrHeight, &tt, &tb, false) {
+	if !p.getMargins(frame, 0, frame.ScrHeight, &tt, &tb, false) {
 		return false
 	}
-	if tt+tb >= CurrentFrame.ScrHeight {
+	if tt+tb >= frame.ScrHeight {
 		ScreenMessage(MsgMarginOutOfRange)
 		return false
 	}
@@ -396,13 +396,20 @@ func (p *tparParser) setTBMargin(setInitial bool) bool {
 		InitialMarginTop = tt
 		InitialMarginBottom = tb
 	}
-	CurrentFrame.MarginTop = tt
-	CurrentFrame.MarginBottom = tb
+	frame.MarginTop = tt
+	frame.MarginBottom = tb
 	return true
 }
 
 // getMargins gets left/right or top/bottom margins from the tpar
-func (p *tparParser) getMargins(loBnd int, hiBnd int, lower *int, upper *int, lr bool) bool {
+func (p *tparParser) getMargins(
+	frame *FrameObject,
+	loBnd int,
+	hiBnd int,
+	lower *int,
+	upper *int,
+	lr bool,
+) bool {
 	ch := p.nextChar()
 	if ch != '(' {
 		ScreenMessage(MsgMarginSyntaxError)
@@ -411,9 +418,9 @@ func (p *tparParser) getMargins(loBnd int, hiBnd int, lower *int, upper *int, lr
 	ch = p.nextChar()
 	if ch == '.' {
 		if lr {
-			*lower = CurrentFrame.Dot.Col
+			*lower = frame.Dot.Col
 		} else {
-			*lower = CurrentFrame.Dot.Line.ScrRowNr
+			*lower = frame.Dot.Line.ScrRowNr
 		}
 		ch = p.nextChar()
 	} else if !p.getMar(&ch, loBnd, hiBnd, lower) {
@@ -423,9 +430,9 @@ func (p *tparParser) getMargins(loBnd int, hiBnd int, lower *int, upper *int, lr
 		ch = p.nextChar()
 		if ch == '.' {
 			if lr {
-				*upper = CurrentFrame.Dot.Col
+				*upper = frame.Dot.Col
 			} else {
-				*upper = CurrentFrame.ScrHeight - CurrentFrame.Dot.Line.ScrRowNr
+				*upper = frame.ScrHeight - frame.Dot.Line.ScrRowNr
 			}
 			ch = p.nextChar()
 		} else if !p.getMar(&ch, loBnd, hiBnd, upper) {
@@ -459,7 +466,7 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 
 // FrameEdit creates or edits a frame with the specified name.
 // This is the \ED command. If frame_name doesn't exist, then it is created.
-func FrameEdit(frameName string) bool {
+func FrameEdit(frame *FrameObject, frameName string) bool {
 	fname := frameName
 	if fname == "" {
 		fname = DefaultFrameName
@@ -470,8 +477,8 @@ func FrameEdit(frameName string) bool {
 
 	if SpanFind(fname, &ptr, &oldp) {
 		if ptr.Frame != nil {
-			if ptr.Frame != CurrentFrame {
-				ptr.Frame.ReturnFrame = CurrentFrame
+			if ptr.Frame != frame {
+				ptr.Frame.ReturnFrame = frame
 				CurrentFrame = ptr.Frame
 			}
 			return true
@@ -517,7 +524,7 @@ func FrameEdit(frameName string) bool {
 	fptr.ScrOffset = InitialScrOffset
 	fptr.ScrDotLine = 1
 	fptr.Span = sptr
-	fptr.ReturnFrame = CurrentFrame
+	fptr.ReturnFrame = frame
 	fptr.InputCount = 0
 	fptr.SpaceLimit = FileData.Space
 	fptr.SpaceLeft = FileData.Space
@@ -552,7 +559,7 @@ func FrameEdit(frameName string) bool {
 
 // FrameKill destroys the specified frame.
 // You can't kill frame C or OOPS or the current frame.
-func FrameKill(frameName string) bool {
+func FrameKill(frame *FrameObject, frameName string) bool {
 	var oldp *SpanObject
 	var sptr *SpanObject
 
@@ -566,8 +573,7 @@ func FrameKill(frameName string) bool {
 	}
 
 	thisFrame := sptr.Frame
-	if thisFrame == CurrentFrame || thisFrame == ScrFrame ||
-		thisFrame.Options.Has(OptSpecialFrame) {
+	if thisFrame == frame || thisFrame == ScrFrame || thisFrame.Options.Has(OptSpecialFrame) {
 		ScreenMessage(MsgCantKillFrame)
 		return false
 	}
@@ -625,7 +631,7 @@ func FrameKill(frameName string) bool {
 }
 
 // setmemory sets the memory allocation for the current frame
-func setmemory(sz int, setInitial bool) bool {
+func setmemory(frame *FrameObject, sz int, setInitial bool) bool {
 	if sz >= MaxSpace {
 		sz = MaxSpace
 	}
@@ -633,32 +639,32 @@ func setmemory(sz int, setInitial bool) bool {
 		FileData.Space = sz
 	}
 
-	usedStorage := CurrentFrame.SpaceLimit - CurrentFrame.SpaceLeft
-	minSize := min(usedStorage+800, CurrentFrame.SpaceLimit)
+	usedStorage := frame.SpaceLimit - frame.SpaceLeft
+	minSize := min(usedStorage+800, frame.SpaceLimit)
 	if sz < minSize {
 		sz = minSize
 	}
-	CurrentFrame.SpaceLimit = sz
-	CurrentFrame.SpaceLeft = sz - usedStorage
+	frame.SpaceLimit = sz
+	frame.SpaceLeft = sz - usedStorage
 	return true
 }
 
 // FrameSetHeight sets the screen height for the current frame
-func FrameSetHeight(sh int, setInitial bool) bool {
+func FrameSetHeight(frame *FrameObject, sh int, setInitial bool) bool {
 	if sh >= 1 && sh <= TerminalInfo.Height {
 		if setInitial {
 			InitialScrHeight = sh
 		}
-		CurrentFrame.ScrHeight = sh
+		frame.ScrHeight = sh
 		band := sh / 6
 		if setInitial {
 			InitialMarginTop = band
 		}
-		CurrentFrame.MarginTop = band
+		frame.MarginTop = band
 		if setInitial {
 			InitialMarginBottom = band
 		}
-		CurrentFrame.MarginBottom = band
+		frame.MarginBottom = band
 		return true
 	}
 	ScreenMessage(MsgInvalidScreenHeight)
@@ -666,12 +672,12 @@ func FrameSetHeight(sh int, setInitial bool) bool {
 }
 
 // setwidth sets the screen width for the current frame
-func setwidth(wid int, setInitial bool) bool {
+func setwidth(frame *FrameObject, wid int, setInitial bool) bool {
 	if wid >= 10 && wid <= TerminalInfo.Width {
 		if setInitial {
 			InitialScrWidth = wid
 		}
-		CurrentFrame.ScrWidth = wid
+		frame.ScrWidth = wid
 		return true
 	}
 	ScreenMessage(MsgScreenWidthInvalid)
@@ -679,7 +685,7 @@ func setwidth(wid int, setInitial bool) bool {
 }
 
 // showOptions displays the current frame options
-func showOptions() {
+func showOptions(frame *FrameObject) {
 	ScreenUnload()
 	ScreenHome(true)
 	ScreenWriteStr(0, "    Ludwig Option         Code    State")
@@ -690,21 +696,21 @@ func showOptions() {
 	ScreenWriteStr(4, "Show current options  S")
 	ScreenWriteln()
 	ScreenWriteStr(4, "Auto-indenting        I       ")
-	if CurrentFrame.Options.Has(OptAutoIndent) {
+	if frame.Options.Has(OptAutoIndent) {
 		ScreenWriteStr(0, "On")
 	} else {
 		ScreenWriteStr(0, "Off")
 	}
 	ScreenWriteln()
 	ScreenWriteStr(4, "New Line              N       ")
-	if CurrentFrame.Options.Has(OptNewLine) {
+	if frame.Options.Has(OptNewLine) {
 		ScreenWriteStr(0, "On")
 	} else {
 		ScreenWriteStr(0, "Off")
 	}
 	ScreenWriteln()
 	ScreenWriteStr(4, "Wrap at Right Margin  W       ")
-	if CurrentFrame.Options.Has(OptAutoWrap) {
+	if frame.Options.Has(OptAutoWrap) {
 		ScreenWriteStr(0, "On")
 	} else {
 		ScreenWriteStr(0, "Off")
@@ -716,10 +722,10 @@ func showOptions() {
 }
 
 // setOpt sets a single option
-func setOpt(ch byte, seton bool, options *FrameOptions) bool {
+func setOpt(frame *FrameObject, ch byte, seton bool, options *FrameOptions) bool {
 	switch ch {
 	case 'S':
-		showOptions()
+		showOptions(frame)
 	case 'I':
 		if seton {
 			options.Set(OptAutoIndent)
@@ -746,7 +752,7 @@ func setOpt(ch byte, seton bool, options *FrameOptions) bool {
 }
 
 // setparam parses and sets frame parameters
-func setparam(request *TParObject) bool {
+func setparam(frame *FrameObject, request *TParObject) bool {
 	p := newTparParser(request)
 	ch := p.nextChar()
 	for ch != 0 {
@@ -762,27 +768,27 @@ func setparam(request *TParObject) bool {
 		ok := false
 		switch ch {
 		case 'O':
-			ok = p.setOptions(setInitial)
+			ok = p.setOptions(frame, setInitial)
 		case 'S':
 			if mem, found := p.toInt(); found {
-				ok = setmemory(mem, setInitial)
+				ok = setmemory(frame, mem, setInitial)
 			}
 		case 'H':
 			if height, found := p.toInt(); found {
-				ok = FrameSetHeight(height, setInitial)
+				ok = FrameSetHeight(frame, height, setInitial)
 			}
 		case 'W':
 			if width, found := p.toInt(); found {
-				ok = setwidth(width, setInitial)
+				ok = setwidth(frame, width, setInitial)
 			}
 		case 'C':
 			ok = p.setCmdIntr()
 		case 'T':
-			ok = p.setTabs(setInitial)
+			ok = p.setTabs(frame, setInitial)
 		case 'M':
-			ok = p.setLRMargin(setInitial)
+			ok = p.setLRMargin(frame, setInitial)
 		case 'V':
-			ok = p.setTBMargin(setInitial)
+			ok = p.setTBMargin(frame, setInitial)
 		case 'K':
 			ok = p.setMode()
 		default:
@@ -852,13 +858,13 @@ func printMargins(m1 int, m2 int) {
 }
 
 // FrameParameter handles the frame parameters command
-func FrameParameter(tpar *TParObject) bool {
+func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 	request := TParObject{}
 	if !TparGet1(tpar, CmdFrameParameters, &request) {
 		return false
 	}
 	if request.Len > 0 {
-		return setparam(&request)
+		return setparam(frame, &request)
 	}
 
 	// Display parameters and stats
@@ -871,23 +877,23 @@ func FrameParameter(tpar *TParObject) bool {
 			ScreenWriteCh(0, LudwigVersion[i])
 		}
 		ScreenWriteStr(5, "Parameters      Frame: ")
-		ScreenWriteNameStr(0, CurrentFrame.Span.Name, NameLen)
+		ScreenWriteNameStr(0, frame.Span.Name, NameLen)
 		ScreenWritelnClel()
 		ScreenWriteStr(0, " ===============     ==========      =====")
 		ScreenWritelnClel()
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Unused  memory available in frame    =")
-		ScreenWriteInt(CurrentFrame.SpaceLeft, 9)
+		ScreenWriteInt(frame.SpaceLeft, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "The number of lines in this frame    =")
-		temp := LineToNumber(CurrentFrame.LastGroup.LastLine) - 1
+		temp := LineToNumber(frame.LastGroup.LastLine) - 1
 		ScreenWriteInt(temp, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Lines read from input file so far    =")
-		ScreenWriteInt(CurrentFrame.InputCount, 9)
+		ScreenWriteInt(frame.InputCount, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Current Line number in this frame    =")
-		temp = LineToNumber(CurrentFrame.Dot.Line)
+		temp = LineToNumber(frame.Dot.Line)
 		ScreenWriteInt(temp, 9)
 		ScreenWritelnClel()
 		ScreenWritelnClel()
@@ -917,43 +923,43 @@ func FrameParameter(tpar *TParObject) bool {
 			ScreenWritelnClel()
 		}
 		ScreenWriteStr(3, "Maximum memory available in frame  S =")
-		ScreenWriteInt(CurrentFrame.SpaceLimit, 9)
+		ScreenWriteInt(frame.SpaceLimit, 9)
 		ScreenWriteStr(5, "  --  ")
 		ScreenWriteInt(FileData.Space, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Screen height  (lines displayed)   H =")
-		ScreenWriteInt(CurrentFrame.ScrHeight, 9)
+		ScreenWriteInt(frame.ScrHeight, 9)
 		ScreenWriteStr(5, "  --  ")
 		ScreenWriteInt(InitialScrHeight, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Screen width   (characters)        W =")
-		ScreenWriteInt(CurrentFrame.ScrWidth, 9)
+		ScreenWriteInt(frame.ScrWidth, 9)
 		ScreenWriteStr(5, "  --  ")
 		ScreenWriteInt(InitialScrWidth, 9)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Editing options                    O =")
-		printOptions(CurrentFrame.Options)
+		printOptions(frame.Options)
 		ScreenWriteStr(0, "  --  ")
 		printOptions(InitialOptions)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Horizontal margins                 M =")
-		printMargins(CurrentFrame.MarginLeft, CurrentFrame.MarginRight)
+		printMargins(frame.MarginLeft, frame.MarginRight)
 		ScreenWriteStr(0, "  --  ")
 		printMargins(InitialMarginLeft, InitialMarginRight)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Vertical margins                   V =")
-		printMargins(CurrentFrame.MarginTop, CurrentFrame.MarginBottom)
+		printMargins(frame.MarginTop, frame.MarginBottom)
 		ScreenWriteStr(0, "  --  ")
 		printMargins(InitialMarginTop, InitialMarginBottom)
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Tab settings                       T =")
 		ScreenWritelnClel()
-		for i := 1; i <= CurrentFrame.ScrWidth; i++ {
-			if i == CurrentFrame.MarginLeft {
+		for i := 1; i <= frame.ScrWidth; i++ {
+			if i == frame.MarginLeft {
 				ScreenWriteCh(0, 'L')
-			} else if i == CurrentFrame.MarginRight {
+			} else if i == frame.MarginRight {
 				ScreenWriteCh(0, 'R')
-			} else if CurrentFrame.TabStops[i] {
+			} else if frame.TabStops[i] {
 				ScreenWriteCh(0, 'T')
 			} else {
 				ScreenWriteCh(0, ' ')
@@ -964,7 +970,7 @@ func FrameParameter(tpar *TParObject) bool {
 		request.Str, request.Len = ScreenGetLineP(newValues, 1, 1)
 		if request.Len > 0 {
 			request.Str.ApplyN(ChToUpper, request.Len, 1)
-			if !setparam(&request) {
+			if !setparam(frame, &request) {
 				ScreenBeep()
 			}
 		}
