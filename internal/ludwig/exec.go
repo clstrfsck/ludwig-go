@@ -465,7 +465,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdFileInput, CmdFileOutput, CmdFileEdit, CmdFileRead, CmdFileWrite,
 		CmdFileRewind, CmdFileKill, CmdFileSave,
 		CmdFileGlobalInput, CmdFileGlobalOutput, CmdFileGlobalRewind, CmdFileGlobalKill:
-		cmdSuccess = FileCommand(command, rept, count, tparam, fromSpan)
+		cmdSuccess = FileCommand(CurrentFrame, command, rept, count, tparam, fromSpan)
 
 	case CmdFileExecute:
 		if CurrentFrame == FrameCmd {
@@ -484,7 +484,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 				LinesExtract(firstLine, lastLine)
 			}
-			if FileCommand(CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
+			if FileCommand(CurrentFrame, CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
 				CurrentFrame = CurrentFrame.ReturnFrame
 				// Recompile and execute frame COMMAND
 				var newSpan, oldSpan *SpanObject
