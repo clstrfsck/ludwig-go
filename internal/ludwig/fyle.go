@@ -482,9 +482,9 @@ func getFreeSlot(fileSlot int) (int, error) {
 	return slot, nil
 }
 
-func getFileName(tparam *TParObject, command Commands) (string, error) {
+func getFileName(frame *FrameObject, tparam *TParObject, command Commands) (string, error) {
 	tpFileName := TParObject{}
-	if !TparGet1(tparam, command, &tpFileName) {
+	if !TparGet1(frame, tparam, command, &tpFileName) {
 		// TparAnalyze has already output the message, so we return an empty one
 		return "", errEmpty
 	}
@@ -517,7 +517,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return false
 		}
 		var fnm string
-		if fnm, err = getFileName(tparam, command); err != nil {
+		if fnm, err = getFileName(frame, tparam, command); err != nil {
 			return false
 		}
 		var dummyFptr *FileObject
@@ -546,7 +546,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		}
 		if Files[fileSlot] == nil {
 			var fnm string
-			if fnm, err = getFileName(tparam, command); err != nil {
+			if fnm, err = getFileName(frame, tparam, command); err != nil {
 				return false
 			}
 			var dummyFptr *FileObject
@@ -571,7 +571,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return false
 		}
 		var fnm string
-		if fnm, err = getFileName(tparam, command); err != nil {
+		if fnm, err = getFileName(frame, tparam, command); err != nil {
 			return false
 		}
 		if !FileCreateOpen([]string{fnm}, ParseEdit, &Files[fileSlot], &Files[fileSlot2]) {
@@ -600,7 +600,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return false
 		}
 		var fnm string
-		if fnm, err = getFileName(tparam, command); err != nil {
+		if fnm, err = getFileName(frame, tparam, command); err != nil {
 			return false
 		}
 		var dummyFptr *FileObject
@@ -688,7 +688,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return false
 		}
 		var fnm string
-		if fnm, err = getFileName(tparam, command); err != nil {
+		if fnm, err = getFileName(frame, tparam, command); err != nil {
 			return false
 		}
 		if frame.InputFile != 0 {
@@ -713,7 +713,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		}
 		if Files[fileSlot] == nil {
 			var fnm string
-			if fnm, err = getFileName(tparam, command); err != nil {
+			if fnm, err = getFileName(frame, tparam, command); err != nil {
 				return false
 			}
 			var dummyFptr *FileObject
