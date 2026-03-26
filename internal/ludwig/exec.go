@@ -677,33 +677,33 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		cmdSuccess = true
 
 	case CmdLineCentre:
-		cmdSuccess = WordCentre(rept, count)
+		cmdSuccess = WordCentre(CurrentFrame, rept, count)
 
 	case CmdLineFill:
-		cmdSuccess = WordFill(rept, count)
+		cmdSuccess = WordFill(CurrentFrame, rept, count)
 
 	case CmdLineJustify:
-		cmdSuccess = WordJustify(rept, count)
+		cmdSuccess = WordJustify(CurrentFrame, rept, count)
 
 	case CmdLineSquash:
-		cmdSuccess = WordSqueeze(rept, count)
+		cmdSuccess = WordSqueeze(CurrentFrame, rept, count)
 
 	case CmdLineLeft:
-		cmdSuccess = WordLeft(rept, count)
+		cmdSuccess = WordLeft(CurrentFrame, rept, count)
 
 	case CmdLineRight:
-		cmdSuccess = WordRight(rept, count)
+		cmdSuccess = WordRight(CurrentFrame, rept, count)
 
 	case CmdWordAdvance:
 		if FileData.OldCmds {
-			cmdSuccess = WordAdvanceWord(rept, count)
+			cmdSuccess = WordAdvanceWord(CurrentFrame, rept, count)
 		} else {
 			cmdSuccess = NewwordAdvanceWord(CurrentFrame, rept, count)
 		}
 
 	case CmdWordDelete:
 		if FileData.OldCmds {
-			cmdSuccess = WordDeleteWord(rept, count)
+			cmdSuccess = WordDeleteWord(CurrentFrame, rept, count)
 		} else {
 			cmdSuccess = NewwordDeleteWord(CurrentFrame, rept, count)
 		}
