@@ -108,7 +108,7 @@ func UserKeyInitialize() {
 }
 
 // UserCommandIntroducer enters command introducer into text in correct keyboard mode
-func UserCommandIntroducer() bool {
+func UserCommandIntroducer(frame *FrameObject) bool {
 	if !ChIsPrintable(rune(CommandIntroducer)) {
 		ScreenMessage(MsgNonprintableIntroducer)
 		return false
@@ -120,20 +120,20 @@ func UserCommandIntroducer() bool {
 
 	switch EditMode {
 	case ModeInsert:
-		cmdSuccess = TextInsert(true, 1, temp, 1, CurrentFrame.Dot)
+		cmdSuccess = TextInsert(true, 1, temp, 1, frame.Dot)
 	case ModeCommand:
 		if PreviousMode == ModeInsert {
-			cmdSuccess = TextInsert(true, 1, temp, 1, CurrentFrame.Dot)
+			cmdSuccess = TextInsert(true, 1, temp, 1, frame.Dot)
 		} else {
-			cmdSuccess = TextOvertype(true, 1, temp, 1, CurrentFrame.Dot)
+			cmdSuccess = TextOvertype(true, 1, temp, 1, frame.Dot)
 		}
 	case ModeOvertype:
-		cmdSuccess = TextOvertype(true, 1, temp, 1, CurrentFrame.Dot)
+		cmdSuccess = TextOvertype(true, 1, temp, 1, frame.Dot)
 	}
 
 	if cmdSuccess {
-		CurrentFrame.TextModified = true
-		MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+		frame.TextModified = true
+		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
 	}
 	return cmdSuccess
 }
