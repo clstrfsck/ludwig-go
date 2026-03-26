@@ -180,7 +180,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 		if rept == LeadParamNone {
 			count = TerminalInfo.Height
 		}
-		cmdSuccess = FrameSetHeight(count, false)
+		cmdSuccess = FrameSetHeight(frame, count, false)
 
 	case CmdWindowTop:
 		MarkCreate(frame.FirstGroup.FirstLine, frame.Dot.Col, &frame.Dot)

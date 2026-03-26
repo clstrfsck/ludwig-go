@@ -506,18 +506,18 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		var request TParObject
 		if TparGet1(tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
-			cmdSuccess = FrameEdit(newName)
+			cmdSuccess = FrameEdit(CurrentFrame, newName)
 		}
 
 	case CmdFrameKill:
 		var request TParObject
 		if TparGet1(tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
-			cmdSuccess = FrameKill(newName)
+			cmdSuccess = FrameKill(CurrentFrame, newName)
 		}
 
 	case CmdFrameParameters:
-		cmdSuccess = FrameParameter(tparam)
+		cmdSuccess = FrameParameter(CurrentFrame, tparam)
 
 	case CmdFrameReturn:
 		for i := 1; i <= count; i++ {
@@ -901,7 +901,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 						cmdSuccess = true
 					} else {
 						fr := newLine.Group.Frame
-						if FrameEdit(fr.Span.Name) {
+						if FrameEdit(CurrentFrame, fr.Span.Name) {
 							if fr.Marks[MarkEquals] != nil {
 								MarkDestroy(&fr.Marks[MarkEquals])
 							}
