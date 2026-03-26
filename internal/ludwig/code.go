@@ -101,9 +101,11 @@ func errorMsg(ps *parseState, errText string) {
 
 		// Insert the error message into the span
 		if LudwigMode == LudwigScreen {
-			if !FrameEdit(CurrentFrame, ps.currentPoint.Line.Group.Frame.Span.Name) {
+			newFrame, ok := FrameEdit(CurrentFrame, ps.currentPoint.Line.Group.Frame.Span.Name)
+			if !ok {
 				return
 			}
+			CurrentFrame = newFrame
 			if CurrentFrame.Marks[MarkEquals] != nil {
 				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
 			}
