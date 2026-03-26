@@ -506,7 +506,12 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		var request TParObject
 		if TparGet1(tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
-			cmdSuccess = FrameEdit(CurrentFrame, newName)
+			if newFrame, ok := FrameEdit(CurrentFrame, newName); ok {
+				CurrentFrame = newFrame
+				cmdSuccess = true
+			} else {
+				cmdSuccess = false
+			}
 		}
 
 	case CmdFrameKill:
@@ -901,7 +906,9 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 						cmdSuccess = true
 					} else {
 						fr := newLine.Group.Frame
-						if FrameEdit(CurrentFrame, fr.Span.Name) {
+
+						if newFrame, ok := FrameEdit(CurrentFrame, fr.Span.Name); ok {
+							CurrentFrame = newFrame
 							if fr.Marks[MarkEquals] != nil {
 								MarkDestroy(&fr.Marks[MarkEquals])
 							}

@@ -555,30 +555,32 @@ func startUp(argv []string) bool {
 	// Create the three automatically defined frames: OOPS, COMMAND and LUDWIG.
 	// Save pointers to COMMAND & OOPS  frames for use in later frame routines.
 
-	if !FrameEdit(CurrentFrame, frameNameOops) {
+	var ok bool
+	FrameOops, ok = FrameEdit(nil, frameNameOops)
+	if !ok {
 		return false
 	}
-	if !FrameSetHeight(CurrentFrame, InitialScrHeight, true) {
+	if !FrameSetHeight(FrameOops, InitialScrHeight, true) {
 		return false
 	}
-	FrameOops = CurrentFrame
-	CurrentFrame = nil
 	FrameOops.SpaceLimit = MaxSpace     // Big !
 	FrameOops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
 	FrameOops.Options.Set(OptSpecialFrame)
-	if !FrameEdit(CurrentFrame, frameNameCmd) {
+
+	FrameCmd, ok = FrameEdit(nil, frameNameCmd)
+	if !ok {
 		return false
 	}
-	FrameCmd = CurrentFrame
-	CurrentFrame = nil
 	FrameCmd.Options.Set(OptSpecialFrame)
-	if !FrameEdit(CurrentFrame, frameNameHeap) {
+
+	FrameHeap, ok = FrameEdit(nil, frameNameHeap)
+	if !ok {
 		return false
 	}
-	FrameHeap = CurrentFrame
-	CurrentFrame = nil
 	FrameHeap.Options.Set(OptSpecialFrame)
-	if !FrameEdit(CurrentFrame, DefaultFrameName) {
+
+	CurrentFrame, ok = FrameEdit(nil, DefaultFrameName)
+	if !ok {
 		return false
 	}
 

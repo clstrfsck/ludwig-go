@@ -466,7 +466,7 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 
 // FrameEdit creates or edits a frame with the specified name.
 // This is the \ED command. If frame_name doesn't exist, then it is created.
-func FrameEdit(frame *FrameObject, frameName string) bool {
+func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 	fname := frameName
 	if fname == "" {
 		fname = DefaultFrameName
@@ -479,12 +479,11 @@ func FrameEdit(frame *FrameObject, frameName string) bool {
 		if ptr.Frame != nil {
 			if ptr.Frame != frame {
 				ptr.Frame.ReturnFrame = frame
-				CurrentFrame = ptr.Frame
 			}
-			return true
+			return ptr.Frame, true
 		}
 		ScreenMessage(MsgSpanOfThatNameExists)
-		return false
+		return nil, false
 	}
 
 	// No Span/Frame of that name exists, create one.
@@ -553,8 +552,7 @@ func FrameEdit(frame *FrameObject, frameName string) bool {
 	eofLen := len(endOfFile) + 1
 	gptr.LastLine.Str.FillCopyBytes([]byte(fname), eofLen, lineLen-eofLen, ' ')
 	gptr.LastLine.Used = 0 // Special feature of the NULL line!
-	CurrentFrame = fptr
-	return true
+	return fptr, true
 }
 
 // FrameKill destroys the specified frame.
