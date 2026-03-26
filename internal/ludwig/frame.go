@@ -630,7 +630,7 @@ func FrameKill(frame *FrameObject, frameName string) bool {
 	return true
 }
 
-// setmemory sets the memory allocation for the current frame
+// setmemory sets the memory allocation for the specified frame
 func setmemory(frame *FrameObject, sz int, setInitial bool) bool {
 	if sz >= MaxSpace {
 		sz = MaxSpace
@@ -649,7 +649,7 @@ func setmemory(frame *FrameObject, sz int, setInitial bool) bool {
 	return true
 }
 
-// FrameSetHeight sets the screen height for the current frame
+// FrameSetHeight sets the screen height for the specified frame
 func FrameSetHeight(frame *FrameObject, sh int, setInitial bool) bool {
 	if sh >= 1 && sh <= TerminalInfo.Height {
 		if setInitial {
