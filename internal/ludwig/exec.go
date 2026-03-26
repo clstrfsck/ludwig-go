@@ -746,7 +746,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					ScreenMessage(MsgScreenModeOnly)
 					return
 				}
-				if !UserCommandIntroducer() {
+				if !UserCommandIntroducer(CurrentFrame) {
 					return
 				}
 			}
@@ -1036,7 +1036,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			ScreenMessage(MsgScreenModeOnly)
 			return
 		}
-		cmdSuccess = UserCommandIntroducer()
+		cmdSuccess = UserCommandIntroducer(CurrentFrame)
 
 	case CmdUserKey:
 		if LudwigMode != LudwigScreen {

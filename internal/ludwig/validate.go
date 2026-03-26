@@ -22,8 +22,6 @@ func ValidateCommand() bool {
 	  Outputs  : none.
 	  Bugchecks: .lots and lots of them!
 	*/
-	// In production builds, validation is typically disabled
-	// For now, we always validate. Can be controlled via build tags if needed.
 
 	const (
 		oops = 0x0001
