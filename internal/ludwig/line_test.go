@@ -10,18 +10,9 @@ import (
 
 // Helper functions for test setup
 
-// createTestFrame creates a minimal frame for testing
-func createTestFrame() *FrameObject {
-	frame := &FrameObject{
-		SpaceLeft:  MaxSpace,
-		SpaceLimit: MaxSpace,
-	}
-	return frame
-}
-
 // createTestFrameWithEOP creates a frame with an EOP group
 func createTestFrameWithEOP() (*FrameObject, *GroupObject) {
-	frame := createTestFrame()
+	frame, _ := emptyTestLineInFrame()
 	eopGroup := LineEOPCreate(frame)
 	frame.FirstGroup = eopGroup
 	frame.LastGroup = eopGroup
@@ -136,7 +127,7 @@ func validateFrameStructure(t *testing.T, frame *FrameObject) {
 
 func TestLineToNumber(t *testing.T) {
 	t.Run("FirstLineInGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 5)
 
 		lineNr := LineToNumber(group.FirstLine)
@@ -145,7 +136,7 @@ func TestLineToNumber(t *testing.T) {
 	})
 
 	t.Run("LastLineInGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 10, 5)
 
 		lineNr := LineToNumber(group.LastLine)
@@ -154,7 +145,7 @@ func TestLineToNumber(t *testing.T) {
 	})
 
 	t.Run("MiddleLineInGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 100, 10)
 
 		// Get the middle line (offset 5, which is line 105)
@@ -169,7 +160,7 @@ func TestLineToNumber(t *testing.T) {
 	})
 
 	t.Run("LineInSecondGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group1 := createTestGroup(frame, 1, 10)
 		group2 := createTestGroup(frame, 11, 10)
 		linkGroups(group1, group2)
@@ -184,7 +175,7 @@ func TestLineToNumber(t *testing.T) {
 
 func TestLineFromNumber(t *testing.T) {
 	t.Run("FirstLine", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -195,7 +186,7 @@ func TestLineFromNumber(t *testing.T) {
 	})
 
 	t.Run("LastLine", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -206,7 +197,7 @@ func TestLineFromNumber(t *testing.T) {
 	})
 
 	t.Run("MiddleLine", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -217,7 +208,7 @@ func TestLineFromNumber(t *testing.T) {
 	})
 
 	t.Run("LineInSecondGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group1 := createTestGroup(frame, 1, 10)
 		group2 := createTestGroup(frame, 11, 10)
 		linkGroups(group1, group2)
@@ -231,7 +222,7 @@ func TestLineFromNumber(t *testing.T) {
 	})
 
 	t.Run("LineNumberTooLarge", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -242,7 +233,7 @@ func TestLineFromNumber(t *testing.T) {
 	})
 
 	t.Run("MultipleGroupsSearch", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group1 := createTestGroup(frame, 1, 20)
 		group2 := createTestGroup(frame, 21, 30)
 		group3 := createTestGroup(frame, 51, 25)
@@ -262,7 +253,7 @@ func TestLineFromNumber(t *testing.T) {
 
 func TestLineChangeLength(t *testing.T) {
 	t.Run("ExpandFromZero", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 1)
 		line := group.FirstLine
 
@@ -277,7 +268,7 @@ func TestLineChangeLength(t *testing.T) {
 	})
 
 	t.Run("ExpandLength", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 1)
 		line := group.FirstLine
 
@@ -296,7 +287,7 @@ func TestLineChangeLength(t *testing.T) {
 	})
 
 	t.Run("ShrinkLength", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 1)
 		line := group.FirstLine
 
@@ -316,7 +307,7 @@ func TestLineChangeLength(t *testing.T) {
 	})
 
 	t.Run("SetToZero", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 1)
 		line := group.FirstLine
 
@@ -334,7 +325,7 @@ func TestLineChangeLength(t *testing.T) {
 	})
 
 	t.Run("QuantizationBehavior", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 1)
 		line := group.FirstLine
 
@@ -462,7 +453,7 @@ func TestLinesCreate(t *testing.T) {
 
 func TestLineEOPCreate(t *testing.T) {
 	t.Run("CreateEOPGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := LineEOPCreate(frame)
 
 		assert.NotNil(t, group, "group is nil")
@@ -475,7 +466,7 @@ func TestLineEOPCreate(t *testing.T) {
 	})
 
 	t.Run("VerifyEOPLineInitialization", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := LineEOPCreate(frame)
 
 		line := group.FirstLine
@@ -558,7 +549,7 @@ func TestLinesInject_Basic(t *testing.T) {
 	})
 
 	t.Run("InjectWithinGroupCapacity", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -692,7 +683,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 	ScrBotLine = nil
 
 	t.Run("ExtractSingleLine", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -723,7 +714,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 	})
 
 	t.Run("ExtractMultipleLines", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -744,7 +735,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 	})
 
 	t.Run("ExtractFirstLine", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		frame.FirstGroup = group
 		frame.LastGroup = group
@@ -760,7 +751,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 	})
 
 	t.Run("ExtractLastLine", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group := createTestGroup(frame, 1, 10)
 		// Add an EOP group after the main group
 		eopGroup := LineEOPCreate(frame)
@@ -787,7 +778,7 @@ func TestLinesExtract_Basic(t *testing.T) {
 	})
 
 	t.Run("ExtractAllLinesInGroup", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group1 := createTestGroup(frame, 1, 10)
 		group2 := createTestGroup(frame, 11, 10)
 		group3 := createTestGroup(frame, 21, 10)
@@ -838,7 +829,7 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 	ScrBotLine = nil
 
 	t.Run("ExtractSpanningTwoGroups", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group1 := createTestGroup(frame, 1, 20)
 		group2 := createTestGroup(frame, 21, 20)
 		linkGroups(group1, group2)
@@ -884,7 +875,7 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 	})
 
 	t.Run("ExtractLeavingEmptyGroups", func(t *testing.T) {
-		frame := createTestFrame()
+		frame, _ := emptyTestLineInFrame()
 		group1 := createTestGroup(frame, 1, 10)
 		group2 := createTestGroup(frame, 11, 10)
 		group3 := createTestGroup(frame, 21, 10)

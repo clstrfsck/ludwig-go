@@ -10,78 +10,6 @@ import (
 
 // Helper functions for text tests
 
-// setupTestLineInFrame creates a test line within a frame with a group
-func setupTestLineInFrame() (*FrameObject, *LineHdrObject) {
-	frame := &FrameObject{
-		SpaceLeft:    MaxSpace,
-		SpaceLimit:   MaxSpace,
-		ScrWidth:     80,
-		ScrOffset:    0,
-		MarginLeft:   1,
-		MarginRight:  MaxStrLen,
-		TextModified: false,
-		Options:      0,
-	}
-
-	group := &GroupObject{
-		Frame:       frame,
-		FirstLineNr: 1,
-		NrLines:     1,
-	}
-
-	line1 := &LineHdrObject{
-		Group:    group,
-		OffsetNr: 0,
-		Used:     0,
-		ScrRowNr: 0,
-		Str:      NewBlankStrObject(MaxStrLen),
-	}
-
-	// Add NULL line at the end
-	nullLine := &LineHdrObject{
-		Group:    group,
-		OffsetNr: 1,
-		FLink:    nil,
-		BLink:    line1,
-		Used:     0,
-		Str:      nil,
-	}
-	line1.FLink = nullLine
-
-	group.FirstLine = line1
-	group.LastLine = nullLine
-	frame.FirstGroup = group
-	frame.LastGroup = group
-
-	// Create marks array for the frame
-	for i := range frame.Marks {
-		frame.Marks[i] = nil
-	}
-
-	// Create a dot mark (required for many operations)
-	frame.Dot = &MarkObject{
-		Line: line1,
-		Col:  1,
-	}
-
-	return frame, line1
-}
-
-// setupTestLineWithContent creates a test line with specified content
-func setupTestLineWithContent(content string) (*FrameObject, *LineHdrObject) {
-	frame, line := setupTestLineInFrame()
-
-	// Copy content into the line
-	for i, ch := range content {
-		if i < MaxStrLen {
-			line.Str.Set(i+1, byte(ch))
-		}
-	}
-	line.Used = len(content)
-
-	return frame, line
-}
-
 // setupLinkedLines creates a chain of lines
 func setupLinkedLines(count int) (*FrameObject, []*LineHdrObject) {
 	frame := &FrameObject{
@@ -143,57 +71,57 @@ func setupLinkedLines(count int) (*FrameObject, []*LineHdrObject) {
 // TestTextReturnCol tests the TextReturnCol function
 func TestTextReturnCol(t *testing.T) {
 	t.Run("ColumnBeforeMarginLeft", func(t *testing.T) {
-		frame, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 10
 
-		newCol := TextReturnCol(line, 5, false)
+		newCol := TextReturnCol(frame.FirstGroup.FirstLine, 5, false)
 		assert.Equal(t, 1, newCol, "Expected column 1 when curCol < MarginLeft")
 	})
 
 	t.Run("ColumnAtOrAfterMarginLeft", func(t *testing.T) {
-		frame, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 10
 
-		newCol := TextReturnCol(line, 15, false)
+		newCol := TextReturnCol(frame.FirstGroup.FirstLine, 15, false)
 		assert.Equal(t, 10, newCol, "Expected column to be MarginLeft")
 	})
 
 	t.Run("AutoIndentDisabled", func(t *testing.T) {
-		frame, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 5
 		frame.Options = 0 // No auto-indent
 
 		// Create next line
 		nextLine := &LineHdrObject{
-			Group:    line.Group,
+			Group:    frame.FirstGroup,
 			OffsetNr: 1,
 			Used:     10,
 			Str:      NewBlankStrObject(MaxStrLen),
-			BLink:    line,
+			BLink:    frame.FirstGroup.FirstLine,
 		}
-		line.FLink = nextLine
+		frame.FirstGroup.FirstLine.FLink = nextLine
 
 		// Set some content with leading spaces
 		nextLine.Str.Set(5, 'A')
 
-		newCol := TextReturnCol(line, 10, false)
+		newCol := TextReturnCol(frame.FirstGroup.FirstLine, 10, false)
 		assert.Equal(t, 5, newCol, "Expected MarginLeft without auto-indent")
 	})
 
 	t.Run("AutoIndentEnabled", func(t *testing.T) {
-		frame, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 		frame.MarginLeft = 1
 		frame.Options.Set(OptAutoIndent)
 
 		// Put content on the current line with leading spaces
 		for i := 1; i <= 4; i++ {
-			line.Str.Set(i, ' ')
+			frame.FirstGroup.FirstLine.Str.Set(i, ' ')
 		}
-		line.Str.Set(5, 'A')
-		line.Used = 5
+		frame.FirstGroup.FirstLine.Str.Set(5, 'A')
+		frame.FirstGroup.FirstLine.Used = 5
 
 		// The function should find the first non-space character
-		newCol := TextReturnCol(line, 10, false)
+		newCol := TextReturnCol(frame.FirstGroup.FirstLine, 10, false)
 		assert.Equal(t, 5, newCol, "Expected auto-indent to column 5")
 	})
 }
@@ -228,10 +156,10 @@ func TestTextRealizeNull(t *testing.T) {
 // TestTextInsert tests the TextInsert function
 func TestTextInsert(t *testing.T) {
 	t.Run("InsertIntoEmptyLine", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
-			Line: line,
+			Line: frame.FirstGroup.FirstLine,
 			Col:  1,
 		}
 
@@ -242,16 +170,16 @@ func TestTextInsert(t *testing.T) {
 
 		result := TextInsert(false, 1, insertStr, 2, mark)
 		assert.True(t, result, "TextInsert should succeed")
-		assert.Equal(t, byte('H'), line.Str.Get(1), "First character should be 'H'")
-		assert.Equal(t, byte('i'), line.Str.Get(2), "Second character should be 'i'")
-		assert.Equal(t, 2, line.Used, "Line.Used should be 2")
+		assert.Equal(t, byte('H'), frame.FirstGroup.FirstLine.Str.Get(1), "First character should be 'H'")
+		assert.Equal(t, byte('i'), frame.FirstGroup.FirstLine.Str.Get(2), "Second character should be 'i'")
+		assert.Equal(t, 2, frame.FirstGroup.FirstLine.Used, "Line.Used should be 2")
 	})
 
 	t.Run("InsertInMiddleOfLine", func(t *testing.T) {
-		_, line := setupTestLineWithContent("Hello")
+		frame, _ := contentLineInFrame("Hello")
 
 		mark := &MarkObject{
-			Line: line,
+			Line: frame.FirstGroup.FirstLine,
 			Col:  4, // Insert before 'l'
 		}
 
@@ -261,20 +189,20 @@ func TestTextInsert(t *testing.T) {
 
 		result := TextInsert(false, 1, insertStr, 2, mark)
 		assert.True(t, result, "TextInsert should succeed")
-		assert.Equal(t, byte('H'), line.Str.Get(1))
-		assert.Equal(t, byte('e'), line.Str.Get(2))
-		assert.Equal(t, byte('l'), line.Str.Get(3))
-		assert.Equal(t, byte('X'), line.Str.Get(4))
-		assert.Equal(t, byte('Y'), line.Str.Get(5))
-		assert.Equal(t, byte('l'), line.Str.Get(6))
-		assert.Equal(t, byte('o'), line.Str.Get(7))
+		assert.Equal(t, byte('H'), frame.FirstGroup.FirstLine.Str.Get(1))
+		assert.Equal(t, byte('e'), frame.FirstGroup.FirstLine.Str.Get(2))
+		assert.Equal(t, byte('l'), frame.FirstGroup.FirstLine.Str.Get(3))
+		assert.Equal(t, byte('X'), frame.FirstGroup.FirstLine.Str.Get(4))
+		assert.Equal(t, byte('Y'), frame.FirstGroup.FirstLine.Str.Get(5))
+		assert.Equal(t, byte('l'), frame.FirstGroup.FirstLine.Str.Get(6))
+		assert.Equal(t, byte('o'), frame.FirstGroup.FirstLine.Str.Get(7))
 	})
 
 	t.Run("InsertMultipleCopies", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
-			Line: line,
+			Line: frame.FirstGroup.FirstLine,
 			Col:  1,
 		}
 
@@ -283,17 +211,17 @@ func TestTextInsert(t *testing.T) {
 
 		result := TextInsert(false, 3, insertStr, 1, mark)
 		assert.True(t, result, "TextInsert should succeed")
-		assert.Equal(t, byte('A'), line.Str.Get(1))
-		assert.Equal(t, byte('A'), line.Str.Get(2))
-		assert.Equal(t, byte('A'), line.Str.Get(3))
-		assert.Equal(t, 3, line.Used)
+		assert.Equal(t, byte('A'), frame.FirstGroup.FirstLine.Str.Get(1))
+		assert.Equal(t, byte('A'), frame.FirstGroup.FirstLine.Str.Get(2))
+		assert.Equal(t, byte('A'), frame.FirstGroup.FirstLine.Str.Get(3))
+		assert.Equal(t, 3, frame.FirstGroup.FirstLine.Used)
 	})
 
 	t.Run("InsertExceedsMaxLength", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
-			Line: line,
+			Line: frame.FirstGroup.FirstLine,
 			Col:  1,
 		}
 
@@ -333,10 +261,10 @@ func TestTextInsert(t *testing.T) {
 // TestTextOvertype tests the TextOvertype function
 func TestTextOvertype(t *testing.T) {
 	t.Run("OvertypeEmptyLine", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
 
 		mark := &MarkObject{
-			Line: line,
+			Line: frame.FirstGroup.FirstLine,
 			Col:  1,
 		}
 
@@ -346,14 +274,14 @@ func TestTextOvertype(t *testing.T) {
 
 		result := TextOvertype(false, 1, overtypeStr, 2, mark)
 		assert.True(t, result, "TextOvertype should succeed")
-		assert.Equal(t, byte('A'), line.Str.Get(1))
-		assert.Equal(t, byte('B'), line.Str.Get(2))
-		assert.Equal(t, 2, line.Used)
+		assert.Equal(t, byte('A'), frame.FirstGroup.FirstLine.Str.Get(1))
+		assert.Equal(t, byte('B'), frame.FirstGroup.FirstLine.Str.Get(2))
+		assert.Equal(t, 2, frame.FirstGroup.FirstLine.Used)
 		assert.Equal(t, 3, mark.Col, "Mark should advance to column 3")
 	})
 
 	t.Run("OvertypeExistingContent", func(t *testing.T) {
-		_, line := setupTestLineWithContent("Hello")
+		_, line := contentLineInFrame("Hello")
 
 		mark := &MarkObject{
 			Line: line,
@@ -375,7 +303,8 @@ func TestTextOvertype(t *testing.T) {
 	})
 
 	t.Run("OvertypeMultipleCopies", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
+		line := frame.FirstGroup.FirstLine
 
 		mark := &MarkObject{
 			Line: line,
@@ -394,7 +323,7 @@ func TestTextOvertype(t *testing.T) {
 	})
 
 	t.Run("OvertypeExceedsMaxLength", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		_, line := emptyTestLineInFrame()
 
 		mark := &MarkObject{
 			Line: line,
@@ -411,7 +340,7 @@ func TestTextOvertype(t *testing.T) {
 // TestTextRemove tests the TextRemove function
 func TestTextRemove(t *testing.T) {
 	t.Run("RemoveWithinSingleLine", func(t *testing.T) {
-		_, line := setupTestLineWithContent("Hello World")
+		_, line := contentLineInFrame("Hello World")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -436,7 +365,7 @@ func TestTextRemove(t *testing.T) {
 	})
 
 	t.Run("RemoveFromStartOfLine", func(t *testing.T) {
-		_, line := setupTestLineWithContent("Test")
+		_, line := contentLineInFrame("Test")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -457,7 +386,7 @@ func TestTextRemove(t *testing.T) {
 	})
 
 	t.Run("RemoveEntireLine", func(t *testing.T) {
-		_, line := setupTestLineWithContent("Test")
+		_, line := contentLineInFrame("Test")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -653,7 +582,7 @@ func TestTextSplitLine(t *testing.T) {
 // TestTextMove tests the TextMove function
 func TestTextMove(t *testing.T) {
 	t.Run("CopySingleLine", func(t *testing.T) {
-		frame, line := setupTestLineWithContent("Hello")
+		frame, line := contentLineInFrame("Hello")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -682,7 +611,7 @@ func TestTextMove(t *testing.T) {
 	})
 
 	t.Run("MoveWithinSameLine", func(t *testing.T) {
-		frame, line := setupTestLineWithContent("Hello World")
+		frame, line := contentLineInFrame("Hello World")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -712,7 +641,7 @@ func TestTextMove(t *testing.T) {
 	})
 
 	t.Run("CopyZeroCount", func(t *testing.T) {
-		_, line := setupTestLineWithContent("Test")
+		_, line := contentLineInFrame("Test")
 
 		markOne := &MarkObject{
 			Line: line,
@@ -852,7 +781,8 @@ func TestTextMove(t *testing.T) {
 // TestTextInsertTpar tests the TextInsertTpar function
 func TestTextInsertTpar(t *testing.T) {
 	t.Run("InsertSimpleTpar", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
+		line := frame.FirstGroup.FirstLine
 
 		mark := &MarkObject{
 			Line: line,
@@ -887,7 +817,8 @@ func TestTextInsertTpar(t *testing.T) {
 	})
 
 	t.Run("InsertEmptyTpar", func(t *testing.T) {
-		_, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
+		line := frame.FirstGroup.FirstLine
 
 		mark := &MarkObject{
 			Line: line,
@@ -909,7 +840,8 @@ func TestTextInsertTpar(t *testing.T) {
 	})
 
 	t.Run("InsertMultiLineTpar", func(t *testing.T) {
-		frame, line := setupTestLineInFrame()
+		frame, _ := emptyTestLineInFrame()
+		line := frame.FirstGroup.FirstLine
 
 		// Set some initial content on the line
 		line.Str.Assign("Hello World")
