@@ -1059,7 +1059,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdWindowBackward, CmdWindowEnd, CmdWindowForward, CmdWindowLeft,
 		CmdWindowMiddle, CmdWindowNew, CmdWindowRight, CmdWindowScroll,
 		CmdWindowSetHeight, CmdWindowTop, CmdWindowUpdate:
-		cmdSuccess = WindowCommand(command, rept, count, fromSpan)
+		cmdSuccess = WindowCommand(CurrentFrame, command, rept, count, fromSpan)
 
 	case CmdResizeWindow:
 		ScreenResize()
