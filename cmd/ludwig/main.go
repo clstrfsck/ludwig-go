@@ -663,7 +663,7 @@ func main() {
 	ValueInitializations()
 	initialize()          // Stuff VALUE can't do, like creating frames etc.
 	if startUp(os.Args) { // Parse command line, get files attached, etc.
-		ExecuteImmed()
+		ExecuteImmed(CurrentFrame)
 		SysExitSuccess()
 	}
 	if LudwigAborted {

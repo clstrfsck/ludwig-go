@@ -242,7 +242,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdBridge, CmdNext:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			cmdSuccess = NextbridgeCommand(CurrentFrame, count, &request, command == CmdBridge)
 		}
 
@@ -328,7 +328,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdEqualColumn:
 		var request TParObject
 		i := 1 // Start of column number, j receives column number
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			if j, found := TparToInt(&request, &i); found {
 				switch rept {
 				case LeadParamNone, LeadParamPlus:
@@ -370,7 +370,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdEqualMark:
 		var request TParObject
-		if !TparGet1(tparam, command, &request) {
+		if !TparGet1(CurrentFrame, tparam, command, &request) {
 			return
 		}
 		var found bool
@@ -409,7 +409,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdEqualString:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			if request.Len == 0 {
 				// If didn't specify, use default
 				request = CurrentFrame.EqsTpar
@@ -430,7 +430,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 		if command == CmdExecuteString {
 			var request TParObject
-			if !TparGet1(tparam, command, &request) {
+			if !TparGet1(CurrentFrame, tparam, command, &request) {
 				return
 			}
 
@@ -459,7 +459,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			if !CodeCompile(FrameCmd.Span, true) {
 				return
 			}
-			cmdSuccess = CodeInterpret(rept, count, FrameCmd.Span.Code, true)
+			cmdSuccess = CodeInterpret(CurrentFrame, rept, count, FrameCmd.Span.Code, true)
 		}
 
 	case CmdFileInput, CmdFileOutput, CmdFileEdit, CmdFileRead, CmdFileWrite,
@@ -473,7 +473,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			return
 		}
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			newTparam := request
 			FrameCmd.ReturnFrame = CurrentFrame
 			CurrentFrame = FrameCmd
@@ -490,7 +490,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				var newSpan, oldSpan *SpanObject
 				if SpanFind(FrameCmd.Span.Name, &newSpan, &oldSpan) {
 					if CodeCompile(FrameCmd.Span, true) {
-						cmdSuccess = CodeInterpret(rept, count, FrameCmd.Span.Code, true)
+						cmdSuccess = CodeInterpret(CurrentFrame, rept, count, FrameCmd.Span.Code, true)
 					}
 				}
 			} else {
@@ -504,7 +504,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdFrameEdit:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
 			if newFrame, ok := FrameEdit(CurrentFrame, newName); ok {
 				CurrentFrame = newFrame
@@ -516,7 +516,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdFrameKill:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
 			cmdSuccess = FrameKill(CurrentFrame, newName)
 		}
@@ -536,7 +536,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdGet:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			if request.Len == 0 {
 				// If didn't specify, use default
 				request = CurrentFrame.GetTpar
@@ -556,7 +556,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			return
 		}
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			HelpHelp(string(request.Str.Slice(1, request.Len)))
 			cmdSuccess = true // Never fails
 		}
@@ -595,7 +595,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 		} else {
 			var request TParObject
-			if TparGet1(tparam, command, &request) {
+			if TparGet1(CurrentFrame, tparam, command, &request) {
 				if request.Con == nil {
 					cmdSuccess = TextInsert(true, count, request.Str, request.Len, CurrentFrame.Dot)
 					if cmdSuccess && (count*request.Len != 0) {
@@ -767,7 +767,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			}
 		} else {
 			var request TParObject
-			if TparGet1(tparam, command, &request) {
+			if TparGet1(CurrentFrame, tparam, command, &request) {
 				cmdSuccess = TextOvertype(true, count, request.Str, request.Len, CurrentFrame.Dot)
 				if cmdSuccess && (count*request.Len != 0) {
 					CurrentFrame.TextModified = true
@@ -791,7 +791,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdOpSysCommand:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			var firstLine, lastLine *LineHdrObject
 			var ok bool
 			if firstLine, lastLine, _, ok = OpsysCommand(&request); !ok {
@@ -828,7 +828,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdReplace:
 		var request, request2 TParObject
-		if TparGet2(tparam, command, &request, &request2) {
+		if TparGet2(CurrentFrame, tparam, command, &request, &request2) {
 			if request.Len == 0 { // If didn't specify, use default
 				if CurrentFrame.Rep1Tpar.Len == 0 {
 					ScreenMessage(MsgNoDefaultStr)
@@ -879,7 +879,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 	case CmdSpanJump, CmdSpanCompile, CmdSpanCopy, CmdSpanDefine,
 		CmdSpanExecute, CmdSpanExecuteNoRecompile, CmdSpanTransfer:
 		var request TParObject
-		if TparGet1(tparam, command, &request) {
+		if TparGet1(CurrentFrame, tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
 			switch command {
 			case CmdSpanDefine:
@@ -961,7 +961,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					if command == CmdSpanCompile {
 						cmdSuccess = true
 					} else {
-						cmdSuccess = CodeInterpret(rept, count, newSpan.Code, true)
+						cmdSuccess = CodeInterpret(CurrentFrame, rept, count, newSpan.Code, true)
 					}
 				} else {
 					ScreenMessage(MsgNoSuchSpan)
@@ -974,7 +974,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 
 	case CmdSpanAssign:
 		var request, request2 TParObject
-		if !TparGet2(tparam, command, &request, &request2) {
+		if !TparGet2(CurrentFrame, tparam, command, &request, &request2) {
 			return
 		}
 		if request.Len == 0 {
@@ -1044,7 +1044,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			return
 		}
 		var request, request2 TParObject
-		if TparGet2(tparam, command, &request, &request2) {
+		if TparGet2(CurrentFrame, tparam, command, &request, &request2) {
 			if request.Len == 0 {
 				cmdSuccess = false
 			} else {
