@@ -361,7 +361,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.False(t, result, "Empty pattern should fail")
 	})
@@ -372,7 +372,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Simple literal pattern should succeed")
 		assert.Greater(t, statesUsed, PatternNFAStart, "Should have allocated NFA states")
@@ -385,7 +385,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Exact case pattern should succeed")
 	})
@@ -396,7 +396,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Space character class should succeed")
 		// Verify the accept set contains space
@@ -416,7 +416,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Lowercase character class should succeed")
 	})
@@ -427,7 +427,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Uppercase character class should succeed")
 	})
@@ -438,7 +438,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Alpha character class should succeed")
 	})
@@ -449,7 +449,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Numeric character class should succeed")
 	})
@@ -460,7 +460,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Punctuation character class should succeed")
 	})
@@ -471,7 +471,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Negated character class should succeed")
 	})
@@ -483,7 +483,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Kleene star should succeed")
 	})
@@ -495,7 +495,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Kleene plus should succeed")
 	})
@@ -507,7 +507,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Exact count repetition should succeed")
 	})
@@ -519,7 +519,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Range repetition should succeed")
 	})
@@ -531,7 +531,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Open-ended range should succeed")
 	})
@@ -542,7 +542,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Beginning of line positional should succeed")
 	})
@@ -553,7 +553,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "End of line positional should succeed")
 	})
@@ -564,7 +564,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Left margin positional should succeed")
 	})
@@ -575,7 +575,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Right margin positional should succeed")
 	})
@@ -586,7 +586,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Dot column positional should succeed")
 	})
@@ -597,7 +597,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Alternation pattern should succeed")
 	})
@@ -608,7 +608,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Grouped pattern should succeed")
 	})
@@ -621,7 +621,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Complex pattern should succeed")
 	})
@@ -633,7 +633,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Context pattern should succeed")
 		assert.NotEqual(t, leftEnd, firstStart, "leftEnd should be different from start")
@@ -647,7 +647,7 @@ func TestPatternParser(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.False(t, result, "Invalid character should fail")
 	})
@@ -662,7 +662,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Pattern with spaces should succeed")
 	})
@@ -673,7 +673,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Nested groups should succeed")
 	})
@@ -684,7 +684,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Multiple alternations should succeed")
 	})
@@ -696,7 +696,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Zero repetition range should succeed")
 	})
@@ -708,7 +708,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Single repetition range should succeed")
 	})
@@ -719,7 +719,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Combined character classes should succeed")
 	})
@@ -731,7 +731,7 @@ func TestPatternParserEdgeCases(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Uppercase character classes should succeed")
 	})
@@ -749,7 +749,7 @@ func TestPatternParserIntegration(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Email-like pattern should succeed")
 	})
@@ -762,7 +762,7 @@ func TestPatternParserIntegration(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Word pattern with anchors should succeed")
 	})
@@ -775,7 +775,7 @@ func TestPatternParserIntegration(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Number pattern should succeed")
 	})
@@ -788,7 +788,7 @@ func TestPatternParserIntegration(t *testing.T) {
 
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
 
-		result := PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		result := PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 
 		assert.True(t, result, "Whitespace pattern should succeed")
 	})
@@ -801,7 +801,7 @@ func TestPatternParserErrorPaths(t *testing.T) {
 		nfaTable, patternDef := setupParser()
 		pattern := createTestTpar(content)
 		var firstStart, finalState, leftEnd, middleEnd, statesUsed int
-		return PatternParser(pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
+		return PatternParser(nil, pattern, nfaTable, &firstStart, &finalState, &leftEnd, &middleEnd, patternDef, &statesUsed)
 	}
 
 	// --- Error cases ---

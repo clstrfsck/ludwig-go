@@ -193,6 +193,7 @@ func setClear(set *big.Int) {
 
 // PatternParser parses a pattern and builds an NFA table
 func PatternParser(
+	frame *FrameObject,
 	pattern *TParObject,
 	nfaTable *NFATableType,
 	firstPatternStart *int,
@@ -498,7 +499,7 @@ func PatternParser(
 				tparSort = CmdPatternDummyPattern
 				derefTpar.Len = aux
 				derefTpar.Dlm = delimiter
-				if !TparGet1(&derefTpar, tparSort, &derefSpan) {
+				if !TparGet1(frame, &derefTpar, tparSort, &derefSpan) {
 					return false
 				}
 
@@ -582,7 +583,7 @@ func PatternParser(
 								tparSort = CmdPatternDummyText
 								derefTpar.Len = aux - 2
 								derefTpar.Dlm = delimiter
-								if !TparGet1(&derefTpar, tparSort, &derefSpan) {
+								if !TparGet1(frame, &derefTpar, tparSort, &derefSpan) {
 									return false
 								}
 								// Insert quote at beginning: shift string right and add delimiters
@@ -771,7 +772,7 @@ func PatternParser(
 							}
 							patternDefinition.Length -= (aux + 1)
 							derefTpar.Len = aux
-							if !TparGet1(&derefTpar, tparSort, &derefSpan) {
+							if !TparGet1(frame, &derefTpar, tparSort, &derefSpan) {
 								return false
 							}
 						} else {

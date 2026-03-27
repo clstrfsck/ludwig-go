@@ -40,7 +40,7 @@ func eqsgetrepSamePatternDef(pattern1 *PatternDefType, pattern2 *PatternDefType)
 	return false
 }
 
-func eqsgetrepPatternBuild(tpar TParObject, patternPtr **DFATableObject) bool {
+func eqsgetrepPatternBuild(frame *FrameObject, tpar TParObject, patternPtr **DFATableObject) bool {
 	patternDefinition := PatternDefType{Strng: *NewBlankStrObject(MaxStrLen)}
 	var nfaTable NFATableType
 	var firstPatternStart int
@@ -50,6 +50,7 @@ func eqsgetrepPatternBuild(tpar TParObject, patternPtr **DFATableObject) bool {
 	var statesUsed int
 
 	if PatternParser(
+		frame,
 		&tpar,
 		&nfaTable,
 		&firstPatternStart,
@@ -93,13 +94,14 @@ func EqsGetRepEqs(frame *FrameObject, rept LeadParam, tpar TParObject) bool {
 	success := false
 
 	if tpar.Dlm == TpdSmart {
-		if !eqsgetrepPatternBuild(tpar, &frame.EqsPatternPtr) {
+		if !eqsgetrepPatternBuild(frame, tpar, &frame.EqsPatternPtr) {
 			return false
 		}
 		markFlag := false
 		var startCol int
 		var endPos int
 		found := PatternRecognize(
+			frame,
 			frame.EqsPatternPtr,
 			frame.Dot.Line,
 			frame.Dot.Col,
@@ -314,7 +316,7 @@ func eqsgetrepPatternGet(
 
 	var patternPtr *DFATableObject
 	if !replaceFlag {
-		if !eqsgetrepPatternBuild(tpar, &frame.GetPatternPtr) {
+		if !eqsgetrepPatternBuild(frame, tpar, &frame.GetPatternPtr) {
 			return result
 		}
 		patternPtr = frame.GetPatternPtr
@@ -343,6 +345,7 @@ outerLoop:
 		var matchedStartCol int
 		var matchedFinishCol int
 		if PatternRecognize(
+			frame,
 			patternPtr,
 			line,
 			startCol,
@@ -456,7 +459,7 @@ func EqsGetRepRep(
 	}()
 
 	if tpar.Dlm == TpdSmart {
-		if !eqsgetrepPatternBuild(tpar, &frame.RepPatternPtr) {
+		if !eqsgetrepPatternBuild(frame, tpar, &frame.RepPatternPtr) {
 			return result
 		}
 	}

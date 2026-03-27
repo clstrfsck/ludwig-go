@@ -466,9 +466,9 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 
 // This implements the \ED command. If frameName is empty, DefaultFrameName is
 // used. It returns the selected (or newly created) frame and an ok flag
-// indicating success.
-// When ok == true, the caller is responsible for making the returned frame the
-// CurrentFrame; FrameEdit itself does not change the current frame.
+// indicating success.  FrameEdit does not update any global "current frame"
+// variable as a side effect; callers must assign the returned *FrameObject
+// themselves if they wish to make it the current frame.
 func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 	fname := frameName
 	if fname == "" {
@@ -861,7 +861,7 @@ func printMargins(m1 int, m2 int) {
 // FrameParameter handles the frame parameters command
 func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 	request := TParObject{}
-	if !TparGet1(tpar, CmdFrameParameters, &request) {
+	if !TparGet1(frame, tpar, CmdFrameParameters, &request) {
 		return false
 	}
 	if request.Len > 0 {

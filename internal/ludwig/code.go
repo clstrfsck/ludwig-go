@@ -14,19 +14,6 @@
 
 package ludwig
 
-var interpCmds = map[Commands]bool{
-	CmdPcJump:      true,
-	CmdExitTo:      true,
-	CmdFailTo:      true,
-	CmdIterate:     true,
-	CmdExitSuccess: true,
-	CmdExitFail:    true,
-	CmdExitAbort:   true,
-	CmdExtended:    true,
-	CmdVerify:      true,
-	CmdNoop:        true,
-}
-
 type parseState struct {
 	status       string
 	key          int
@@ -38,6 +25,23 @@ type parseState struct {
 	endPoint     MarkObject
 	verifyCount  int
 	fromSpan     bool
+}
+
+func isInterpCmd(cmd Commands) bool {
+	switch cmd {
+	case CmdPcJump,
+		CmdExitTo,
+		CmdFailTo,
+		CmdIterate,
+		CmdExitSuccess,
+		CmdExitFail,
+		CmdExitAbort,
+		CmdExtended,
+		CmdVerify,
+		CmdNoop:
+		return true
+	}
+	return false
 }
 
 // CodeDiscard releases the specified code and compacts the code array
@@ -727,7 +731,7 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 			currCode := cc.Code
 			pc++
 
-			if interpCmds[currOp] {
+			if isInterpCmd(currOp) {
 				switch currOp {
 				case CmdPcJump:
 					pc = currLbl
@@ -795,7 +799,7 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 							ExitAbort = true
 							interpStatus = failForever
 							pc = 0
-						} else if TparGet1(currTpar, CmdVerify, &request) {
+						} else if TparGet1(CurrentFrame, currTpar, CmdVerify, &request) {
 							if request.Len == 0 {
 								request = CurrentFrame.VerifyTpar
 								if request.Len == 0 {

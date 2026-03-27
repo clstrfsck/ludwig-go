@@ -226,7 +226,7 @@ func leftPadded(width int, value int) string {
 }
 
 // findEnquiry handles environment and system enquiries
-func findEnquiry(name string) (string, bool) {
+func findEnquiry(frame *FrameObject, name string) (string, bool) {
 	variableType := varTypeUnknown
 	var item strings.Builder
 	length := len(name)
@@ -276,23 +276,26 @@ func findEnquiry(name string) (string, bool) {
 			}
 
 		case varTypeFrame:
+			if frame == nil {
+				return "", false
+			}
 			switch itemStr {
 			case "NAME":
-				return CurrentFrame.Span.Name, true
+				return frame.Span.Name, true
 			case "INPUTFILE":
-				if CurrentFrame.InputFile == 0 {
+				if frame.InputFile == 0 {
 					return "", true
 				} else {
-					return Files[CurrentFrame.InputFile].Filename, true
+					return Files[frame.InputFile].Filename, true
 				}
 			case "OUTPUTFILE":
-				if CurrentFrame.OutputFile == 0 {
+				if frame.OutputFile == 0 {
 					return "", true
 				} else {
-					return Files[CurrentFrame.OutputFile].Filename, true
+					return Files[frame.OutputFile].Filename, true
 				}
 			case "MODIFIED":
-				if CurrentFrame.TextModified {
+				if frame.TextModified {
 					return "Y", true
 				} else {
 					return "N", true
@@ -342,10 +345,10 @@ func findEnquiry(name string) (string, bool) {
 }
 
 // tparEnquire performs environment enquiries
-func tparEnquire(tpar *TParObject) bool {
+func tparEnquire(frame *FrameObject, tpar *TParObject) bool {
 	tpar.Dlm = '\x00'
 	name := tpar.Str.Slice(1, tpar.Len)
-	if result, found := findEnquiry(name); found {
+	if result, found := findEnquiry(frame, name); found {
 		tpar.Str.Assign(result)
 		tpar.Len = len(result)
 		return true
@@ -356,7 +359,7 @@ func tparEnquire(tpar *TParObject) bool {
 }
 
 // TparAnalyse analyses and processes trailing parameters
-func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
+func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 	if depth > MaxTparRecursion {
 		ScreenMessage(MsgTparTooDeep)
 		return false
@@ -376,7 +379,7 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 						tran.Len -= 2
 						// Erase first char
 						tran.Str.Erase(1, 1)
-						if !TparAnalyse(cmd, tran, depth+1, thisTp) {
+						if !TparAnalyse(frame, cmd, tran, depth+1, thisTp) {
 							return false
 						}
 					}
@@ -396,7 +399,7 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 						tran.Len--
 						tran.Str.Erase(1, 1)
 						tmpTp.Len--
-						if !TparAnalyse(cmd, tran, depth+1, thisTp) {
+						if !TparAnalyse(frame, cmd, tran, depth+1, thisTp) {
 							return false
 						}
 					}
@@ -412,7 +415,7 @@ func TparAnalyse(cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 					ScreenMessage(MsgReservedTpd)
 					return false
 				} else {
-					if !tparEnquire(tran) {
+					if !tparEnquire(frame, tran) {
 						return false
 					}
 				}
@@ -488,13 +491,13 @@ func trim(request *TParObject) {
 }
 
 // TparGet1 gets and processes the first trailing parameter
-func TparGet1(tpar *TParObject, cmd Commands, tran *TParObject) bool {
+func TparGet1(frame *FrameObject, tpar *TParObject, cmd Commands, tran *TParObject) bool {
 	if tpar == nil {
 		return false
 	}
 	tparDuplicateCon(tpar, tran)
 
-	if TparAnalyse(cmd, tran, 1, 1) {
+	if TparAnalyse(frame, cmd, tran, 1, 1) {
 		if CmdAttrib[cmd].TparInfo[1].TrimReply {
 			trim(tran)
 		}
@@ -504,7 +507,7 @@ func TparGet1(tpar *TParObject, cmd Commands, tran *TParObject) bool {
 }
 
 // TparGet2 gets and processes two trailing parameters
-func TparGet2(tpar *TParObject, cmd Commands, trn1 *TParObject, trn2 *TParObject) bool {
+func TparGet2(frame *FrameObject, tpar *TParObject, cmd Commands, trn1 *TParObject, trn2 *TParObject) bool {
 	if tpar == nil {
 		return false
 	}
@@ -515,11 +518,11 @@ func TparGet2(tpar *TParObject, cmd Commands, trn1 *TParObject, trn2 *TParObject
 	tparDuplicateCon(tpar, trn1)
 	tparDuplicateCon(tpar.Nxt, trn2)
 
-	if !TparAnalyse(cmd, trn1, 1, 1) {
+	if !TparAnalyse(frame, cmd, trn1, 1, 1) {
 		return false
 	}
 	if trn1.Len != 0 {
-		if !TparAnalyse(cmd, trn2, 1, 2) {
+		if !TparAnalyse(frame, cmd, trn2, 1, 2) {
 			return false
 		}
 	}
