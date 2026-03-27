@@ -14,19 +14,6 @@
 
 package ludwig
 
-var interpCmds = map[Commands]bool{
-	CmdPcJump:      true,
-	CmdExitTo:      true,
-	CmdFailTo:      true,
-	CmdIterate:     true,
-	CmdExitSuccess: true,
-	CmdExitFail:    true,
-	CmdExitAbort:   true,
-	CmdExtended:    true,
-	CmdVerify:      true,
-	CmdNoop:        true,
-}
-
 type parseState struct {
 	status       string
 	key          int
@@ -38,6 +25,23 @@ type parseState struct {
 	endPoint     MarkObject
 	verifyCount  int
 	fromSpan     bool
+}
+
+func isInterpCmd(cmd Commands) bool {
+	switch cmd {
+	case CmdPcJump,
+		CmdExitTo,
+		CmdFailTo,
+		CmdIterate,
+		CmdExitSuccess,
+		CmdExitFail,
+		CmdExitAbort,
+		CmdExtended,
+		CmdVerify,
+		CmdNoop:
+		return true
+	}
+	return false
 }
 
 // CodeDiscard releases the specified code and compacts the code array
@@ -679,7 +683,7 @@ type labelsType struct {
 }
 
 // CodeInterpret interprets compiled code
-func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) bool {
+func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) bool {
 	const maxLevel = 100
 	labels := make([]labelsType, maxLevel+1)
 
@@ -727,7 +731,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 			currCode := cc.Code
 			pc++
 
-			if interpCmds[currOp] {
+			if isInterpCmd(currOp) {
 				switch currOp {
 				case CmdPcJump:
 					pc = currLbl
@@ -787,7 +791,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 						ScreenMessage(DbgCodePtrIsNil)
 						return false
 					}
-					CodeInterpret(frame, currRep, currCnt, currCode, true)
+					CodeInterpret(currRep, currCnt, currCode, true)
 
 				case CmdVerify:
 					if !verifyAlways[currCnt] {
@@ -795,15 +799,15 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 							ExitAbort = true
 							interpStatus = failForever
 							pc = 0
-						} else if TparGet1(frame, currTpar, CmdVerify, &request) {
+						} else if TparGet1(CurrentFrame, currTpar, CmdVerify, &request) {
 							if request.Len == 0 {
-								request = frame.VerifyTpar
+								request = CurrentFrame.VerifyTpar
 								if request.Len == 0 {
 									ScreenMessage(MsgNoDefaultStr)
 									return false
 								}
 							} else {
-								frame.VerifyTpar = request
+								CurrentFrame.VerifyTpar = request
 							}
 							if request.Str.Get(1) == 'Y' {
 								// do nothing

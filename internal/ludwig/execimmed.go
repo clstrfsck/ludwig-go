@@ -21,7 +21,7 @@ const (
 	defaultSpanName = "L. Wittgenstein und Sohn."
 )
 
-func executeImmedScreen(frame *FrameObject) {
+func executeImmedScreen() {
 	cmdSpan := SpanObject{
 		Name: defaultSpanName,
 	}
@@ -44,7 +44,7 @@ outerLoop:
 			// VDU_GET_TEXT.
 			for {
 				// Check for boundaries where text cannot be accepted.
-				if jammed || frame.Dot.Col == MaxStrLenP {
+				if jammed || CurrentFrame.Dot.Col == MaxStrLenP {
 					key = VduGetKey()
 					if TtControlC {
 						skipExec = true
@@ -60,17 +60,17 @@ outerLoop:
 				}
 
 				// DECIDE MAX CHARS THAT CAN BE READ.
-				tmpScrCol := frame.Dot.Col - frame.ScrOffset
-				inputLen := MaxStrLenP - frame.Dot.Col
-				if frame.Dot.Col <= frame.MarginRight {
-					inputLen = frame.MarginRight - frame.Dot.Col + 1
+				tmpScrCol := CurrentFrame.Dot.Col - CurrentFrame.ScrOffset
+				inputLen := MaxStrLenP - CurrentFrame.Dot.Col
+				if CurrentFrame.Dot.Col <= CurrentFrame.MarginRight {
+					inputLen = CurrentFrame.MarginRight - CurrentFrame.Dot.Col + 1
 				}
-				if inputLen > frame.ScrWidth+1-tmpScrCol {
-					inputLen = frame.ScrWidth + 1 - tmpScrCol
+				if inputLen > CurrentFrame.ScrWidth+1-tmpScrCol {
+					inputLen = CurrentFrame.ScrWidth + 1 - tmpScrCol
 				}
 
 				// WATCH OUT FOR NULL LINE.
-				if frame.Dot.Line.FLink == nil {
+				if CurrentFrame.Dot.Line.FLink == nil {
 					key = VduGetKey()
 					if TtControlC {
 						skipExec = true
@@ -79,7 +79,7 @@ outerLoop:
 					VduTakeBackKey(key)
 					if ChIsPrintable(rune(key)) && key != CommandIntroducer {
 						// If printing char, realize NULL, re-fix cursor.
-						TextRealizeNull(frame.Dot.Line)
+						TextRealizeNull(CurrentFrame.Dot.Line)
 					}
 
 					// MAKE SURE THE USER CAN SEE THE CURRENT DOT POSITION.
@@ -105,31 +105,31 @@ outerLoop:
 				}
 
 				if EditMode == ModeOvertype {
-					cmdSuccess = TextOvertype(false, 1, inputBuf, inputLen, frame.Dot)
+					cmdSuccess = TextOvertype(false, 1, inputBuf, inputLen, CurrentFrame.Dot)
 				} else {
-					cmdSuccess = TextInsert(false, 1, inputBuf, inputLen, frame.Dot)
+					cmdSuccess = TextInsert(false, 1, inputBuf, inputLen, CurrentFrame.Dot)
 				}
 				if cmdSuccess {
-					frame.TextModified = true
-					MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
-					MarkCreate(frame.Dot.Line, frame.Dot.Col-inputLen, &frame.Marks[MarkEquals])
+					CurrentFrame.TextModified = true
+					MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col, &CurrentFrame.Marks[MarkModified])
+					MarkCreate(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col-inputLen, &CurrentFrame.Marks[MarkEquals])
 				} else {
 					// IF, FOR SOME REASON, THAT FAILED, CORRECT THE VDU IMAGE OF
 					// THE LINE. THIS IS BECAUSE VDU_GET_TEXT HAS CORRUPTED IT.
-					ScreenDrawLine(frame.Dot.Line)
+					ScreenDrawLine(CurrentFrame.Dot.Line)
 					skipExec = true
 					break
 				}
-				if frame.Dot.Col != frame.MarginRight+1 {
+				if CurrentFrame.Dot.Col != CurrentFrame.MarginRight+1 {
 					// FOLLOW THE DOT.
-					ScreenPosition(frame.Dot.Line, frame.Dot.Col)
+					ScreenPosition(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col)
 					VduMoveCurs(
-						frame.Dot.Col-frame.ScrOffset,
-						frame.Dot.Line.ScrRowNr,
+						CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
+						CurrentFrame.Dot.Line.ScrRowNr,
 					)
 				} else {
 					// AT THE RIGHT MARGIN.
-					if frame.Options.Has(OptAutoWrap) {
+					if CurrentFrame.Options.Has(OptAutoWrap) {
 						// Take care of Wrap Option.
 						key = VduGetKey()
 						if TtControlC {
@@ -137,34 +137,34 @@ outerLoop:
 							break
 						}
 						if ChIsPrintable(rune(key)) && key != CommandIntroducer {
-							col1 := frame.MarginRight
+							col1 := CurrentFrame.MarginRight
 							if key != ' ' {
-								for frame.Dot.Line.Str.Get(col1) != ' ' &&
-									col1 > frame.MarginLeft {
+								for CurrentFrame.Dot.Line.Str.Get(col1) != ' ' &&
+									col1 > CurrentFrame.MarginLeft {
 									col1--
 								}
 								col2 := col1
-								for frame.Dot.Line.Str.Get(col2) == ' ' &&
-									col2 > frame.MarginLeft {
+								for CurrentFrame.Dot.Line.Str.Get(col2) == ' ' &&
+									col2 > CurrentFrame.MarginLeft {
 									col2--
 								}
-								if col2 == frame.MarginLeft { // Line has only one word
-									col1 = frame.MarginRight // Split at right margin
+								if col2 == CurrentFrame.MarginLeft { // Line has only one word
+									col1 = CurrentFrame.MarginRight // Split at right margin
 								}
 								VduTakeBackKey(key)
 							}
-							frame.Dot.Col = col1 + 1
-							TextSplitLine(frame.Dot, 0, &frame.Marks[MarkEquals])
-							frame.Dot.Col += frame.MarginRight - col1
+							CurrentFrame.Dot.Col = col1 + 1
+							TextSplitLine(CurrentFrame.Dot, 0, &CurrentFrame.Marks[MarkEquals])
+							CurrentFrame.Dot.Col += CurrentFrame.MarginRight - col1
 							continue outerLoop
 						}
 						VduTakeBackKey(key)
 					} else {
 						VduBeep()
-						frame.Dot.Col--
+						CurrentFrame.Dot.Col--
 						VduMoveCurs(
-							frame.Dot.Col-frame.ScrOffset,
-							frame.Dot.Line.ScrRowNr,
+							CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
+							CurrentFrame.Dot.Line.ScrRowNr,
 						)
 						jammed = true
 					}
@@ -184,13 +184,13 @@ outerLoop:
 		if !skipExec {
 			if key == CommandIntroducer {
 				if CodeCompile(&cmdSpan, false) {
-					cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, false)
+					cmdSuccess = CodeInterpret(LeadParamNone, 1, cmdSpan.Code, false)
 				} else {
 					cmdSuccess = false
 				}
 			} else {
 				if Lookup[key].Command == CmdExtended {
-					cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, Lookup[key].Code, true)
+					cmdSuccess = CodeInterpret(LeadParamNone, 1, Lookup[key].Code, true)
 				} else {
 					cmdSuccess = Execute(
 						Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
@@ -201,7 +201,7 @@ outerLoop:
 
 		if TtControlC {
 			TtControlC = false
-			if frame.Dot.Line.ScrRowNr != 0 {
+			if CurrentFrame.Dot.Line.ScrRowNr != 0 {
 				ScreenRedraw()
 			} else {
 				ScreenUnload()
@@ -216,7 +216,7 @@ outerLoop:
 	}
 }
 
-func executeImmedBatchHardcopy(frame *FrameObject) {
+func executeImmedBatchHardcopy() {
 	cmdSpan := SpanObject{
 		Name: defaultSpanName,
 	}
@@ -246,7 +246,7 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 
 			// If necessary, prompt.
 			if LudwigMode == LudwigHardcopy {
-				ScreenLoad(frame.Dot.Line)
+				ScreenLoad(CurrentFrame.Dot.Line)
 				fmt.Println("COMMAND: ")
 			}
 
@@ -260,7 +260,7 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 				if cmdSpan.MarkOne.Line != nil {
 					cmdSpan.MarkTwo.Col = cmdSpan.MarkTwo.Line.Used + 1
 					if CodeCompile(&cmdSpan, true) {
-						if !CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, true) {
+						if !CodeInterpret(LeadParamNone, 1, cmdSpan.Code, true) {
 							fmt.Println("\aCOMMAND FAILED")
 						}
 					}
@@ -278,14 +278,14 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 }
 
 // ExecuteImmed is the main execution loop for Ludwig
-func ExecuteImmed(frame *FrameObject) {
+func ExecuteImmed() {
 	// Vector off to the appropriate main execution mode. Each mode behaves
 	// slightly differently at this level.
 	switch LudwigMode {
 	case LudwigScreen:
-		executeImmedScreen(frame)
+		executeImmedScreen()
 
 	case LudwigHardcopy, LudwigBatch:
-		executeImmedBatchHardcopy(frame)
+		executeImmedBatchHardcopy()
 	}
 }
