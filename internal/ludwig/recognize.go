@@ -23,6 +23,7 @@ func emptySet() *big.Int {
 
 // patternGetInputElt gets the next input element for pattern matching
 func patternGetInputElt(
+	frame *FrameObject,
 	line *LineHdrObject,
 	ch *byte,
 	inputSet *big.Int,
@@ -52,24 +53,24 @@ func patternGetInputElt(
 				*endOfLine = true
 				markFound = true
 			}
-			if *column == CurrentFrame.MarginLeft {
+			if *column == frame.MarginLeft {
 				setAdd(inputSet, PatternLeftMargin)
 				markFound = true
 			}
-			if *column == CurrentFrame.MarginRight {
+			if *column == frame.MarginRight {
 				setAdd(inputSet, PatternRightMargin)
 				markFound = true
 			}
-			if *column == CurrentFrame.Dot.Col {
+			if *column == frame.Dot.Col {
 				setAdd(inputSet, PatternDotColumn)
 				markFound = true
 			}
 			if len(line.Marks) > 0 { // if any marks on this line
 				for markNo := 0; markNo <= MaxMarkNumber; markNo++ {
 					// run through user accessible ones
-					if CurrentFrame.Marks[markNo] != nil {
-						if (CurrentFrame.Marks[markNo].Line == line) &&
-							(CurrentFrame.Marks[markNo].Col == *column) {
+					if frame.Marks[markNo] != nil {
+						if (frame.Marks[markNo].Line == line) &&
+							(frame.Marks[markNo].Col == *column) {
 							setAdd(inputSet, byte(markNo+PatternMarksStart))
 							markFound = true
 						}
@@ -149,6 +150,7 @@ func patternNextState(
 
 // PatternRecognize performs pattern matching on a line
 func PatternRecognize(
+	frame *FrameObject,
 	dfaTablePointer *DFATableObject,
 	line *LineHdrObject,
 	startCol int,
@@ -171,7 +173,7 @@ func PatternRecognize(
 	for {
 		for {
 			patternGetInputElt(
-				line, &ch, &positionalSet, &lineCounter, line.Used, markFlag, &endOfLine,
+				frame, line, &ch, &positionalSet, &lineCounter, line.Used, markFlag, &endOfLine,
 			)
 			if patternNextState(
 				dfaTablePointer, ch, &positionalSet, *markFlag, &state, &started,
@@ -205,7 +207,7 @@ func PatternRecognize(
 		if !endOfLine {
 			for {
 				patternGetInputElt(
-					line, &ch, &positionalSet, &lineCounter, line.Used, markFlag, &endOfLine,
+					frame, line, &ch, &positionalSet, &lineCounter, line.Used, markFlag, &endOfLine,
 				)
 				if patternNextState(
 					dfaTablePointer, ch, &positionalSet, *markFlag, &state, &started,

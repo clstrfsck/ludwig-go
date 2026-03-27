@@ -276,6 +276,9 @@ func findEnquiry(frame *FrameObject, name string) (string, bool) {
 			}
 
 		case varTypeFrame:
+			if frame == nil {
+				return "<no frame>", false
+			}
 			switch itemStr {
 			case "NAME":
 				return frame.Span.Name, true

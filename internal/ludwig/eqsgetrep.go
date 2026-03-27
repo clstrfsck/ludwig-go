@@ -101,6 +101,7 @@ func EqsGetRepEqs(frame *FrameObject, rept LeadParam, tpar TParObject) bool {
 		var startCol int
 		var endPos int
 		found := PatternRecognize(
+			frame,
 			frame.EqsPatternPtr,
 			frame.Dot.Line,
 			frame.Dot.Col,
@@ -344,6 +345,7 @@ outerLoop:
 		var matchedStartCol int
 		var matchedFinishCol int
 		if PatternRecognize(
+			frame,
 			patternPtr,
 			line,
 			startCol,
