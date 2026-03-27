@@ -466,7 +466,9 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 
 // This implements the \ED command. If frameName is empty, DefaultFrameName is
 // used. It returns the selected (or newly created) frame and an ok flag
-// indicating success.
+// indicating success.  FrameEdit does not update any global "current frame"
+// variable as a side effect; callers must assign the returned *FrameObject
+// themselves if they wish to make it the current frame.
 func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 	fname := frameName
 	if fname == "" {
