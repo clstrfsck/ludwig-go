@@ -323,7 +323,8 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdDump:
-		// DEBUG command - skip in release build
+		// FIXME: Implement this in a sensible way for golang
+		cmdSuccess = false
 
 	case CmdEqualColumn:
 		var request TParObject
@@ -1079,7 +1080,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		cmdSuccess = true
 
 	case CmdValidate:
-		// DEBUG command - skip in release build
+		cmdSuccess = ValidateCommand(CurrentFrame, FrameOops, FrameCmd, FrameHeap)
 
 	case CmdBlockDefine, CmdBlockTransfer, CmdBlockCopy:
 		ScreenMessage(MsgNotImplemented)

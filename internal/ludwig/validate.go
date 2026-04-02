@@ -15,7 +15,7 @@
 package ludwig
 
 // ValidateCommand validates the data structure
-func ValidateCommand() bool {
+func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) bool {
 	/*
 	  Purpose  : Validate the data structure.
 	  Inputs   : none.
@@ -29,7 +29,7 @@ func ValidateCommand() bool {
 		heap = 0x0004
 	)
 
-	if CurrentFrame == nil || FrameOops == nil || FrameCmd == nil || FrameHeap == nil {
+	if currentFrame == nil || frameOops == nil || frameCmd == nil || frameHeap == nil {
 		ScreenMessage(DbgInvalidFramePtr)
 		return false
 	}
@@ -63,11 +63,11 @@ func ValidateCommand() bool {
 		if thisSpan.Frame != nil {
 			thisFrame := thisSpan.Frame
 			switch thisFrame {
-			case FrameCmd:
+			case frameCmd:
 				frameList |= cmd
-			case FrameOops:
+			case frameOops:
 				frameList |= oops
-			case FrameHeap:
+			case frameHeap:
 				frameList |= heap
 			}
 
