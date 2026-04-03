@@ -172,7 +172,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		}
 	}
 
-	// Save the current value of DOT and CURRENT_FRAME for use by equals
+	// Save the current value of DOT and current frame for use by equals
 	oldDot := *frame.Dot
 	oldFrame := frame
 

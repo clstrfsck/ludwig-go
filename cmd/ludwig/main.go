@@ -595,8 +595,6 @@ func startUp(argv []string) bool {
 	}
 
 	// Hook our input and output files into the current frame.
-
-	// with current_frame^ do
 	if Files[1] != nil {
 		CurrentFrame.InputFile = 1
 		FilesFrames[1] = CurrentFrame
