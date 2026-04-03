@@ -327,7 +327,7 @@ func scanLeadingParam(frame *FrameObject, ps *parseState, repSym *LeadParam, rep
 	return frame, true
 }
 
-func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, repSym LeadParam) (*TParObject, *FrameObject, bool) {
+func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, repSym LeadParam) (*FrameObject, *TParObject, bool) {
 	tc := CmdAttrib[command].TpCount
 	var result *TParObject
 
@@ -342,11 +342,11 @@ func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, rep
 
 	if tc > 0 {
 		if !nextKey(ps) {
-			return nil, frame, false
+			return frame, nil, false
 		}
 		parDelim := ps.key
 		if ps.key < 0 || ps.key > MaxSetRange || !ChIsPunctuation(rune(parDelim)) {
-			return nil, errorMsg(frame, ps, "Illegal parameter delimiter"), false
+			return errorMsg(frame, ps, "Illegal parameter delimiter"), nil, false
 		}
 
 		var tpl *TParObject
@@ -356,10 +356,10 @@ func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, rep
 				parString := *NewBlankStrObject(MaxStrLen)
 				for {
 					if !nextKey(ps) {
-						return nil, frame, false
+						return frame, nil, false
 					}
 					if ps.key == 0 {
-						return nil, errorMsg(frame, ps, "Missing trailing delimiter"), false
+						return errorMsg(frame, ps, "Missing trailing delimiter"), nil, false
 					}
 					parLength++
 					parString.Set(parLength, byte(ps.key))
@@ -369,7 +369,7 @@ func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, rep
 				}
 				parLength--
 				if ps.eoln && !CmdAttrib[command].TparInfo[tci].MlAllowed {
-					return nil, errorMsg(frame, ps, "Missing trailing delimiter"), false
+					return errorMsg(frame, ps, "Missing trailing delimiter"), nil, false
 				}
 
 				tp := &TParObject{
@@ -399,7 +399,7 @@ func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, rep
 			tpl = nil
 		}
 	}
-	return result, frame, true
+	return frame, result, true
 }
 
 func scanCommand(frame *FrameObject, ps *parseState, fullScan bool) (*FrameObject, bool) {
@@ -576,7 +576,7 @@ func scanSimpleCommand(
 		if CmdAttrib[command].TpCount != 0 {
 			if fullScan {
 				var found bool
-				if *tparam, frame, found = scanTrailingParam(frame, ps, command, repSym); !found {
+				if frame, *tparam, found = scanTrailingParam(frame, ps, command, repSym); !found {
 					return frame, false
 				}
 			} else {
