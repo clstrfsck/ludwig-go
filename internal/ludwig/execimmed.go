@@ -193,7 +193,7 @@ outerLoop:
 					cmdSuccess = CodeInterpret(CurrentFrame, LeadParamNone, 1, Lookup[key].Code, true)
 				} else {
 					cmdSuccess = Execute(
-						Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
+						CurrentFrame, Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
 					)
 				}
 			}

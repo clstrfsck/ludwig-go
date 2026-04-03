@@ -595,8 +595,6 @@ func startUp(argv []string) bool {
 	}
 
 	// Hook our input and output files into the current frame.
-
-	// with current_frame^ do
 	if Files[1] != nil {
 		CurrentFrame.InputFile = 1
 		FilesFrames[1] = CurrentFrame
@@ -635,7 +633,7 @@ func startUp(argv []string) bool {
 			Dlm: TpdExact,
 			Str: NewStrObjectFrom(FileData.Initial),
 		}
-		if !Execute(CmdFileExecute, LeadParamNone, 1, tparam, true) {
+		if !Execute(CurrentFrame, CmdFileExecute, LeadParamNone, 1, tparam, true) {
 			if ExitAbort {
 				// something is wrong, but let the user continue anyway!
 				if LudwigMode != LudwigBatch {
