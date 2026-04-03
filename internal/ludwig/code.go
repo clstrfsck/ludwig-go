@@ -832,7 +832,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 				}
 			} else {
 				// Call execute command
-				if !Execute(currOp, currRep, currCnt, currTpar, fromSpan) {
+				if !Execute(frame, currOp, currRep, currCnt, currTpar, fromSpan) {
 					interpStatus = failure
 					pc = currLbl
 				}

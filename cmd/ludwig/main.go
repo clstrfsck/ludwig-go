@@ -635,7 +635,7 @@ func startUp(argv []string) bool {
 			Dlm: TpdExact,
 			Str: NewStrObjectFrom(FileData.Initial),
 		}
-		if !Execute(CmdFileExecute, LeadParamNone, 1, tparam, true) {
+		if !Execute(CurrentFrame, CmdFileExecute, LeadParamNone, 1, tparam, true) {
 			if ExitAbort {
 				// something is wrong, but let the user continue anyway!
 				if LudwigMode != LudwigBatch {
