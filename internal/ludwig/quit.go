@@ -19,7 +19,7 @@ const (
 )
 
 // QuitCommand handles the quit command
-func QuitCommand() bool {
+func QuitCommand(frame *FrameObject) bool {
 	if LudwigMode != LudwigBatch {
 		newSpan := FirstSpan
 	spanLoop:
@@ -27,17 +27,18 @@ func QuitCommand() bool {
 			if newSpan.Frame != nil {
 				if newSpan.Frame.TextModified && newSpan.Frame.OutputFile == 0 &&
 					newSpan.Frame.InputFile != 0 {
-					CurrentFrame = newSpan.Frame
+					frame = newSpan.Frame
+					CurrentFrame = frame
 					MarkCreate(
 						newSpan.Frame.Marks[MarkModified].Line,
 						newSpan.Frame.Marks[MarkModified].Col,
 						&newSpan.Frame.Dot,
 					)
 					if LudwigMode == LudwigScreen {
-						ScreenFixup()
+						ScreenFixup(frame)
 					}
 					ScreenBeep()
-					switch ScreenVerify(noOutputFileMsg) {
+					switch ScreenVerify(frame, noOutputFileMsg) {
 					case VerifyReplyYes:
 						// Nothing to do here
 					case VerifyReplyAlways:

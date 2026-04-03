@@ -833,7 +833,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		MarkCreate(newLine, 1, &frame.Dot)
 
 	case CmdQuit:
-		cmdSuccess = QuitCommand()
+		cmdSuccess = QuitCommand(frame)
 
 	case CmdReplace:
 		var request, request2 TParObject
@@ -1085,7 +1085,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		cmdSuccess = WindowCommand(frame, command, rept, count, fromSpan)
 
 	case CmdResizeWindow:
-		ScreenResize()
+		ScreenResize(frame)
 		cmdSuccess = true
 
 	case CmdValidate:

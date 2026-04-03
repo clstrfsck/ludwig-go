@@ -585,7 +585,7 @@ func startUp(argv []string) bool {
 	}
 
 	if LudwigMode == LudwigScreen {
-		ScreenFixup()
+		ScreenFixup(CurrentFrame)
 	}
 
 	// Load the key definitions.
@@ -619,7 +619,7 @@ func startUp(argv []string) bool {
 		ScreenClearMsgs(false)
 	}
 	if LudwigMode == LudwigScreen {
-		ScreenFixup()
+		ScreenFixup(CurrentFrame)
 	}
 
 	// Execute the user's initialization string.
@@ -661,7 +661,7 @@ func main() {
 	ValueInitializations()
 	initialize()          // Stuff VALUE can't do, like creating frames etc.
 	if startUp(os.Args) { // Parse command line, get files attached, etc.
-		ExecuteImmed()
+		ExecuteImmed(CurrentFrame)
 		SysExitSuccess()
 	}
 	if LudwigAborted {

@@ -425,10 +425,10 @@ func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, 
 						var verifyReply VerifyResponse
 						if tran.Len == 0 {
 							prompt := DfltPrompts[CmdAttrib[cmd].TparInfo[thisTp].PromptName]
-							verifyReply = ScreenVerify(prompt)
+							verifyReply = ScreenVerify(frame, prompt)
 						} else {
 							prompt := tran.Str.Slice(1, tran.Len)
-							verifyReply = ScreenVerify(prompt)
+							verifyReply = ScreenVerify(frame, prompt)
 						}
 						switch verifyReply {
 						case VerifyReplyYes:
@@ -443,14 +443,14 @@ func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, 
 						tran.Len = 1
 					} else if tran.Len == 0 {
 						prompt := DfltPrompts[CmdAttrib[cmd].TparInfo[thisTp].PromptName]
-						tran.Str, tran.Len = ScreenGetLineP(prompt, CmdAttrib[cmd].TpCount, thisTp)
+						tran.Str, tran.Len = ScreenGetLineP(frame, prompt, CmdAttrib[cmd].TpCount, thisTp)
 					} else {
 						if tran.Con != nil {
 							ScreenMessage(MsgPromptsAreOneLine)
 							return false
 						} else {
 							prompt := tran.Str.Slice(1, tran.Len)
-							tran.Str, tran.Len = ScreenGetLineP(prompt, CmdAttrib[cmd].TpCount, thisTp)
+							tran.Str, tran.Len = ScreenGetLineP(frame, prompt, CmdAttrib[cmd].TpCount, thisTp)
 						}
 					}
 					tran.Dlm = '\x00'

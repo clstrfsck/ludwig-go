@@ -80,7 +80,7 @@ func CodeDiscard(codeHead **CodeHeader) {
 	}
 }
 
-func errorMsg(ps *parseState, errText string) {
+func errorMsg(frame *FrameObject, ps *parseState, errText string) {
 	ps.status = MsgSyntaxError
 	if ps.fromSpan {
 		// If possible, backup the current point one character
@@ -105,13 +105,14 @@ func errorMsg(ps *parseState, errText string) {
 
 		// Insert the error message into the span
 		if LudwigMode == LudwigScreen {
-			newFrame, ok := FrameEdit(CurrentFrame, ps.currentPoint.Line.Group.Frame.Span.Name)
+			newFrame, ok := FrameEdit(frame, ps.currentPoint.Line.Group.Frame.Span.Name)
 			if !ok {
 				return
 			}
-			CurrentFrame = newFrame
-			if CurrentFrame.Marks[MarkEquals] != nil {
-				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+			frame = newFrame
+			CurrentFrame = frame
+			if frame.Marks[MarkEquals] != nil {
+				MarkDestroy(&frame.Marks[MarkEquals])
 			}
 			eLine, _ := LinesCreate(1)
 
@@ -132,7 +133,7 @@ func errorMsg(ps *parseState, errText string) {
 			eLine.Str.Copy(str, 1, i, 1)
 			eLine.Used = str.TrimmedLen(' ', i)
 			LinesInject(eLine, eLine, ps.currentPoint.Line)
-			MarkCreate(eLine, ps.currentPoint.Col, &CurrentFrame.Dot)
+			MarkCreate(eLine, ps.currentPoint.Col, &frame.Dot)
 		}
 	}
 }
@@ -230,7 +231,7 @@ func getCount(ps *parseState, repCount *int) bool {
 			if *repCount <= (maxRepCount-digit)/10 {
 				*repCount = *repCount*10 + digit
 			} else {
-				errorMsg(ps, "Count too large")
+				errorMsg(CurrentFrame, ps, "Count too large")
 				return false
 			}
 			if !nextKey(ps) {
@@ -304,7 +305,7 @@ func scanLeadingParam(ps *parseState, repSym *LeadParam, repCount *int) bool {
 			return false
 		}
 		if (*repCount <= 0) || (*repCount > MaxUserMarkNumber) {
-			errorMsg(ps, "Illegal mark number")
+			errorMsg(CurrentFrame, ps, "Illegal mark number")
 			return false
 		}
 
@@ -348,7 +349,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 		}
 		parDelim := ps.key
 		if ps.key < 0 || ps.key > MaxSetRange || !ChIsPunctuation(rune(parDelim)) {
-			errorMsg(ps, "Illegal parameter delimiter")
+			errorMsg(CurrentFrame, ps, "Illegal parameter delimiter")
 			return nil, false
 		}
 
@@ -362,7 +363,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 						return nil, false
 					}
 					if ps.key == 0 {
-						errorMsg(ps, "Missing trailing delimiter")
+						errorMsg(CurrentFrame, ps, "Missing trailing delimiter")
 						return nil, false
 					}
 					parLength++
@@ -373,7 +374,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 				}
 				parLength--
 				if ps.eoln && !CmdAttrib[command].TparInfo[tci].MlAllowed {
-					errorMsg(ps, "Missing trailing delimiter")
+					errorMsg(CurrentFrame, ps, "Missing trailing delimiter")
 					return nil, false
 				}
 
@@ -424,7 +425,7 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 			return false
 		}
 		if ps.key < 0 {
-			errorMsg(ps, "Command not valid")
+			errorMsg(CurrentFrame, ps, "Command not valid")
 			return false
 		}
 		i := LookupExpPtr[command]
@@ -435,7 +436,7 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 		if i < j {
 			command = LookupExp[i].Command
 		} else {
-			errorMsg(ps, "Command not valid")
+			errorMsg(CurrentFrame, ps, "Command not valid")
 			return false
 		}
 	}
@@ -453,7 +454,7 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 			return false
 		}
 	} else {
-		errorMsg(ps, "Command not valid")
+		errorMsg(CurrentFrame, ps, "Command not valid")
 		return false
 	}
 
@@ -510,7 +511,7 @@ func scanExitHandler(ps *parseState, pc1 int, pc4 *int, fullScan bool) bool {
 func scanCompoundCommand(ps *parseState, repSym LeadParam, repCount int, pc1, pc2, pc3 *int) bool {
 	if repSym != LeadParamNone && repSym != LeadParamPlus && repSym != LeadParamPInt &&
 		repSym != LeadParamPIndef {
-		errorMsg(ps, "Illegal leading parameter")
+		errorMsg(CurrentFrame, ps, "Illegal leading parameter")
 		return false
 	}
 	if !generate(ps, LeadParamNone, 0, CmdExitTo, nil, 0, nil) {
@@ -560,14 +561,14 @@ func scanSimpleCommand(
 		allowed = true
 	}
 	if !allowed {
-		errorMsg(ps, "Illegal leading parameter")
+		errorMsg(CurrentFrame, ps, "Illegal leading parameter")
 		return false
 	}
 
 	if command == CmdVerify {
 		ps.verifyCount++
 		if ps.verifyCount > MaxVerify {
-			errorMsg(ps, "Too many verify commands in span")
+			errorMsg(CurrentFrame, ps, "Too many verify commands in span")
 			return false
 		}
 		*repCount = ps.verifyCount
@@ -644,7 +645,7 @@ func CodeCompile(span *SpanObject, fromSpan bool) bool {
 		return false
 	}
 	if ps.key == 0 {
-		errorMsg(&ps, "Span contains no commands")
+		errorMsg(CurrentFrame, &ps, "Span contains no commands")
 		return false
 	}
 

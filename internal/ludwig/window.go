@@ -189,7 +189,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 	case CmdWindowUpdate:
 		cmdSuccess = true
 		if LudwigMode == LudwigScreen {
-			ScreenFixup()
+			ScreenFixup(frame)
 		}
 
 	default:
