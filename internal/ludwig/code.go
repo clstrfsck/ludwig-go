@@ -80,7 +80,7 @@ func CodeDiscard(codeHead **CodeHeader) {
 	}
 }
 
-func errorMsg(ps *parseState, errText string) {
+func errorMsg(frame *FrameObject, ps *parseState, errText string) *FrameObject {
 	ps.status = MsgSyntaxError
 	if ps.fromSpan {
 		// If possible, backup the current point one character
@@ -105,13 +105,13 @@ func errorMsg(ps *parseState, errText string) {
 
 		// Insert the error message into the span
 		if LudwigMode == LudwigScreen {
-			newFrame, ok := FrameEdit(CurrentFrame, ps.currentPoint.Line.Group.Frame.Span.Name)
+			newFrame, ok := FrameEdit(frame, ps.currentPoint.Line.Group.Frame.Span.Name)
 			if !ok {
-				return
+				return frame
 			}
-			CurrentFrame = newFrame
-			if CurrentFrame.Marks[MarkEquals] != nil {
-				MarkDestroy(&CurrentFrame.Marks[MarkEquals])
+			frame = newFrame
+			if frame.Marks[MarkEquals] != nil {
+				MarkDestroy(&frame.Marks[MarkEquals])
 			}
 			eLine, _ := LinesCreate(1)
 
@@ -132,9 +132,10 @@ func errorMsg(ps *parseState, errText string) {
 			eLine.Str.Copy(str, 1, i, 1)
 			eLine.Used = str.TrimmedLen(' ', i)
 			LinesInject(eLine, eLine, ps.currentPoint.Line)
-			MarkCreate(eLine, ps.currentPoint.Col, &CurrentFrame.Dot)
+			MarkCreate(eLine, ps.currentPoint.Col, &frame.Dot)
 		}
 	}
+	return frame
 }
 
 func nextKey(ps *parseState) bool {
@@ -220,7 +221,7 @@ func poke(codeBase, location, newLabel int) {
 	CompilerCode[codeBase+location].Lbl = newLabel
 }
 
-func getCount(ps *parseState, repCount *int) bool {
+func getCount(frame *FrameObject, ps *parseState, repCount *int) (*FrameObject, bool) {
 	const maxRepCount = 65535
 
 	if ps.key >= '0' && ps.key <= '9' {
@@ -230,11 +231,10 @@ func getCount(ps *parseState, repCount *int) bool {
 			if *repCount <= (maxRepCount-digit)/10 {
 				*repCount = *repCount*10 + digit
 			} else {
-				errorMsg(ps, "Count too large")
-				return false
+				return errorMsg(frame, ps, "Count too large"), false
 			}
 			if !nextKey(ps) {
-				return false
+				return frame, false
 			}
 			if ps.key < '0' || ps.key > '9' {
 				break
@@ -243,81 +243,79 @@ func getCount(ps *parseState, repCount *int) bool {
 	} else {
 		*repCount = 1
 	}
-	return true
+	return frame, true
 }
 
-func scanLeadingParam(ps *parseState, repSym *LeadParam, repCount *int) bool {
+func scanLeadingParam(frame *FrameObject, ps *parseState, repSym *LeadParam, repCount *int) (*FrameObject, bool) {
+	var ok bool
 	switch ps.key {
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		*repSym = LeadParamPInt
-		if !getCount(ps, repCount) {
-			return false
-		}
+		return getCount(frame, ps, repCount)
 
 	case '+':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamPlus
 		*repCount = 1
 		if ps.key >= '0' && ps.key <= '9' {
 			*repSym = LeadParamPInt
-			if !getCount(ps, repCount) {
-				return false
-			}
+			return getCount(frame, ps, repCount)
 		}
 
 	case '-':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamMinus
 		*repCount = -1
 		if ps.key >= '0' && ps.key <= '9' {
 			*repSym = LeadParamNInt
-			if !getCount(ps, repCount) {
-				return false
+			frame, ok = getCount(frame, ps, repCount)
+			if !ok {
+				return frame, false
 			}
 			*repCount = -*repCount
 		}
 
 	case '>', '.':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamPIndef
 		*repCount = 0
 
 	case '<', ',':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamNIndef
 		*repCount = 0
 
 	case '@':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamMarker
-		if !getCount(ps, repCount) {
-			return false
+		frame, ok = getCount(frame, ps, repCount)
+		if !ok {
+			return frame, false
 		}
 		if (*repCount <= 0) || (*repCount > MaxUserMarkNumber) {
-			errorMsg(ps, "Illegal mark number")
-			return false
+			return errorMsg(frame, ps, "Illegal mark number"), false
 		}
 
 	case '=':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamMarker
 		*repCount = MarkEquals
 
 	case '%':
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		*repSym = LeadParamMarker
 		*repCount = MarkModified
@@ -326,10 +324,10 @@ func scanLeadingParam(ps *parseState, repSym *LeadParam, repCount *int) bool {
 		*repSym = LeadParamNone
 		*repCount = 1
 	}
-	return true
+	return frame, true
 }
 
-func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TParObject, bool) {
+func scanTrailingParam(frame *FrameObject, ps *parseState, command Commands, repSym LeadParam) (*FrameObject, *TParObject, bool) {
 	tc := CmdAttrib[command].TpCount
 	var result *TParObject
 
@@ -344,12 +342,11 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 
 	if tc > 0 {
 		if !nextKey(ps) {
-			return nil, false
+			return frame, nil, false
 		}
 		parDelim := ps.key
 		if ps.key < 0 || ps.key > MaxSetRange || !ChIsPunctuation(rune(parDelim)) {
-			errorMsg(ps, "Illegal parameter delimiter")
-			return nil, false
+			return errorMsg(frame, ps, "Illegal parameter delimiter"), nil, false
 		}
 
 		var tpl *TParObject
@@ -359,11 +356,10 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 				parString := *NewBlankStrObject(MaxStrLen)
 				for {
 					if !nextKey(ps) {
-						return nil, false
+						return frame, nil, false
 					}
 					if ps.key == 0 {
-						errorMsg(ps, "Missing trailing delimiter")
-						return nil, false
+						return errorMsg(frame, ps, "Missing trailing delimiter"), nil, false
 					}
 					parLength++
 					parString.Set(parLength, byte(ps.key))
@@ -373,8 +369,7 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 				}
 				parLength--
 				if ps.eoln && !CmdAttrib[command].TparInfo[tci].MlAllowed {
-					errorMsg(ps, "Missing trailing delimiter")
-					return nil, false
+					return errorMsg(frame, ps, "Missing trailing delimiter"), nil, false
 				}
 
 				tp := &TParObject{
@@ -404,14 +399,17 @@ func scanTrailingParam(ps *parseState, command Commands, repSym LeadParam) (*TPa
 			tpl = nil
 		}
 	}
-	return result, true
+	return frame, result, true
 }
 
-func scanCommand(ps *parseState, fullScan bool) bool {
+func scanCommand(frame *FrameObject, ps *parseState, fullScan bool) (*FrameObject, bool) {
 	var repCount int
 	var repSym LeadParam
-	if !scanLeadingParam(ps, &repSym, &repCount) {
-		return false
+	var ok bool
+
+	frame, ok = scanLeadingParam(frame, ps, &repSym, &repCount)
+	if !ok {
+		return frame, false
 	}
 
 	if ps.key >= 0 && ps.key <= MaxSetRange {
@@ -421,11 +419,10 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 	command := Lookup[ps.key].Command
 	for Prefixes.Bit(int(command)) != 0 {
 		if !nextKey(ps) {
-			return false
+			return frame, false
 		}
 		if ps.key < 0 {
-			errorMsg(ps, "Command not valid")
-			return false
+			return errorMsg(frame, ps, "Command not valid"), false
 		}
 		i := LookupExpPtr[command]
 		j := LookupExpPtr[command+1]
@@ -435,65 +432,66 @@ func scanCommand(ps *parseState, fullScan bool) bool {
 		if i < j {
 			command = LookupExp[i].Command
 		} else {
-			errorMsg(ps, "Command not valid")
-			return false
+			return errorMsg(frame, ps, "Command not valid"), false
 		}
 	}
 
 	var pc1 int
 	if ps.key == '(' {
 		var pc2, pc3 int
-		if !scanCompoundCommand(ps, repSym, repCount, &pc1, &pc2, &pc3) {
-			return false
+		frame, ok = scanCompoundCommand(frame, ps, repSym, repCount, &pc1, &pc2, &pc3)
+		if !ok {
+			return frame, false
 		}
 	} else if command != CmdNoop {
 		var tparam *TParObject
 		var lookupCode *CodeHeader
-		if !scanSimpleCommand(ps, command, repSym, &repCount, &tparam, &lookupCode, &pc1, fullScan) {
-			return false
+		frame, ok = scanSimpleCommand(frame, ps, command, repSym, &repCount, &tparam, &lookupCode, &pc1, fullScan)
+		if !ok {
+			return frame, false
 		}
 	} else {
-		errorMsg(ps, "Command not valid")
-		return false
+		return errorMsg(frame, ps, "Command not valid"), false
 	}
 
 	if fullScan {
 		var pc4 int
-		if !scanExitHandler(ps, pc1, &pc4, fullScan) {
-			return false
-		}
+		return scanExitHandler(frame, ps, pc1, &pc4, fullScan)
 	}
-	return true
+	return frame, true
 }
 
-func scanExitHandler(ps *parseState, pc1 int, pc4 *int, fullScan bool) bool {
+func scanExitHandler(frame *FrameObject, ps *parseState, pc1 int, pc4 *int, fullScan bool) (*FrameObject, bool) {
 	if !nextNonBl(ps) {
-		return false
+		return frame, false
 	}
 	if ps.key == '[' {
 		if !nextNonBl(ps) {
-			return false
+			return frame, false
 		}
+		var ok bool
 		for (ps.key != ':') && (ps.key != ']') {
 			// Construct exit part
-			if !scanCommand(ps, fullScan) {
-				return false
+			frame, ok = scanCommand(frame, ps, fullScan)
+			if !ok {
+				return frame, false
 			}
 		}
 		if ps.key == ':' {
 			// Jump over fail handler
 			if !generate(ps, LeadParamNone, 0, CmdPcJump, nil, 0, nil) {
-				return false
+				return frame, false
 			}
 			*pc4 = ps.pc
 			poke(ps.codeBase, pc1, ps.pc+1) // Set fail label for command
 			if !nextNonBl(ps) {
-				return false
+				return frame, false
 			}
 			for ps.key != ']' {
 				// Construct fail part
-				if !scanCommand(ps, fullScan) {
-					return false
+				frame, ok = scanCommand(frame, ps, fullScan)
+				if !ok {
+					return frame, false
 				}
 			}
 			poke(ps.codeBase, *pc4, ps.pc+1) // End of fail handler
@@ -501,48 +499,50 @@ func scanExitHandler(ps *parseState, pc1 int, pc4 *int, fullScan bool) bool {
 			poke(ps.codeBase, pc1, ps.pc+1) // Set fail label
 		}
 		if !nextNonBl(ps) {
-			return false
+			return frame, false
 		}
 	}
-	return true
+	return frame, true
 }
 
-func scanCompoundCommand(ps *parseState, repSym LeadParam, repCount int, pc1, pc2, pc3 *int) bool {
+func scanCompoundCommand(frame *FrameObject, ps *parseState, repSym LeadParam, repCount int, pc1, pc2, pc3 *int) (*FrameObject, bool) {
 	if repSym != LeadParamNone && repSym != LeadParamPlus && repSym != LeadParamPInt &&
 		repSym != LeadParamPIndef {
-		errorMsg(ps, "Illegal leading parameter")
-		return false
+		return errorMsg(frame, ps, "Illegal leading parameter"), false
 	}
 	if !generate(ps, LeadParamNone, 0, CmdExitTo, nil, 0, nil) {
-		return false
+		return frame, false
 	}
 	*pc2 = ps.pc
 	if !generate(ps, LeadParamNone, 0, CmdFailTo, nil, 0, nil) {
-		return false
+		return frame, false
 	}
 	*pc1 = ps.pc
 	*pc3 = ps.pc + 1
 	if repSym != LeadParamPIndef {
 		if !generate(ps, LeadParamNone, repCount, CmdIterate, nil, 0, nil) {
-			return false
+			return frame, false
 		}
 	}
 	if !nextNonBl(ps) {
-		return false
+		return frame, false
 	}
 	for ps.key != ')' {
-		if !scanCommand(ps, true) {
-			return false
+		var ok bool
+		frame, ok = scanCommand(frame, ps, true)
+		if !ok {
+			return frame, false
 		}
 	}
 	if !generate(ps, LeadParamNone, 0, CmdPcJump, nil, *pc3, nil) {
-		return false
+		return frame, false
 	}
 	poke(ps.codeBase, *pc2, ps.pc+1) // Fill in exit label
-	return true
+	return frame, true
 }
 
 func scanSimpleCommand(
+	frame *FrameObject,
 	ps *parseState,
 	command Commands,
 	repSym LeadParam,
@@ -551,7 +551,7 @@ func scanSimpleCommand(
 	lookupCode **CodeHeader,
 	pc1 *int,
 	fullScan bool,
-) bool {
+) (*FrameObject, bool) {
 	// Check if leading parameter is allowed
 	lpAllowed := CmdAttrib[command].LpAllowed
 	allowed := false
@@ -560,15 +560,13 @@ func scanSimpleCommand(
 		allowed = true
 	}
 	if !allowed {
-		errorMsg(ps, "Illegal leading parameter")
-		return false
+		return errorMsg(frame, ps, "Illegal leading parameter"), false
 	}
 
 	if command == CmdVerify {
 		ps.verifyCount++
 		if ps.verifyCount > MaxVerify {
-			errorMsg(ps, "Too many verify commands in span")
-			return false
+			return errorMsg(frame, ps, "Too many verify commands in span"), false
 		}
 		*repCount = ps.verifyCount
 	}
@@ -578,8 +576,8 @@ func scanSimpleCommand(
 		if CmdAttrib[command].TpCount != 0 {
 			if fullScan {
 				var found bool
-				if *tparam, found = scanTrailingParam(ps, command, repSym); !found {
-					return false
+				if frame, *tparam, found = scanTrailingParam(frame, ps, command, repSym); !found {
+					return frame, false
 				}
 			} else {
 				*tparam = &TParObject{
@@ -606,14 +604,14 @@ func scanSimpleCommand(
 		(*lookupCode).Ref++
 	}
 	if !generate(ps, repSym, *repCount, command, *tparam, 0, *lookupCode) {
-		return false
+		return frame, false
 	}
 	*pc1 = ps.pc
-	return true
+	return frame, true
 }
 
 // CodeCompile compiles a span into executable code
-func CodeCompile(span *SpanObject, fromSpan bool) bool {
+func CodeCompile(frame *FrameObject, span *SpanObject, fromSpan bool) (*FrameObject, bool) {
 	var ps parseState
 	ps.status = ""
 	ps.eoln = false
@@ -641,25 +639,30 @@ func CodeCompile(span *SpanObject, fromSpan bool) bool {
 	ps.verifyCount = 0
 
 	if !nextNonBl(&ps) {
-		return false
+		return frame, false
 	}
 	if ps.key == 0 {
-		errorMsg(&ps, "Span contains no commands")
-		return false
+		return errorMsg(frame, &ps, "Span contains no commands"), false
 	}
 
 	if fromSpan {
 		for ps.key != 0 {
-			if !scanCommand(&ps, true) {
-				return false
+			var ok bool
+			frame, ok = scanCommand(frame, &ps, true)
+			if !ok {
+				return frame, false
 			}
 		}
-	} else if !scanCommand(&ps, false) {
-		return false
+	} else {
+		var ok bool
+		frame, ok = scanCommand(frame, &ps, false)
+		if !ok {
+			return frame, false
+		}
 	}
 
 	if !generate(&ps, LeadParamPInt, 1, CmdExitSuccess, nil, 0, nil) {
-		return false
+		return frame, false
 	}
 
 	// Fill in code header
@@ -673,7 +676,7 @@ func CodeCompile(span *SpanObject, fromSpan bool) bool {
 	CodeList.FLink.BLink = span.Code
 	CodeList.FLink = span.Code
 	CodeTop = ps.codeBase + ps.pc
-	return true
+	return frame, true
 }
 
 type labelsType struct {
@@ -683,7 +686,7 @@ type labelsType struct {
 }
 
 // CodeInterpret interprets compiled code
-func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) bool {
+func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) (*FrameObject, bool) {
 	const maxLevel = 100
 	labels := make([]labelsType, maxLevel+1)
 
@@ -718,7 +721,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 		for pc != 0 {
 			if pc > codeHead.Len {
 				ScreenMessage(DbgPcOutOfRange)
-				return false
+				return frame, false
 			}
 
 			interpStatus = success
@@ -789,11 +792,9 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 				case CmdExtended:
 					if currCode == nil {
 						ScreenMessage(DbgCodePtrIsNil)
-						return false
+						return frame, false
 					}
-					CodeInterpret(frame, currRep, currCnt, currCode, true)
-					// FIXME: Temporary until global frame removed
-					frame = CurrentFrame
+					frame, _ = CodeInterpret(frame, currRep, currCnt, currCode, true)
 
 				case CmdVerify:
 					if !verifyAlways[currCnt] {
@@ -806,7 +807,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 								request = frame.VerifyTpar
 								if request.Len == 0 {
 									ScreenMessage(MsgNoDefaultStr)
-									return false
+									return frame, false
 								}
 							} else {
 								frame.VerifyTpar = request
@@ -828,16 +829,16 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 
 				case CmdNoop:
 					ScreenMessage(DbgIllegalInstruction)
-					return false
+					return frame, false
 				}
 			} else {
 				// Call execute command
-				if !Execute(frame, currOp, currRep, currCnt, currTpar, fromSpan) {
+				var ok bool
+				frame, ok = Execute(frame, currOp, currRep, currCnt, currTpar, fromSpan)
+				if !ok {
 					interpStatus = failure
 					pc = currLbl
 				}
-				// FIXME: Temporary until global frame removed
-				frame = CurrentFrame
 				if ExitAbort {
 					interpStatus = failForever
 					pc = 0
@@ -858,5 +859,5 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 		}
 	}
 
-	return (interpStatus == success)
+	return frame, (interpStatus == success)
 }

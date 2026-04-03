@@ -139,7 +139,7 @@ func UserCommandIntroducer(frame *FrameObject) bool {
 }
 
 // UserKey assigns a key to a command string
-func UserKey(key *TParObject, strng *TParObject) bool {
+func UserKey(frame *FrameObject, key *TParObject, strng *TParObject) (*FrameObject, bool) {
 	result := false
 	var keyCode int
 
@@ -150,14 +150,14 @@ func UserKey(key *TParObject, strng *TParObject) bool {
 		var found bool
 		if keyCode, found = UserKeyNameToCode(keyName); !found {
 			ScreenMessage(MsgUnrecognizedKeyName)
-			return false
+			return frame, false
 		}
 	}
 
 	// Create a span in frame "HEAP"
 	MarkCreate(FrameHeap.LastGroup.LastLine, 1, &FrameHeap.Span.MarkTwo)
 	if !SpanCreate(BlankFrameName, FrameHeap.Span.MarkTwo, FrameHeap.Span.MarkTwo) {
-		return false
+		return frame, false
 	}
 
 	var keySpan *SpanObject
@@ -166,7 +166,9 @@ func UserKey(key *TParObject, strng *TParObject) bool {
 		success := false
 		var keyMarkOne *MarkObject = keySpan.MarkOne
 		if TextInsertTpar(strng, keySpan.MarkTwo, &keyMarkOne) {
-			if CodeCompile(keySpan, true) {
+			var ok bool
+			frame, ok = CodeCompile(frame, keySpan, true)
+			if ok {
 				// discard code_ptr, if it exists, NOW!
 				if Lookup[keyCode].Code != nil {
 					CodeDiscard(&Lookup[keyCode].Code)
@@ -191,7 +193,7 @@ func UserKey(key *TParObject, strng *TParObject) bool {
 		SpanDestroy(&keySpan)
 		result = success
 	}
-	return result
+	return frame, result
 }
 
 // UserParent suspends Ludwig and returns to parent shell

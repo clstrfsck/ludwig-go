@@ -922,7 +922,7 @@ func changeFrameSize(frm *FrameObject, band int, halfScreen int) {
 }
 
 // ScreenResize handles screen resize
-func ScreenResize() {
+func ScreenResize(frame *FrameObject) {
 	TtWinChanged = false
 	TerminalInfo.Width, TerminalInfo.Height = VduGetNewDimensions()
 	ScrMsgRow = TerminalInfo.Height + 1
@@ -945,12 +945,12 @@ func ScreenResize() {
 	InitialScrWidth = TerminalInfo.Width
 	InitialScrHeight = TerminalInfo.Height
 
-	ScreenLoad(CurrentFrame.Dot.Line)
+	ScreenLoad(frame.Dot.Line)
 	ScrNeedsFix = false
 	screenExpand(true, true)
 	VduMoveCurs(
-		CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
-		CurrentFrame.Dot.Line.ScrRowNr,
+		frame.Dot.Col-frame.ScrOffset,
+		frame.Dot.Line.ScrRowNr,
 	)
 }
 
@@ -963,33 +963,33 @@ func advance(line *LineHdrObject, count int) *LineHdrObject {
 }
 
 // ScreenFixup makes sure the screen is correct
-func ScreenFixup() {
+func ScreenFixup(frame *FrameObject) {
 	if TtWinChanged {
-		ScreenResize()
+		ScreenResize(frame)
 	} else {
-		if ScrFrame != CurrentFrame {
+		if ScrFrame != frame {
 			if ScrMsgRow <= TerminalInfo.Height {
 				ScreenClearMsgs(true)
 			}
-			ScreenLoad(CurrentFrame.Dot.Line)
+			ScreenLoad(frame.Dot.Line)
 		} else {
-			needsReposition := CurrentFrame.Dot.Line.ScrRowNr == 0 ||
-				(CurrentFrame.Dot.Line.ScrRowNr-ScrTopLine.ScrRowNr < CurrentFrame.MarginTop &&
+			needsReposition := frame.Dot.Line.ScrRowNr == 0 ||
+				(frame.Dot.Line.ScrRowNr-ScrTopLine.ScrRowNr < frame.MarginTop &&
 					ScrTopLine.BLink != nil) ||
-				(TerminalInfo.Height-CurrentFrame.Dot.Line.ScrRowNr < CurrentFrame.MarginBottom &&
+				(TerminalInfo.Height-frame.Dot.Line.ScrRowNr < frame.MarginBottom &&
 					advance(ScrBotLine.FLink, TerminalInfo.Height-ScrBotLine.ScrRowNr) != nil) ||
-				CurrentFrame.Dot.Col <= CurrentFrame.ScrOffset ||
-				CurrentFrame.Dot.Col > CurrentFrame.ScrOffset+CurrentFrame.ScrWidth
+				frame.Dot.Col <= frame.ScrOffset ||
+				frame.Dot.Col > frame.ScrOffset+frame.ScrWidth
 
 			if needsReposition {
 				if ScrMsgRow <= TerminalInfo.Height {
 					ScreenClearMsgs(true)
 				}
-				ScreenPosition(CurrentFrame.Dot.Line, CurrentFrame.Dot.Col)
+				ScreenPosition(frame.Dot.Line, frame.Dot.Col)
 			} else if ScrMsgRow <= TerminalInfo.Height {
 				VduMoveCurs(
-					CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
-					CurrentFrame.Dot.Line.ScrRowNr,
+					frame.Dot.Col-frame.ScrOffset,
+					frame.Dot.Line.ScrRowNr,
 				)
 				key := VduGetKey()
 				ScreenClearMsgs(false)
@@ -1000,11 +1000,11 @@ func ScreenFixup() {
 			}
 		}
 		ScrNeedsFix = false
-		SyntaxApplyDirty(CurrentFrame)
+		SyntaxApplyDirty(frame)
 		screenExpand(true, true)
 		VduMoveCurs(
-			CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
-			CurrentFrame.Dot.Line.ScrRowNr,
+			frame.Dot.Col-frame.ScrOffset,
+			frame.Dot.Line.ScrRowNr,
 		)
 	}
 }
@@ -1015,7 +1015,7 @@ func ScreenFixup() {
 // below the prompt band, only LineNr is set. When the prompt must overwrite
 // an existing screen line, Redraw records that line so it can be restored
 // after input is complete.
-func computePromptPosition(thisTp, maxTp int) {
+func computePromptPosition(frame *FrameObject, thisTp, maxTp int) {
 	PromptRegion[thisTp].LineNr = 0
 	PromptRegion[thisTp].Redraw = nil
 
@@ -1023,7 +1023,7 @@ func computePromptPosition(thisTp, maxTp int) {
 		return
 	}
 
-	ScreenFixup()
+	ScreenFixup(frame)
 	PromptRegion[thisTp].LineNr = thisTp
 
 	if ScrTopLine.ScrRowNr > maxTp {
@@ -1074,6 +1074,7 @@ func restorePromptLines(maxTp int) {
 
 // ScreenGetLineP gets a line from the user
 func ScreenGetLineP(
+	frame *FrameObject,
 	prompt string,
 	maxTp int,
 	thisTp int,
@@ -1090,7 +1091,7 @@ func ScreenGetLineP(
 		return nil, 0
 	}
 
-	computePromptPosition(thisTp, maxTp)
+	computePromptPosition(frame, thisTp, maxTp)
 	if PromptRegion[thisTp].LineNr != 0 {
 		VduMoveCurs(1, PromptRegion[thisTp].LineNr)
 	}
@@ -1163,18 +1164,18 @@ func ScreenFreeBottomLine() {
 }
 
 // ScreenVerify gets verification from user
-func ScreenVerify(prompt string) VerifyResponse {
+func ScreenVerify(frame *FrameObject, prompt string) VerifyResponse {
 	const verHeight = 4
 
 	verify := VerifyReplyQuit
 
-	oldHeight := CurrentFrame.ScrHeight
-	oldTopM := CurrentFrame.MarginTop
-	oldBotM := CurrentFrame.MarginBottom
+	oldHeight := frame.ScrHeight
+	oldTopM := frame.MarginTop
+	oldBotM := frame.MarginBottom
 	if oldHeight > verHeight {
-		CurrentFrame.MarginTop = verHeight / 2
-		CurrentFrame.ScrHeight = verHeight
-		CurrentFrame.MarginBottom = verHeight / 2
+		frame.MarginTop = verHeight / 2
+		frame.ScrHeight = verHeight
+		frame.MarginBottom = verHeight / 2
 	}
 
 	usePrompt := true
@@ -1184,7 +1185,7 @@ func ScreenVerify(prompt string) VerifyResponse {
 	for {
 		switch LudwigMode {
 		case LudwigScreen:
-			ScreenFixup()
+			ScreenFixup(frame)
 			VduBold()
 			if usePrompt {
 				ScreenMessage(prompt)
@@ -1193,8 +1194,8 @@ func ScreenVerify(prompt string) VerifyResponse {
 			}
 			VduNormal()
 			VduMoveCurs(
-				CurrentFrame.Dot.Col-CurrentFrame.ScrOffset,
-				CurrentFrame.Dot.Line.ScrRowNr,
+				frame.Dot.Col-frame.ScrOffset,
+				frame.Dot.Line.ScrRowNr,
 			)
 			key = VduGetKey()
 			if key >= 'a' && key <= 'z' {
@@ -1209,9 +1210,9 @@ func ScreenVerify(prompt string) VerifyResponse {
 			var response *StrObject
 			var respLen int
 			if usePrompt {
-				response, respLen = ScreenGetLineP(prompt, 1, 1)
+				response, respLen = ScreenGetLineP(frame, prompt, 1, 1)
 			} else {
-				response, respLen = ScreenGetLineP(YNAQM_MSG, 1, 1)
+				response, respLen = ScreenGetLineP(frame, YNAQM_MSG, 1, 1)
 			}
 			if respLen == 0 {
 				key = 'N'
@@ -1243,18 +1244,18 @@ func ScreenVerify(prompt string) VerifyResponse {
 			case '1', '2', '3', '4', '5', '6', '7', '8', '9', 'M':
 				// MORE CONTEXT PLEASE
 				if ScrTopLine != nil {
-					CurrentFrame.ScrHeight = ScrBotLine.ScrRowNr + 1 - ScrTopLine.ScrRowNr
+					frame.ScrHeight = ScrBotLine.ScrRowNr + 1 - ScrTopLine.ScrRowNr
 				}
 				if key == 'M' {
 					key = '1'
 				}
-				if key-'0'+CurrentFrame.ScrHeight < TerminalInfo.Height {
-					CurrentFrame.ScrHeight += key - '0'
+				if key-'0'+frame.ScrHeight < TerminalInfo.Height {
+					frame.ScrHeight += key - '0'
 				} else {
-					CurrentFrame.ScrHeight = TerminalInfo.Height
+					frame.ScrHeight = TerminalInfo.Height
 				}
 				if ScrTopLine == nil {
-					ScreenLoad(CurrentFrame.Dot.Line)
+					ScreenLoad(frame.Dot.Line)
 				} else {
 					screenExpand(true, true)
 				}
@@ -1272,9 +1273,9 @@ func ScreenVerify(prompt string) VerifyResponse {
 		}
 	}
 
-	CurrentFrame.ScrHeight = oldHeight
-	CurrentFrame.MarginTop = oldTopM
-	CurrentFrame.MarginBottom = oldBotM
+	frame.ScrHeight = oldHeight
+	frame.MarginTop = oldTopM
+	frame.MarginBottom = oldBotM
 
 	if verify == VerifyReplyQuit {
 		ExitAbort = true

@@ -51,7 +51,6 @@ var KeyNameList []KeyNameRecord
 var KeyIntroducers map[int]struct{}
 
 // Special frames
-var CurrentFrame *FrameObject
 var FrameOops *FrameObject
 var FrameCmd *FrameObject
 var FrameHeap *FrameObject

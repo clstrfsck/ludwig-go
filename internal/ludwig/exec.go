@@ -131,7 +131,15 @@ func ExecComputeLineRange(
 }
 
 // Execute executes a command with the specified parameters
-func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tparam *TParObject, fromSpan bool) (cmdSuccess bool) {
+func Execute(
+	frame *FrameObject,
+	command Commands,
+	rept LeadParam,
+	count int,
+	tparam *TParObject,
+	fromSpan bool,
+) (currentFrame *FrameObject, cmdSuccess bool) {
+	currentFrame = frame
 	ExecLevel++
 	defer func() {
 		ExecLevel--
@@ -165,7 +173,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 	// Check the mark, assign theMark to the mark
 	var theMark *MarkObject
 	if rept == LeadParamMarker {
-		theMark = frame.Marks[count]
+		theMark = currentFrame.Marks[count]
 		if theMark == nil {
 			ScreenMessage(MsgMarkNotDefined)
 			return
@@ -173,15 +181,15 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 	}
 
 	// Save the current value of DOT and current frame for use by equals
-	oldDot := *frame.Dot
-	oldFrame := frame
+	oldDot := *currentFrame.Dot
+	oldFrame := currentFrame
 
 	// Execute the command
 	switch command {
 	case CmdAdvance:
 		// Establish which line to advance to
 		cmdSuccess = (rept == LeadParamPIndef || rept == LeadParamNIndef || rept == LeadParamMarker)
-		newLine := frame.Dot.Line
+		newLine := currentFrame.Dot.Line
 		switch rept {
 		case LeadParamNone, LeadParamPlus, LeadParamPInt:
 			if count < 20 {
@@ -194,7 +202,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				}
 			} else {
 				lineNr := LineToNumber(newLine)
-				newLine = LineFromNumber(frame, lineNr+count)
+				newLine = LineFromNumber(currentFrame, lineNr+count)
 				if newLine == nil {
 					return
 				}
@@ -220,7 +228,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				if count >= lineNr {
 					return
 				}
-				newLine = LineFromNumber(frame, lineNr-count)
+				newLine = LineFromNumber(currentFrame, lineNr-count)
 				if newLine == nil {
 					return
 				}
@@ -228,41 +236,41 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			cmdSuccess = true
 
 		case LeadParamPIndef:
-			newLine = frame.LastGroup.LastLine
+			newLine = currentFrame.LastGroup.LastLine
 
 		case LeadParamNIndef:
-			newLine = frame.FirstGroup.FirstLine
+			newLine = currentFrame.FirstGroup.FirstLine
 
 		case LeadParamMarker:
 			newLine = theMark.Line
 		}
 
-		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
-		MarkCreate(newLine, 1, &frame.Dot)
+		MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkEquals])
+		MarkCreate(newLine, 1, &currentFrame.Dot)
 
 	case CmdBridge, CmdNext:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
-			cmdSuccess = NextbridgeCommand(frame, count, &request, command == CmdBridge)
+		if TparGet1(currentFrame, tparam, command, &request) {
+			cmdSuccess = NextbridgeCommand(currentFrame, count, &request, command == CmdBridge)
 		}
 
 	case CmdCaseEdit, CmdCaseLow, CmdCaseUp, CmdDittoDown, CmdDittoUp:
-		cmdSuccess = CaseDittoCommand(frame, command, rept, count, fromSpan)
+		cmdSuccess = CaseDittoCommand(currentFrame, command, rept, count, fromSpan)
 
 	case CmdDeleteChar:
 		if rept != LeadParamMarker {
-			cmdSuccess = CharcmdDelete(frame, rept, count, fromSpan)
+			cmdSuccess = CharcmdDelete(currentFrame, rept, count, fromSpan)
 		} else {
-			theOtherMark := frame.Dot
-			lineNr := LineToNumber(frame.Dot.Line)
+			theOtherMark := currentFrame.Dot
+			lineNr := LineToNumber(currentFrame.Dot.Line)
 			line2Nr := LineToNumber(theMark.Line)
-			if lineNr > line2Nr || (lineNr == line2Nr && frame.Dot.Col > theMark.Col) {
+			if lineNr > line2Nr || (lineNr == line2Nr && currentFrame.Dot.Col > theMark.Col) {
 				// Reverse mark pointers to get theOtherMark first
 				anotherMark := theMark
 				theMark = theOtherMark
 				theOtherMark = anotherMark
 			}
-			if frame != FrameOops {
+			if currentFrame != FrameOops {
 				// Make sure oops_span is okay
 				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
 				cmdSuccess = TextMove(
@@ -279,47 +287,47 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			} else {
 				cmdSuccess = TextRemove(theOtherMark, theMark)
 			}
-			frame.TextModified = true
-			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+			currentFrame.TextModified = true
+			MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 		}
 
 	case CmdDeleteLine:
 		// Establish which lines to kill, this is common to K and FW cmds
 		var firstLine, lastLine *LineHdrObject
-		if !ExecComputeLineRange(frame, rept, count, &firstLine, &lastLine) {
+		if !ExecComputeLineRange(currentFrame, rept, count, &firstLine, &lastLine) {
 			return
 		}
 		if firstLine != nil {
-			dotCol := frame.Dot.Col
+			dotCol := currentFrame.Dot.Col
 			if lastLine.FLink == nil {
 				return
 			}
 			MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 			LinesExtract(firstLine, lastLine)
-			if frame != FrameOops {
+			if currentFrame != FrameOops {
 				LinesInject(firstLine, lastLine, FrameOops.LastGroup.LastLine)
 				MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals])
 				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot)
 				FrameOops.TextModified = true
 				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified])
 			}
-			frame.Dot.Col = dotCol
-			frame.TextModified = true
-			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+			currentFrame.Dot.Col = dotCol
+			currentFrame.TextModified = true
+			MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 		}
 		cmdSuccess = true
 
 	case CmdBacktab, CmdDown, CmdHome, CmdLeft, CmdReturn, CmdRight, CmdTab, CmdUp:
 		if command == CmdReturn && EditMode == ModeInsert &&
-			frame.Options.Has(OptNewLine) {
-			if frame.Dot.Line.FLink == nil {
-				TextRealizeNull(frame.Dot.Line)
-				cmdSuccess = ArrowCommand(frame, command, rept, count, fromSpan)
+			currentFrame.Options.Has(OptNewLine) {
+			if currentFrame.Dot.Line.FLink == nil {
+				TextRealizeNull(currentFrame.Dot.Line)
+				cmdSuccess = ArrowCommand(currentFrame, command, rept, count, fromSpan)
 			} else {
-				cmdSuccess = Execute(frame, CmdSplitLine, rept, count, tparam, fromSpan)
+				currentFrame, cmdSuccess = Execute(currentFrame, CmdSplitLine, rept, count, tparam, fromSpan)
 			}
 		} else {
-			cmdSuccess = ArrowCommand(frame, command, rept, count, fromSpan)
+			cmdSuccess = ArrowCommand(currentFrame, command, rept, count, fromSpan)
 		}
 
 	case CmdDump:
@@ -329,17 +337,17 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 	case CmdEqualColumn:
 		var request TParObject
 		i := 1 // Start of column number, j receives column number
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			if j, found := TparToInt(&request, &i); found {
 				switch rept {
 				case LeadParamNone, LeadParamPlus:
-					cmdSuccess = (frame.Dot.Col == j)
+					cmdSuccess = (currentFrame.Dot.Col == j)
 				case LeadParamMinus:
-					cmdSuccess = (frame.Dot.Col != j)
+					cmdSuccess = (currentFrame.Dot.Col != j)
 				case LeadParamPIndef:
-					cmdSuccess = (frame.Dot.Col >= j)
+					cmdSuccess = (currentFrame.Dot.Col >= j)
 				case LeadParamNIndef:
-					cmdSuccess = (frame.Dot.Col <= j)
+					cmdSuccess = (currentFrame.Dot.Col <= j)
 				}
 			}
 		}
@@ -347,20 +355,20 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 	case CmdEqualEol:
 		switch rept {
 		case LeadParamNone, LeadParamPlus:
-			cmdSuccess = (frame.Dot.Col == frame.Dot.Line.Used+1)
+			cmdSuccess = (currentFrame.Dot.Col == currentFrame.Dot.Line.Used+1)
 		case LeadParamMinus:
-			cmdSuccess = (frame.Dot.Col != frame.Dot.Line.Used+1)
+			cmdSuccess = (currentFrame.Dot.Col != currentFrame.Dot.Line.Used+1)
 		case LeadParamPIndef:
-			cmdSuccess = (frame.Dot.Col >= frame.Dot.Line.Used+1)
+			cmdSuccess = (currentFrame.Dot.Col >= currentFrame.Dot.Line.Used+1)
 		case LeadParamNIndef:
-			cmdSuccess = (frame.Dot.Col <= frame.Dot.Line.Used+1)
+			cmdSuccess = (currentFrame.Dot.Col <= currentFrame.Dot.Line.Used+1)
 		}
 
 	case CmdEqualEop, CmdEqualEof:
-		cmdSuccess = (frame.Dot.Line.FLink == nil)
+		cmdSuccess = (currentFrame.Dot.Line.FLink == nil)
 		if command == CmdEqualEof {
-			if frame.InputFile != 0 {
-				if !Files[frame.InputFile].Eof {
+			if currentFrame.InputFile != 0 {
+				if !Files[currentFrame.InputFile].Eof {
 					cmdSuccess = false
 				}
 			}
@@ -371,7 +379,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 	case CmdEqualMark:
 		var request TParObject
-		if !TparGet1(frame, tparam, command, &request) {
+		if !TparGet1(currentFrame, tparam, command, &request) {
 			return
 		}
 		var found bool
@@ -379,26 +387,26 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		if j, found = TparToMark(&request); !found {
 			return
 		}
-		if frame.Marks[j] != nil {
+		if currentFrame.Marks[j] != nil {
 			switch rept {
 			case LeadParamNone, LeadParamPlus, LeadParamMinus:
-				if frame.Marks[j].Line == frame.Dot.Line &&
-					frame.Marks[j].Col == frame.Dot.Col {
+				if currentFrame.Marks[j].Line == currentFrame.Dot.Line &&
+					currentFrame.Marks[j].Col == currentFrame.Dot.Col {
 					cmdSuccess = true
 				}
 				if rept == LeadParamMinus {
 					cmdSuccess = !cmdSuccess
 				}
 			case LeadParamPIndef, LeadParamNIndef:
-				if frame.Marks[j].Line == frame.Dot.Line {
+				if currentFrame.Marks[j].Line == currentFrame.Dot.Line {
 					if rept == LeadParamPIndef {
-						cmdSuccess = (frame.Dot.Col >= frame.Marks[j].Col)
+						cmdSuccess = (currentFrame.Dot.Col >= currentFrame.Marks[j].Col)
 					} else {
-						cmdSuccess = (frame.Dot.Col <= frame.Marks[j].Col)
+						cmdSuccess = (currentFrame.Dot.Col <= currentFrame.Marks[j].Col)
 					}
 				} else {
-					lineNr := LineToNumber(frame.Dot.Line)
-					line2Nr := LineToNumber(frame.Marks[j].Line)
+					lineNr := LineToNumber(currentFrame.Dot.Line)
+					line2Nr := LineToNumber(currentFrame.Marks[j].Line)
 					if rept == LeadParamPIndef {
 						cmdSuccess = (lineNr >= line2Nr)
 					} else {
@@ -410,34 +418,33 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 	case CmdEqualString:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			if request.Len == 0 {
 				// If didn't specify, use default
-				request = frame.EqsTpar
+				request = currentFrame.EqsTpar
 				if request.Len == 0 {
 					ScreenMessage(MsgNoDefaultStr)
 					return
 				}
 			} else {
-				frame.EqsTpar = request // If did specify, save for next time
+				currentFrame.EqsTpar = request // If did specify, save for next time
 			}
 		}
-		cmdSuccess = EqsGetRepEqs(frame, rept, request)
+		cmdSuccess = EqsGetRepEqs(currentFrame, rept, request)
 
 	case CmdDoLastCommand, CmdExecuteString:
-		if frame == FrameCmd {
+		if currentFrame == FrameCmd {
 			ScreenMessage(MsgNotWhileEditingCmd)
 			return
 		}
 		if command == CmdExecuteString {
 			var request TParObject
-			if !TparGet1(frame, tparam, command, &request) {
+			if !TparGet1(currentFrame, tparam, command, &request) {
 				return
 			}
 
-			FrameCmd.ReturnFrame = frame
-			frame = FrameCmd
-			CurrentFrame = frame
+			FrameCmd.ReturnFrame = currentFrame
+			currentFrame = FrameCmd
 
 			// Zap frame COMMAND's current contents
 			firstLine := FrameCmd.FirstGroup.FirstLine
@@ -452,35 +459,35 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				return
 			}
 
-			frame = frame.ReturnFrame
-			CurrentFrame = frame
+			currentFrame = currentFrame.ReturnFrame
 		}
 
 		// Recompile and execute frame COMMAND
 		var newSpan, oldSpan *SpanObject
 		if SpanFind(FrameCmd.Span.Name, &newSpan, &oldSpan) {
-			if !CodeCompile(FrameCmd.Span, true) {
+			var ok bool
+			currentFrame, ok = CodeCompile(currentFrame, FrameCmd.Span, true)
+			if !ok {
 				return
 			}
-			cmdSuccess = CodeInterpret(frame, rept, count, FrameCmd.Span.Code, true)
+			currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, FrameCmd.Span.Code, true)
 		}
 
 	case CmdFileInput, CmdFileOutput, CmdFileEdit, CmdFileRead, CmdFileWrite,
 		CmdFileRewind, CmdFileKill, CmdFileSave,
 		CmdFileGlobalInput, CmdFileGlobalOutput, CmdFileGlobalRewind, CmdFileGlobalKill:
-		cmdSuccess = FileCommand(frame, command, rept, count, tparam, fromSpan)
+		cmdSuccess = FileCommand(currentFrame, command, rept, count, tparam, fromSpan)
 
 	case CmdFileExecute:
-		if frame == FrameCmd {
+		if currentFrame == FrameCmd {
 			ScreenMessage(MsgNotWhileEditingCmd)
 			return
 		}
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			newTparam := request
-			FrameCmd.ReturnFrame = frame
-			frame = FrameCmd
-			CurrentFrame = frame
+			FrameCmd.ReturnFrame = currentFrame
+			currentFrame = FrameCmd
 			// Zap frame COMMAND's current contents
 			firstLine := FrameCmd.FirstGroup.FirstLine
 			lastLine := FrameCmd.LastGroup.LastLine.BLink
@@ -488,19 +495,19 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 				LinesExtract(firstLine, lastLine)
 			}
-			if FileCommand(frame, CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
-				frame = frame.ReturnFrame
-				CurrentFrame = frame
+			if FileCommand(currentFrame, CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
+				currentFrame = currentFrame.ReturnFrame
 				// Recompile and execute frame COMMAND
 				var newSpan, oldSpan *SpanObject
 				if SpanFind(FrameCmd.Span.Name, &newSpan, &oldSpan) {
-					if CodeCompile(FrameCmd.Span, true) {
-						cmdSuccess = CodeInterpret(frame, rept, count, FrameCmd.Span.Code, true)
+					var ok bool
+					currentFrame, ok = CodeCompile(currentFrame, FrameCmd.Span, true)
+					if ok {
+						currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, FrameCmd.Span.Code, true)
 					}
 				}
 			} else {
-				frame = frame.ReturnFrame
-				CurrentFrame = frame
+				currentFrame = currentFrame.ReturnFrame
 			}
 		}
 
@@ -510,11 +517,10 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 	case CmdFrameEdit:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
-			if newFrame, ok := FrameEdit(frame, newName); ok {
-				frame = newFrame
-				CurrentFrame = frame
+			if newFrame, ok := FrameEdit(currentFrame, newName); ok {
+				currentFrame = newFrame
 				cmdSuccess = true
 			} else {
 				cmdSuccess = false
@@ -523,40 +529,38 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 	case CmdFrameKill:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
-			cmdSuccess = FrameKill(frame, newName)
+			cmdSuccess = FrameKill(currentFrame, newName)
 		}
 
 	case CmdFrameParameters:
-		cmdSuccess = FrameParameter(frame, tparam)
+		cmdSuccess = FrameParameter(currentFrame, tparam)
 
 	case CmdFrameReturn:
 		for i := 1; i <= count; i++ {
-			if frame.ReturnFrame == nil {
-				frame = oldFrame
-				CurrentFrame = frame
+			if currentFrame.ReturnFrame == nil {
+				currentFrame = oldFrame
 				return
 			}
-			frame = frame.ReturnFrame
-			CurrentFrame = frame
+			currentFrame = currentFrame.ReturnFrame
 		}
 		cmdSuccess = true
 
 	case CmdGet:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			if request.Len == 0 {
 				// If didn't specify, use default
-				request = frame.GetTpar
+				request = currentFrame.GetTpar
 				if request.Len == 0 {
 					ScreenMessage(MsgNoDefaultStr)
 					return
 				}
 			} else {
-				frame.GetTpar = request // If did specify, save for next time
+				currentFrame.GetTpar = request // If did specify, save for next time
 			}
-			cmdSuccess = EqsGetRepGet(frame, count, request, fromSpan)
+			cmdSuccess = EqsGetRepGet(currentFrame, count, request, fromSpan)
 		}
 
 	case CmdHelp:
@@ -565,28 +569,28 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			return
 		}
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			HelpHelp(string(request.Str.Slice(1, request.Len)))
 			cmdSuccess = true // Never fails
 		}
 
 	case CmdInsertChar:
-		cmdSuccess = CharcmdInsert(frame, rept, count, fromSpan)
+		cmdSuccess = CharcmdInsert(currentFrame, rept, count, fromSpan)
 
 	case CmdInsertLine:
 		if count != 0 {
 			firstLine, lastLine := LinesCreate(iabs(count))
-			LinesInject(firstLine, lastLine, frame.Dot.Line)
+			LinesInject(firstLine, lastLine, currentFrame.Dot.Line)
 			if count > 0 {
-				MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
-				MarkCreate(firstLine, frame.Dot.Col, &frame.Dot)
+				MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkEquals])
+				MarkCreate(firstLine, currentFrame.Dot.Col, &currentFrame.Dot)
 			} else {
-				MarkCreate(firstLine, frame.Dot.Col, &frame.Marks[MarkEquals])
+				MarkCreate(firstLine, currentFrame.Dot.Col, &currentFrame.Marks[MarkEquals])
 			}
-			frame.TextModified = true
-			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+			currentFrame.TextModified = true
+			MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 		} else {
-			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
+			MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkEquals])
 		}
 		cmdSuccess = true
 
@@ -604,21 +608,21 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			}
 		} else {
 			var request TParObject
-			if TparGet1(frame, tparam, command, &request) {
+			if TparGet1(currentFrame, tparam, command, &request) {
 				if request.Con == nil {
-					cmdSuccess = TextInsert(true, count, request.Str, request.Len, frame.Dot)
+					cmdSuccess = TextInsert(true, count, request.Str, request.Len, currentFrame.Dot)
 					if cmdSuccess && (count*request.Len != 0) {
-						frame.TextModified = true
-						MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+						currentFrame.TextModified = true
+						MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 					}
 				} else {
 					for i := 1; i <= count; i++ {
-						if !TextInsertTpar(&request, frame.Dot, &frame.Marks[MarkEquals]) {
+						if !TextInsertTpar(&request, currentFrame.Dot, &currentFrame.Marks[MarkEquals]) {
 							return
 						}
 					}
-					frame.TextModified = true
-					MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+					currentFrame.TextModified = true
+					MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 					cmdSuccess = true
 				}
 			}
@@ -629,10 +633,10 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			return
 		}
 		var i int
-		if frame.Dot.Col > frame.Dot.Line.Used {
-			i = MaxStrLenP - frame.Dot.Col
+		if currentFrame.Dot.Col > currentFrame.Dot.Line.Used {
+			i = MaxStrLenP - currentFrame.Dot.Col
 		} else {
-			i = MaxStrLen - frame.Dot.Line.Used
+			i = MaxStrLen - currentFrame.Dot.Line.Used
 		}
 		if rept == LeadParamPIndef {
 			count = i
@@ -660,80 +664,80 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				VduBeep()
 			}
 		}
-		cmdSuccess = TextInsert(true, 1, newStr, count, frame.Dot)
+		cmdSuccess = TextInsert(true, 1, newStr, count, currentFrame.Dot)
 		if cmdSuccess && count != 0 {
-			frame.TextModified = true
-			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+			currentFrame.TextModified = true
+			MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 		}
 
 	case CmdJump:
 		switch rept {
 		case LeadParamNone, LeadParamPlus, LeadParamPInt:
-			if frame.Dot.Col+count > MaxStrLenP {
+			if currentFrame.Dot.Col+count > MaxStrLenP {
 				return
 			}
 		case LeadParamMinus, LeadParamNInt:
-			if frame.Dot.Col <= -count {
+			if currentFrame.Dot.Col <= -count {
 				return
 			}
 		case LeadParamPIndef:
-			if frame.Dot.Col > frame.Dot.Line.Used+1 {
+			if currentFrame.Dot.Col > currentFrame.Dot.Line.Used+1 {
 				return
 			}
-			count = 1 + frame.Dot.Line.Used - frame.Dot.Col
+			count = 1 + currentFrame.Dot.Line.Used - currentFrame.Dot.Col
 		case LeadParamNIndef:
-			count = 1 - frame.Dot.Col
+			count = 1 - currentFrame.Dot.Col
 		case LeadParamMarker:
-			MarkCreate(theMark.Line, theMark.Col, &frame.Dot)
+			MarkCreate(theMark.Line, theMark.Col, &currentFrame.Dot)
 			count = 0
 		}
-		frame.Dot.Col += count
+		currentFrame.Dot.Col += count
 		cmdSuccess = true
 
 	case CmdLineCentre:
-		cmdSuccess = WordCentre(frame, rept, count)
+		cmdSuccess = WordCentre(currentFrame, rept, count)
 
 	case CmdLineFill:
-		cmdSuccess = WordFill(frame, rept, count)
+		cmdSuccess = WordFill(currentFrame, rept, count)
 
 	case CmdLineJustify:
-		cmdSuccess = WordJustify(frame, rept, count)
+		cmdSuccess = WordJustify(currentFrame, rept, count)
 
 	case CmdLineSquash:
-		cmdSuccess = WordSqueeze(frame, rept, count)
+		cmdSuccess = WordSqueeze(currentFrame, rept, count)
 
 	case CmdLineLeft:
-		cmdSuccess = WordLeft(frame, rept, count)
+		cmdSuccess = WordLeft(currentFrame, rept, count)
 
 	case CmdLineRight:
-		cmdSuccess = WordRight(frame, rept, count)
+		cmdSuccess = WordRight(currentFrame, rept, count)
 
 	case CmdWordAdvance:
 		if FileData.OldCmds {
-			cmdSuccess = WordAdvanceWord(frame, rept, count)
+			cmdSuccess = WordAdvanceWord(currentFrame, rept, count)
 		} else {
-			cmdSuccess = NewwordAdvanceWord(frame, rept, count)
+			cmdSuccess = NewwordAdvanceWord(currentFrame, rept, count)
 		}
 
 	case CmdWordDelete:
 		if FileData.OldCmds {
-			cmdSuccess = WordDeleteWord(frame, rept, count)
+			cmdSuccess = WordDeleteWord(currentFrame, rept, count)
 		} else {
-			cmdSuccess = NewwordDeleteWord(frame, rept, count)
+			cmdSuccess = NewwordDeleteWord(currentFrame, rept, count)
 		}
 
 	case CmdAdvanceParagraph:
-		cmdSuccess = NewwordAdvanceParagraph(frame, rept, count)
+		cmdSuccess = NewwordAdvanceParagraph(currentFrame, rept, count)
 
 	case CmdDeleteParagraph:
-		cmdSuccess = NewwordDeleteParagraph(frame, rept, count)
+		cmdSuccess = NewwordDeleteParagraph(currentFrame, rept, count)
 
 	case CmdMark:
 		cmdSuccess = true
 		if count < 0 {
-			MarkDestroy(&frame.Marks[-count])
+			MarkDestroy(&currentFrame.Marks[-count])
 		} else {
-			MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[count])
+			MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[count])
 		}
 
 	case CmdNoop:
@@ -755,7 +759,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 					ScreenMessage(MsgScreenModeOnly)
 					return
 				}
-				if !UserCommandIntroducer(frame) {
+				if !UserCommandIntroducer(currentFrame) {
 					return
 				}
 			}
@@ -776,11 +780,11 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			}
 		} else {
 			var request TParObject
-			if TparGet1(frame, tparam, command, &request) {
-				cmdSuccess = TextOvertype(true, count, request.Str, request.Len, frame.Dot)
+			if TparGet1(currentFrame, tparam, command, &request) {
+				cmdSuccess = TextOvertype(true, count, request.Str, request.Len, currentFrame.Dot)
 				if cmdSuccess && (count*request.Len != 0) {
-					frame.TextModified = true
-					MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkModified])
+					currentFrame.TextModified = true
+					MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkModified])
 				}
 			}
 		}
@@ -792,7 +796,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				VduFlush()
 			}
 		}
-		cmdSuccess = FilePage(frame, &ExitAbort)
+		cmdSuccess = FilePage(currentFrame, &ExitAbort)
 		// Clean up the PAGING message
 		if !fromSpan {
 			ScreenClearMsgs(false)
@@ -800,18 +804,18 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 	case CmdOpSysCommand:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			var firstLine, lastLine *LineHdrObject
 			var ok bool
 			if firstLine, lastLine, _, ok = OpsysCommand(&request); !ok {
 				return
 			}
 			if firstLine != nil {
-				LinesInject(firstLine, lastLine, frame.Dot.Line)
-				MarkCreate(firstLine, 1, &frame.Marks[MarkEquals])
-				frame.TextModified = true
-				MarkCreate(lastLine.FLink, 1, &frame.Marks[MarkModified])
-				MarkCreate(lastLine.FLink, 1, &frame.Dot)
+				LinesInject(firstLine, lastLine, currentFrame.Dot.Line)
+				MarkCreate(firstLine, 1, &currentFrame.Marks[MarkEquals])
+				currentFrame.TextModified = true
+				MarkCreate(lastLine.FLink, 1, &currentFrame.Marks[MarkModified])
+				MarkCreate(lastLine.FLink, 1, &currentFrame.Dot)
 				cmdSuccess = true
 			}
 		}
@@ -820,75 +824,75 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		if count > MaxStrLen {
 			return
 		}
-		frame.Dot.Col = count
+		currentFrame.Dot.Col = count
 		cmdSuccess = true
 
 	case CmdPositionLine:
-		newLine := LineFromNumber(frame, count)
+		newLine := LineFromNumber(currentFrame, count)
 		if newLine == nil {
 			return
 		}
 		cmdSuccess = true
-		MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
-		MarkCreate(newLine, 1, &frame.Dot)
+		MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkEquals])
+		MarkCreate(newLine, 1, &currentFrame.Dot)
 
 	case CmdQuit:
-		cmdSuccess = QuitCommand()
+		currentFrame, cmdSuccess = QuitCommand(currentFrame)
 
 	case CmdReplace:
 		var request, request2 TParObject
-		if TparGet2(frame, tparam, command, &request, &request2) {
+		if TparGet2(currentFrame, tparam, command, &request, &request2) {
 			if request.Len == 0 { // If didn't specify, use default
-				if frame.Rep1Tpar.Len == 0 {
+				if currentFrame.Rep1Tpar.Len == 0 {
 					ScreenMessage(MsgNoDefaultStr)
 					return
 				}
 			} else {
-				frame.Rep1Tpar = request // If did specify, save for next time
-				frame.Rep2Tpar = request2
+				currentFrame.Rep1Tpar = request // If did specify, save for next time
+				currentFrame.Rep2Tpar = request2
 				request2.Con = nil
 			}
 			cmdSuccess = EqsGetRepRep(
-				frame,
+				currentFrame,
 				rept,
 				count,
-				frame.Rep1Tpar,
-				frame.Rep2Tpar,
+				currentFrame.Rep1Tpar,
+				currentFrame.Rep2Tpar,
 				fromSpan,
 			)
 		}
 
 	case CmdRubout:
-		cmdSuccess = CharcmdRubout(frame, rept, count, fromSpan)
+		cmdSuccess = CharcmdRubout(currentFrame, rept, count, fromSpan)
 
 	case CmdSetMarginLeft:
 		if rept == LeadParamMinus {
-			frame.MarginLeft = InitialMarginLeft
+			currentFrame.MarginLeft = InitialMarginLeft
 		} else {
-			if frame.Dot.Col >= frame.MarginRight {
+			if currentFrame.Dot.Col >= currentFrame.MarginRight {
 				ScreenMessage(MsgLeftMarginGeRight)
 				return
 			}
-			frame.MarginLeft = frame.Dot.Col
+			currentFrame.MarginLeft = currentFrame.Dot.Col
 		}
 		cmdSuccess = true
 
 	case CmdSetMarginRight:
 		if rept == LeadParamMinus {
-			frame.MarginRight = InitialMarginRight
+			currentFrame.MarginRight = InitialMarginRight
 		} else {
-			if frame.Dot.Col <= frame.MarginLeft {
+			if currentFrame.Dot.Col <= currentFrame.MarginLeft {
 				ScreenMessage(MsgLeftMarginGeRight)
 				return
 			}
-			frame.MarginRight = frame.Dot.Col
+			currentFrame.MarginRight = currentFrame.Dot.Col
 		}
 		cmdSuccess = true
 
 	case CmdSpanJump, CmdSpanCompile, CmdSpanCopy, CmdSpanDefine,
 		CmdSpanExecute, CmdSpanExecuteNoRecompile, CmdSpanTransfer:
 		var request TParObject
-		if TparGet1(frame, tparam, command, &request) {
+		if TparGet1(currentFrame, tparam, command, &request) {
 			newName := request.Str.Slice(1, request.Len)
 			switch command {
 			case CmdSpanDefine:
@@ -900,7 +904,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 						ScreenMessage(MsgNoSuchSpan)
 					}
 				} else {
-					cmdSuccess = SpanCreate(newName, theMark, frame.Dot)
+					cmdSuccess = SpanCreate(newName, theMark, currentFrame.Dot)
 				}
 
 			case CmdSpanJump:
@@ -915,16 +919,15 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 						newCol = newSpan.MarkTwo.Col
 						newLine = newSpan.MarkTwo.Line
 					}
-					if newLine.Group.Frame == frame {
-						MarkCreate(frame.Dot.Line, frame.Dot.Col, &frame.Marks[MarkEquals])
-						MarkCreate(newLine, newCol, &frame.Dot)
+					if newLine.Group.Frame == currentFrame {
+						MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &currentFrame.Marks[MarkEquals])
+						MarkCreate(newLine, newCol, &currentFrame.Dot)
 						cmdSuccess = true
 					} else {
 						fr := newLine.Group.Frame
 
-						if newFrame, ok := FrameEdit(frame, fr.Span.Name); ok {
-							frame = newFrame
-							CurrentFrame = frame
+						if newFrame, ok := FrameEdit(currentFrame, fr.Span.Name); ok {
+							currentFrame = newFrame
 							if fr.Marks[MarkEquals] != nil {
 								MarkDestroy(&fr.Marks[MarkEquals])
 							}
@@ -944,17 +947,17 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 						count,
 						newSpan.MarkOne,
 						newSpan.MarkTwo,
-						frame.Dot,                // Dest
-						&frame.Marks[MarkEquals], // New_Start
-						&frame.Dot,               // New_End
+						currentFrame.Dot,                // Dest
+						&currentFrame.Marks[MarkEquals], // New_Start
+						&currentFrame.Dot,               // New_End
 					)
 					if command == CmdSpanTransfer && newSpan.Frame == nil && cmdSuccess {
 						MarkCreate(
-							frame.Marks[MarkEquals].Line,
-							frame.Marks[MarkEquals].Col,
+							currentFrame.Marks[MarkEquals].Line,
+							currentFrame.Marks[MarkEquals].Col,
 							&newSpan.MarkOne,
 						)
-						MarkCreate(frame.Dot.Line, frame.Dot.Col, &newSpan.MarkTwo)
+						MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &newSpan.MarkTwo)
 					}
 				} else {
 					ScreenMessage(MsgNoSuchSpan)
@@ -964,14 +967,16 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				var newSpan, oldSpan *SpanObject
 				if SpanFind(newName, &newSpan, &oldSpan) {
 					if newSpan.Code == nil || command != CmdSpanExecuteNoRecompile {
-						if !CodeCompile(newSpan, true) {
+						var ok bool
+						currentFrame, ok = CodeCompile(currentFrame, newSpan, true)
+						if !ok {
 							return
 						}
 					}
 					if command == CmdSpanCompile {
 						cmdSuccess = true
 					} else {
-						cmdSuccess = CodeInterpret(frame, rept, count, newSpan.Code, true)
+						currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, newSpan.Code, true)
 					}
 				} else {
 					ScreenMessage(MsgNoSuchSpan)
@@ -984,7 +989,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 	case CmdSpanAssign:
 		var request, request2 TParObject
-		if !TparGet2(frame, tparam, command, &request, &request2) {
+		if !TparGet2(currentFrame, tparam, command, &request, &request2) {
 			return
 		}
 		if request.Len == 0 {
@@ -1033,20 +1038,20 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		cmdSuccess = true
 
 	case CmdSplitLine:
-		if frame.Dot.Line.FLink == nil {
-			TextRealizeNull(frame.Dot.Line)
+		if currentFrame.Dot.Line.FLink == nil {
+			TextRealizeNull(currentFrame.Dot.Line)
 		}
-		cmdSuccess = TextSplitLine(frame.Dot, 0, &frame.Marks[MarkEquals])
+		cmdSuccess = TextSplitLine(currentFrame.Dot, 0, &currentFrame.Marks[MarkEquals])
 
 	case CmdSwapLine:
-		cmdSuccess = SwapLine(frame, rept, count)
+		cmdSuccess = SwapLine(currentFrame, rept, count)
 
 	case CmdUserCommandIntroducer:
 		if LudwigMode != LudwigScreen {
 			ScreenMessage(MsgScreenModeOnly)
 			return
 		}
-		cmdSuccess = UserCommandIntroducer(frame)
+		cmdSuccess = UserCommandIntroducer(currentFrame)
 
 	case CmdUserKey:
 		if LudwigMode != LudwigScreen {
@@ -1054,11 +1059,11 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			return
 		}
 		var request, request2 TParObject
-		if TparGet2(frame, tparam, command, &request, &request2) {
+		if TparGet2(currentFrame, tparam, command, &request, &request2) {
 			if request.Len == 0 {
 				cmdSuccess = false
 			} else {
-				cmdSuccess = UserKey(&request, &request2)
+				currentFrame, cmdSuccess = UserKey(currentFrame, &request, &request2)
 			}
 		}
 
@@ -1082,14 +1087,14 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 	case CmdWindowBackward, CmdWindowEnd, CmdWindowForward, CmdWindowLeft,
 		CmdWindowMiddle, CmdWindowNew, CmdWindowRight, CmdWindowScroll,
 		CmdWindowSetHeight, CmdWindowTop, CmdWindowUpdate:
-		cmdSuccess = WindowCommand(frame, command, rept, count, fromSpan)
+		cmdSuccess = WindowCommand(currentFrame, command, rept, count, fromSpan)
 
 	case CmdResizeWindow:
-		ScreenResize()
+		ScreenResize(currentFrame)
 		cmdSuccess = true
 
 	case CmdValidate:
-		cmdSuccess = ValidateCommand(frame, FrameOops, FrameCmd, FrameHeap)
+		cmdSuccess = ValidateCommand(currentFrame, FrameOops, FrameCmd, FrameHeap)
 
 	case CmdBlockDefine, CmdBlockTransfer, CmdBlockCopy:
 		ScreenMessage(MsgNotImplemented)

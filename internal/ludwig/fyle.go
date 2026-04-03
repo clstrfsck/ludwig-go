@@ -634,7 +634,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			if !FileWindthru(frame, fromSpan) {
 				return false
 			}
-			ScreenFixup()
+			ScreenFixup(frame)
 		}
 		if err = freeFile(fileSlot); err != nil {
 			return false

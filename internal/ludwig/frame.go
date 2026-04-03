@@ -968,7 +968,7 @@ func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 		}
 		ScreenWriteln()
 		ScreenWritelnClel()
-		request.Str, request.Len = ScreenGetLineP(newValues, 1, 1)
+		request.Str, request.Len = ScreenGetLineP(frame, newValues, 1, 1)
 		if request.Len > 0 {
 			request.Str.ApplyN(ChToUpper, request.Len, 1)
 			if !setparam(frame, &request) {
