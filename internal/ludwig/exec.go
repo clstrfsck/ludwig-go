@@ -131,7 +131,15 @@ func ExecComputeLineRange(
 }
 
 // Execute executes a command with the specified parameters
-func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tparam *TParObject, fromSpan bool) (cmdSuccess bool) {
+func Execute(
+	f *FrameObject,
+	command Commands,
+	rept LeadParam,
+	count int,
+	tparam *TParObject,
+	fromSpan bool,
+) (frame *FrameObject, cmdSuccess bool) {
+	frame = f
 	ExecLevel++
 	defer func() {
 		ExecLevel--
@@ -316,7 +324,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				TextRealizeNull(frame.Dot.Line)
 				cmdSuccess = ArrowCommand(frame, command, rept, count, fromSpan)
 			} else {
-				cmdSuccess = Execute(frame, CmdSplitLine, rept, count, tparam, fromSpan)
+				frame, cmdSuccess = Execute(frame, CmdSplitLine, rept, count, tparam, fromSpan)
 			}
 		} else {
 			cmdSuccess = ArrowCommand(frame, command, rept, count, fromSpan)
@@ -437,7 +445,6 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 			FrameCmd.ReturnFrame = frame
 			frame = FrameCmd
-			CurrentFrame = frame
 
 			// Zap frame COMMAND's current contents
 			firstLine := FrameCmd.FirstGroup.FirstLine
@@ -453,16 +460,17 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			}
 
 			frame = frame.ReturnFrame
-			CurrentFrame = frame
 		}
 
 		// Recompile and execute frame COMMAND
 		var newSpan, oldSpan *SpanObject
 		if SpanFind(FrameCmd.Span.Name, &newSpan, &oldSpan) {
-			if !CodeCompile(FrameCmd.Span, true) {
+			var ok bool
+			frame, ok = CodeCompile(frame, FrameCmd.Span, true)
+			if !ok {
 				return
 			}
-			cmdSuccess = CodeInterpret(frame, rept, count, FrameCmd.Span.Code, true)
+			frame, cmdSuccess = CodeInterpret(frame, rept, count, FrameCmd.Span.Code, true)
 		}
 
 	case CmdFileInput, CmdFileOutput, CmdFileEdit, CmdFileRead, CmdFileWrite,
@@ -480,7 +488,6 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			newTparam := request
 			FrameCmd.ReturnFrame = frame
 			frame = FrameCmd
-			CurrentFrame = frame
 			// Zap frame COMMAND's current contents
 			firstLine := FrameCmd.FirstGroup.FirstLine
 			lastLine := FrameCmd.LastGroup.LastLine.BLink
@@ -490,17 +497,17 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			}
 			if FileCommand(frame, CmdFileExecute, LeadParamNone, 0, &newTparam, false) {
 				frame = frame.ReturnFrame
-				CurrentFrame = frame
 				// Recompile and execute frame COMMAND
 				var newSpan, oldSpan *SpanObject
 				if SpanFind(FrameCmd.Span.Name, &newSpan, &oldSpan) {
-					if CodeCompile(FrameCmd.Span, true) {
-						cmdSuccess = CodeInterpret(frame, rept, count, FrameCmd.Span.Code, true)
+					var ok bool
+					frame, ok = CodeCompile(frame, FrameCmd.Span, true)
+					if ok {
+						frame, cmdSuccess = CodeInterpret(frame, rept, count, FrameCmd.Span.Code, true)
 					}
 				}
 			} else {
 				frame = frame.ReturnFrame
-				CurrentFrame = frame
 			}
 		}
 
@@ -514,7 +521,6 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			newName := request.Str.Slice(1, request.Len)
 			if newFrame, ok := FrameEdit(frame, newName); ok {
 				frame = newFrame
-				CurrentFrame = frame
 				cmdSuccess = true
 			} else {
 				cmdSuccess = false
@@ -535,11 +541,9 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 		for i := 1; i <= count; i++ {
 			if frame.ReturnFrame == nil {
 				frame = oldFrame
-				CurrentFrame = frame
 				return
 			}
 			frame = frame.ReturnFrame
-			CurrentFrame = frame
 		}
 		cmdSuccess = true
 
@@ -924,7 +928,6 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 
 						if newFrame, ok := FrameEdit(frame, fr.Span.Name); ok {
 							frame = newFrame
-							CurrentFrame = frame
 							if fr.Marks[MarkEquals] != nil {
 								MarkDestroy(&fr.Marks[MarkEquals])
 							}
@@ -964,14 +967,16 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 				var newSpan, oldSpan *SpanObject
 				if SpanFind(newName, &newSpan, &oldSpan) {
 					if newSpan.Code == nil || command != CmdSpanExecuteNoRecompile {
-						if !CodeCompile(newSpan, true) {
+						var ok bool
+						frame, ok = CodeCompile(frame, newSpan, true)
+						if !ok {
 							return
 						}
 					}
 					if command == CmdSpanCompile {
 						cmdSuccess = true
 					} else {
-						cmdSuccess = CodeInterpret(frame, rept, count, newSpan.Code, true)
+						frame, cmdSuccess = CodeInterpret(frame, rept, count, newSpan.Code, true)
 					}
 				} else {
 					ScreenMessage(MsgNoSuchSpan)
@@ -1058,7 +1063,7 @@ func Execute(frame *FrameObject, command Commands, rept LeadParam, count int, tp
 			if request.Len == 0 {
 				cmdSuccess = false
 			} else {
-				cmdSuccess = UserKey(&request, &request2)
+				frame, cmdSuccess = UserKey(frame, &request, &request2)
 			}
 		}
 

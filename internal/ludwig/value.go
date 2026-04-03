@@ -16,7 +16,6 @@ package ludwig
 
 // setupInitialValues initializes all global variables to their default values
 func setupInitialValues() {
-	CurrentFrame = nil
 	LudwigAborted = false
 	ExitAbort = false
 	Hangup = false

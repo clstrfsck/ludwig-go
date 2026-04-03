@@ -28,7 +28,6 @@ func QuitCommand(frame *FrameObject) bool {
 				if newSpan.Frame.TextModified && newSpan.Frame.OutputFile == 0 &&
 					newSpan.Frame.InputFile != 0 {
 					frame = newSpan.Frame
-					CurrentFrame = frame
 					MarkCreate(
 						newSpan.Frame.Marks[MarkModified].Line,
 						newSpan.Frame.Marks[MarkModified].Col,

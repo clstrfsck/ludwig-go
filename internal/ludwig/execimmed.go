@@ -183,21 +183,22 @@ outerLoop:
 
 		if !skipExec {
 			if key == CommandIntroducer {
-				if CodeCompile(&cmdSpan, false) {
-					cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, false)
+				var ok bool
+				frame, ok = CodeCompile(frame, &cmdSpan, false)
+				if ok {
+					frame, cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, false)
 				} else {
 					cmdSuccess = false
 				}
 			} else {
 				if Lookup[key].Command == CmdExtended {
-					cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, Lookup[key].Code, true)
+					frame, cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, Lookup[key].Code, true)
 				} else {
-					cmdSuccess = Execute(
+					frame, cmdSuccess = Execute(
 						frame, Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
 					)
 				}
 			}
-			frame = CurrentFrame
 		}
 
 		if TtControlC {
@@ -260,11 +261,12 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 			); ok {
 				if cmdSpan.MarkOne.Line != nil {
 					cmdSpan.MarkTwo.Col = cmdSpan.MarkTwo.Line.Used + 1
-					if CodeCompile(&cmdSpan, true) {
-						if !CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, true) {
+					frame, ok = CodeCompile(frame, &cmdSpan, true)
+					if ok {
+						frame, ok = CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, true)
+						if !ok {
 							fmt.Println("\aCOMMAND FAILED")
 						}
-						frame = CurrentFrame
 					}
 					ExitAbort = false
 					TtControlC = false
