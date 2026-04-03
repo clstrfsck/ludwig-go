@@ -49,7 +49,7 @@ func SysSuspend() bool {
 
 // SysShell launches a shell
 func SysShell() bool {
-	// FIXME: Should really make this work
+	// TODO: Should really make this work
 	return false
 }
 

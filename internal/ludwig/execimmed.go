@@ -184,13 +184,13 @@ outerLoop:
 		if !skipExec {
 			if key == CommandIntroducer {
 				if CodeCompile(&cmdSpan, false) {
-					cmdSuccess = CodeInterpret(LeadParamNone, 1, cmdSpan.Code, false)
+					cmdSuccess = CodeInterpret(CurrentFrame, LeadParamNone, 1, cmdSpan.Code, false)
 				} else {
 					cmdSuccess = false
 				}
 			} else {
 				if Lookup[key].Command == CmdExtended {
-					cmdSuccess = CodeInterpret(LeadParamNone, 1, Lookup[key].Code, true)
+					cmdSuccess = CodeInterpret(CurrentFrame, LeadParamNone, 1, Lookup[key].Code, true)
 				} else {
 					cmdSuccess = Execute(
 						Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
@@ -260,7 +260,7 @@ func executeImmedBatchHardcopy() {
 				if cmdSpan.MarkOne.Line != nil {
 					cmdSpan.MarkTwo.Col = cmdSpan.MarkTwo.Line.Used + 1
 					if CodeCompile(&cmdSpan, true) {
-						if !CodeInterpret(LeadParamNone, 1, cmdSpan.Code, true) {
+						if !CodeInterpret(CurrentFrame, LeadParamNone, 1, cmdSpan.Code, true) {
 							fmt.Println("\aCOMMAND FAILED")
 						}
 					}

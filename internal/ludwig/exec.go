@@ -323,7 +323,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 		}
 
 	case CmdDump:
-		// FIXME: Implement this in a sensible way for golang
+		// TODO: Implement this in a sensible way for golang
 		cmdSuccess = false
 
 	case CmdEqualColumn:
@@ -460,7 +460,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 			if !CodeCompile(FrameCmd.Span, true) {
 				return
 			}
-			cmdSuccess = CodeInterpret(rept, count, FrameCmd.Span.Code, true)
+			cmdSuccess = CodeInterpret(CurrentFrame, rept, count, FrameCmd.Span.Code, true)
 		}
 
 	case CmdFileInput, CmdFileOutput, CmdFileEdit, CmdFileRead, CmdFileWrite,
@@ -491,7 +491,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 				var newSpan, oldSpan *SpanObject
 				if SpanFind(FrameCmd.Span.Name, &newSpan, &oldSpan) {
 					if CodeCompile(FrameCmd.Span, true) {
-						cmdSuccess = CodeInterpret(rept, count, FrameCmd.Span.Code, true)
+						cmdSuccess = CodeInterpret(CurrentFrame, rept, count, FrameCmd.Span.Code, true)
 					}
 				}
 			} else {
@@ -962,7 +962,7 @@ func Execute(command Commands, rept LeadParam, count int, tparam *TParObject, fr
 					if command == CmdSpanCompile {
 						cmdSuccess = true
 					} else {
-						cmdSuccess = CodeInterpret(rept, count, newSpan.Code, true)
+						cmdSuccess = CodeInterpret(CurrentFrame, rept, count, newSpan.Code, true)
 					}
 				} else {
 					ScreenMessage(MsgNoSuchSpan)

@@ -683,7 +683,7 @@ type labelsType struct {
 }
 
 // CodeInterpret interprets compiled code
-func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) bool {
+func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) bool {
 	const maxLevel = 100
 	labels := make([]labelsType, maxLevel+1)
 
@@ -791,7 +791,9 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 						ScreenMessage(DbgCodePtrIsNil)
 						return false
 					}
-					CodeInterpret(currRep, currCnt, currCode, true)
+					CodeInterpret(frame, currRep, currCnt, currCode, true)
+					// FIXME: Temporary until global frame removed
+					frame = CurrentFrame
 
 				case CmdVerify:
 					if !verifyAlways[currCnt] {
@@ -799,15 +801,15 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 							ExitAbort = true
 							interpStatus = failForever
 							pc = 0
-						} else if TparGet1(CurrentFrame, currTpar, CmdVerify, &request) {
+						} else if TparGet1(frame, currTpar, CmdVerify, &request) {
 							if request.Len == 0 {
-								request = CurrentFrame.VerifyTpar
+								request = frame.VerifyTpar
 								if request.Len == 0 {
 									ScreenMessage(MsgNoDefaultStr)
 									return false
 								}
 							} else {
-								CurrentFrame.VerifyTpar = request
+								frame.VerifyTpar = request
 							}
 							if request.Str.Get(1) == 'Y' {
 								// do nothing
@@ -834,6 +836,8 @@ func CodeInterpret(rept LeadParam, count int, codeHead *CodeHeader, fromSpan boo
 					interpStatus = failure
 					pc = currLbl
 				}
+				// FIXME: Temporary until global frame removed
+				frame = CurrentFrame
 				if ExitAbort {
 					interpStatus = failForever
 					pc = 0
