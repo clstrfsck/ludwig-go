@@ -837,7 +837,7 @@ func Execute(
 		MarkCreate(newLine, 1, &frame.Dot)
 
 	case CmdQuit:
-		cmdSuccess = QuitCommand(frame)
+		frame, cmdSuccess = QuitCommand(frame)
 
 	case CmdReplace:
 		var request, request2 TParObject

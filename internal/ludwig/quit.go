@@ -19,7 +19,7 @@ const (
 )
 
 // QuitCommand handles the quit command
-func QuitCommand(frame *FrameObject) bool {
+func QuitCommand(frame *FrameObject) (*FrameObject, bool) {
 	if LudwigMode != LudwigBatch {
 		newSpan := FirstSpan
 	spanLoop:
@@ -44,7 +44,7 @@ func QuitCommand(frame *FrameObject) bool {
 						break spanLoop
 					case VerifyReplyNo, VerifyReplyQuit:
 						ExitAbort = true
-						return false
+						return frame, false
 					}
 				}
 			}
@@ -61,7 +61,7 @@ func QuitCommand(frame *FrameObject) bool {
 	LudwigAborted = false
 	QuitCloseFiles()
 	SysExitSuccess()
-	return true // Given the exit above, this shouldn't happen
+	return frame, true // Given the exit above, this shouldn't happen
 }
 
 // doFrame handles closing files for a single frame
