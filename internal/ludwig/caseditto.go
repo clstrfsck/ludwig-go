@@ -165,7 +165,7 @@ func CaseDittoCommand(frame *FrameObject, command Commands, rept LeadParam, coun
 			break
 		}
 		if cmdValid {
-			ScreenFixup(frame)
+			ScreenFixup(&Screen, frame)
 		} else {
 			VduBeep()
 		}

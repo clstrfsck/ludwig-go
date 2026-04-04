@@ -33,7 +33,7 @@ outerLoop:
 		skipExec := false
 
 		// MAKE SURE THE USER CAN SEE THE CURRENT DOT POSITION.
-		ScreenFixup(frame)
+		ScreenFixup(&Screen, frame)
 
 		var key int
 		if EditMode == ModeCommand {
@@ -83,7 +83,7 @@ outerLoop:
 					}
 
 					// MAKE SURE THE USER CAN SEE THE CURRENT DOT POSITION.
-					ScreenFixup(frame)
+					ScreenFixup(&Screen, frame)
 				}
 
 				// GET THE ECHOING TEXT
@@ -116,13 +116,13 @@ outerLoop:
 				} else {
 					// IF, FOR SOME REASON, THAT FAILED, CORRECT THE VDU IMAGE OF
 					// THE LINE. THIS IS BECAUSE VDU_GET_TEXT HAS CORRUPTED IT.
-					ScreenDrawLine(frame.Dot.Line)
+					ScreenDrawLine(&Screen, frame.Dot.Line)
 					skipExec = true
 					break
 				}
 				if frame.Dot.Col != frame.MarginRight+1 {
 					// FOLLOW THE DOT.
-					ScreenPosition(frame.Dot.Line, frame.Dot.Col)
+					ScreenPosition(&Screen, frame.Dot.Line, frame.Dot.Col)
 					VduMoveCurs(
 						frame.Dot.Col-frame.ScrOffset,
 						frame.Dot.Line.ScrRowNr,
@@ -204,9 +204,9 @@ outerLoop:
 		if TtControlC {
 			TtControlC = false
 			if frame.Dot.Line.ScrRowNr != 0 {
-				ScreenRedraw()
+				ScreenRedraw(&Screen)
 			} else {
-				ScreenUnload()
+				ScreenUnload(&Screen)
 			}
 		} else if !cmdSuccess {
 			VduBeep()  // Complain.
@@ -248,7 +248,7 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 
 			// If necessary, prompt.
 			if LudwigMode == LudwigHardcopy {
-				ScreenLoad(frame.Dot.Line)
+				ScreenLoad(&Screen, frame.Dot.Line)
 				fmt.Println("COMMAND: ")
 			}
 

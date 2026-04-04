@@ -40,7 +40,7 @@ func askUser(prompt string) string {
 // HelpHelp displays the help system
 // The argument selects a particular part of the help file to read e.g. SD
 func HelpHelp(selection string) {
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 
 	var topic string
@@ -53,7 +53,7 @@ func HelpHelp(selection string) {
 	if !HelpfileOpen(FileData.OldCmds) {
 		ScreenWriteStr(3, "Can't open HELP file")
 		ScreenWriteln()
-		ScreenPause()
+		ScreenPause(&Screen)
 		topic = ""
 	}
 

@@ -51,7 +51,7 @@ func FileName(fp *FileObject, maxLen int) string {
 
 // FileTable lists the current files.
 func FileTable() {
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 	ScreenWriteStrWidth(0, "Usage   Mod Frame  Filename", 27)
 	ScreenWriteln()
@@ -115,7 +115,7 @@ func FileTable() {
 			ScreenWriteln()
 		}
 	}
-	ScreenPause()
+	ScreenPause(&Screen)
 }
 
 // FileFixEOP updates the end-of-page marker
@@ -127,7 +127,7 @@ func FileFixEOP(eof bool, eopLine *LineHdrObject) {
 	}
 	if eopLine.ScrRowNr != 0 {
 		VduDim()
-		ScreenDrawLine(eopLine)
+		ScreenDrawLine(&Screen, eopLine)
 		VduNormal()
 	}
 }
@@ -299,7 +299,7 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 	}
 	defer func() {
 		if current.TextModified && !fromSpan {
-			ScreenClearMsgs(false)
+			ScreenClearMsgs(&Screen, false)
 		}
 	}()
 
@@ -534,7 +534,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		}
 		FilePage(frame, &ExitAbort)
 		if !fromSpan {
-			ScreenClearMsgs(false)
+			ScreenClearMsgs(&Screen, false)
 		}
 
 	case CmdFileGlobalInput:
@@ -589,7 +589,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		}
 		FilePage(frame, &ExitAbort)
 		if !fromSpan {
-			ScreenClearMsgs(false)
+			ScreenClearMsgs(&Screen, false)
 		}
 
 	case CmdFileExecute:
@@ -634,7 +634,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			if !FileWindthru(frame, fromSpan) {
 				return false
 			}
-			ScreenFixup(frame)
+			ScreenFixup(&Screen, frame)
 		}
 		if err = freeFile(fileSlot); err != nil {
 			return false
@@ -763,7 +763,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			}
 		}
 		if !fromSpan {
-			ScreenClearMsgs(false)
+			ScreenClearMsgs(&Screen, false)
 		}
 
 	case CmdFileRewind:
@@ -781,7 +781,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		}
 		FilePage(frame, &ExitAbort)
 		if !fromSpan {
-			ScreenClearMsgs(false)
+			ScreenClearMsgs(&Screen, false)
 		}
 
 	case CmdFileGlobalRewind:

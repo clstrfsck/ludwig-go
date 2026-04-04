@@ -357,15 +357,15 @@ func TestDoCmdHome(t *testing.T) {
 			ScrOffset: 10,
 		}
 
-		oldScrFrame := ScrFrame
-		oldScrTopLine := ScrTopLine
+		savedFrame := Screen.Frame
+		savedTopLine := Screen.TopLine
 
-		ScrFrame = frame
-		ScrTopLine = topLine
+		Screen.Frame = frame
+		Screen.TopLine = topLine
 
 		defer func() {
-			ScrFrame = oldScrFrame
-			ScrTopLine = oldScrTopLine
+			Screen.Frame = savedFrame
+			Screen.TopLine = savedTopLine
 		}()
 
 		var newEql MarkObject
@@ -384,11 +384,11 @@ func TestDoCmdHome(t *testing.T) {
 		}
 
 		otherFrame := &FrameObject{}
-		oldScrFrame := ScrFrame
-		ScrFrame = otherFrame // Different from frame
+		savedFrame := Screen.Frame
+		Screen.Frame = otherFrame // Different from frame
 
 		defer func() {
-			ScrFrame = oldScrFrame
+			Screen.Frame = savedFrame
 		}()
 
 		var newEql MarkObject

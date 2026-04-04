@@ -485,19 +485,19 @@ func TestLineEOPCreate(t *testing.T) {
 
 func TestLinesInject_Basic(t *testing.T) {
 	// Save and clear global screen variables
-	origScrFrame := ScrFrame
-	origScrTopLine := ScrTopLine
-	origScrBotLine := ScrBotLine
+	savedFrame := Screen.Frame
+	savedTopLine := Screen.TopLine
+	savedBotLine := Screen.BotLine
 
 	t.Cleanup(func() {
-		ScrFrame = origScrFrame
-		ScrTopLine = origScrTopLine
-		ScrBotLine = origScrBotLine
+		Screen.Frame = savedFrame
+		Screen.TopLine = savedTopLine
+		Screen.BotLine = savedBotLine
 	})
 
-	ScrFrame = nil
-	ScrTopLine = nil
-	ScrBotLine = nil
+	Screen.Frame = nil
+	Screen.TopLine = nil
+	Screen.BotLine = nil
 
 	t.Run("InjectIntoEOPGroup", func(t *testing.T) {
 		frame, eopGroup := createTestFrameWithEOP()
@@ -596,19 +596,19 @@ func TestLinesInject_Basic(t *testing.T) {
 
 func TestLinesInject_RequiringNewGroups(t *testing.T) {
 	// Save and clear global screen variables
-	origScrFrame := ScrFrame
-	origScrTopLine := ScrTopLine
-	origScrBotLine := ScrBotLine
+	savedFrame := Screen.Frame
+	savedTopLine := Screen.TopLine
+	savedBotLine := Screen.BotLine
 
 	t.Cleanup(func() {
-		ScrFrame = origScrFrame
-		ScrTopLine = origScrTopLine
-		ScrBotLine = origScrBotLine
+		Screen.Frame = savedFrame
+		Screen.TopLine = savedTopLine
+		Screen.BotLine = savedBotLine
 	})
 
-	ScrFrame = nil
-	ScrTopLine = nil
-	ScrBotLine = nil
+	Screen.Frame = nil
+	Screen.TopLine = nil
+	Screen.BotLine = nil
 
 	t.Run("InjectExceedingGroupCapacity", func(t *testing.T) {
 		frame, eopGroup := createTestFrameWithEOP()
@@ -668,19 +668,19 @@ func TestLinesInject_RequiringNewGroups(t *testing.T) {
 
 func TestLinesExtract_Basic(t *testing.T) {
 	// Save and clear global screen variables
-	origScrFrame := ScrFrame
-	origScrTopLine := ScrTopLine
-	origScrBotLine := ScrBotLine
+	savedFrame := Screen.Frame
+	savedTopLine := Screen.TopLine
+	savedBotLine := Screen.BotLine
 
 	t.Cleanup(func() {
-		ScrFrame = origScrFrame
-		ScrTopLine = origScrTopLine
-		ScrBotLine = origScrBotLine
+		Screen.Frame = savedFrame
+		Screen.TopLine = savedTopLine
+		Screen.BotLine = savedBotLine
 	})
 
-	ScrFrame = nil
-	ScrTopLine = nil
-	ScrBotLine = nil
+	Screen.Frame = nil
+	Screen.TopLine = nil
+	Screen.BotLine = nil
 
 	t.Run("ExtractSingleLine", func(t *testing.T) {
 		frame, _ := emptyTestLineInFrame()
@@ -814,19 +814,19 @@ func TestLinesExtract_Basic(t *testing.T) {
 
 func TestLinesExtract_MultipleGroups(t *testing.T) {
 	// Save and clear global screen variables
-	origScrFrame := ScrFrame
-	origScrTopLine := ScrTopLine
-	origScrBotLine := ScrBotLine
+	savedFrame := Screen.Frame
+	savedTopLine := Screen.TopLine
+	savedBotLine := Screen.BotLine
 
 	t.Cleanup(func() {
-		ScrFrame = origScrFrame
-		ScrTopLine = origScrTopLine
-		ScrBotLine = origScrBotLine
+		Screen.Frame = savedFrame
+		Screen.TopLine = savedTopLine
+		Screen.BotLine = savedBotLine
 	})
 
-	ScrFrame = nil
-	ScrTopLine = nil
-	ScrBotLine = nil
+	Screen.Frame = nil
+	Screen.TopLine = nil
+	Screen.BotLine = nil
 
 	t.Run("ExtractSpanningTwoGroups", func(t *testing.T) {
 		frame, _ := emptyTestLineInFrame()
@@ -928,19 +928,19 @@ func TestLinesExtract_MultipleGroups(t *testing.T) {
 
 func TestLinesInjectExtractIntegration(t *testing.T) {
 	// Save and clear global screen variables
-	origScrFrame := ScrFrame
-	origScrTopLine := ScrTopLine
-	origScrBotLine := ScrBotLine
+	savedFrame := Screen.Frame
+	savedTopLine := Screen.TopLine
+	savedBotLine := Screen.BotLine
 
 	t.Cleanup(func() {
-		ScrFrame = origScrFrame
-		ScrTopLine = origScrTopLine
-		ScrBotLine = origScrBotLine
+		Screen.Frame = savedFrame
+		Screen.TopLine = savedTopLine
+		Screen.BotLine = savedBotLine
 	})
 
-	ScrFrame = nil
-	ScrTopLine = nil
-	ScrBotLine = nil
+	Screen.Frame = nil
+	Screen.TopLine = nil
+	Screen.BotLine = nil
 
 	t.Run("InjectThenExtractSameLines", func(t *testing.T) {
 		frame, eopGroup := createTestFrameWithEOP()

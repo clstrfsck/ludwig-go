@@ -139,7 +139,7 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 						return false
 					}
 					if thisLine.ScrRowNr != scrRow {
-						if thisLine == ScrTopLine {
+						if thisLine == Screen.TopLine {
 							scrRow = thisLine.ScrRowNr
 						} else {
 							ScreenMessage(DbgInvalidScrRowNr)
@@ -147,7 +147,7 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 						}
 					}
 					if scrRow != 0 {
-						if thisLine != ScrBotLine {
+						if thisLine != Screen.BotLine {
 							scrRow++
 						} else {
 							scrRow = 0

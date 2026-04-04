@@ -799,7 +799,7 @@ func Execute(
 		cmdSuccess = FilePage(currentFrame, &ExitAbort)
 		// Clean up the PAGING message
 		if !fromSpan {
-			ScreenClearMsgs(false)
+			ScreenClearMsgs(&Screen, false)
 		}
 
 	case CmdOpSysCommand:
@@ -1090,7 +1090,7 @@ func Execute(
 		cmdSuccess = WindowCommand(currentFrame, command, rept, count, fromSpan)
 
 	case CmdResizeWindow:
-		ScreenResize(currentFrame)
+		ScreenResize(&Screen, currentFrame)
 		cmdSuccess = true
 
 	case CmdValidate:

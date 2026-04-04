@@ -679,14 +679,14 @@ func textInterMove(
 		dstLine.Used = dstCol + textLen - 1
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
-			ScreenDrawLine(dstLine)
+			ScreenDrawLine(&Screen, dstLine)
 		}
 	} else if dstCol <= dstLine.Used {
 		dstLine.Str.Fill(' ', dstCol, dstLine.Used)
 		dstLine.Used = dstLine.Str.TrimmedLen(' ', dstCol)
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
-			ScreenDrawLine(dstLine)
+			ScreenDrawLine(&Screen, dstLine)
 		}
 	}
 

@@ -128,7 +128,7 @@ func SpanDestroy(span **SpanObject) bool {
 
 // SpanIndex displays the list of spans. This is the \SI command.
 func SpanIndex() bool {
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 	p := FirstSpan
 	haveSpan := false
@@ -142,7 +142,7 @@ func SpanIndex() bool {
 		if p.Frame == nil {
 			haveSpan = true
 			if lineCount > TerminalInfo.Height-2 {
-				ScreenPause()
+				ScreenPause(&Screen)
 				ScreenHome(true)
 				ScreenWriteln()
 				ScreenWriteStr(0, "Spans")
@@ -187,7 +187,7 @@ func SpanIndex() bool {
 		if p.Frame != nil {
 			if lineCount > TerminalInfo.Height-2 {
 				if !firstTime {
-					ScreenPause()
+					ScreenPause(&Screen)
 					ScreenHome(true)
 				}
 				ScreenWriteln()
@@ -220,6 +220,6 @@ func SpanIndex() bool {
 		}
 		p = p.FLink
 	}
-	ScreenPause()
+	ScreenPause(&Screen)
 	return true
 }

@@ -574,7 +574,7 @@ func FrameKill(frame *FrameObject, frameName string) bool {
 	}
 
 	thisFrame := sptr.Frame
-	if thisFrame == frame || thisFrame == ScrFrame || thisFrame.Options.Has(OptSpecialFrame) {
+	if thisFrame == frame || thisFrame == Screen.Frame || thisFrame.Options.Has(OptSpecialFrame) {
 		ScreenMessage(MsgCantKillFrame)
 		return false
 	}
@@ -687,7 +687,7 @@ func setwidth(frame *FrameObject, wid int, setInitial bool) bool {
 
 // showOptions displays the current frame options
 func showOptions(frame *FrameObject) {
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 	ScreenWriteStr(0, "    Ludwig Option         Code    State")
 	ScreenWriteln()
@@ -718,7 +718,7 @@ func showOptions(frame *FrameObject) {
 	}
 	ScreenWriteln()
 	ScreenWriteln()
-	ScreenPause()
+	ScreenPause(&Screen)
 	ScreenHome(true) // wipe out the display
 }
 
@@ -869,7 +869,7 @@ func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 	}
 
 	// Display parameters and stats
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 	for {
 		ScreenHome(false) // Don't clear the screen here!
@@ -968,7 +968,7 @@ func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 		}
 		ScreenWriteln()
 		ScreenWritelnClel()
-		request.Str, request.Len = ScreenGetLineP(frame, newValues, 1, 1)
+		request.Str, request.Len = ScreenGetLineP(&Screen, frame, newValues, 1, 1)
 		if request.Len > 0 {
 			request.Str.ApplyN(ChToUpper, request.Len, 1)
 			if !setparam(frame, &request) {
