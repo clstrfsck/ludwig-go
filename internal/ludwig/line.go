@@ -210,8 +210,8 @@ func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *
 	thisFrame.SpaceLeft -= space
 
 	// Update the screen
-	if beforeLine.ScrRowNr != 0 && beforeLine != ScrTopLine {
-		ScreenLinesInject(firstLine, nrNewLines, beforeLine)
+	if beforeLine.ScrRowNr != 0 && beforeLine != Screen.TopLine {
+		ScreenLinesInject(&Screen, firstLine, nrNewLines, beforeLine)
 	}
 }
 
@@ -234,24 +234,24 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) {
 	firstLineNr := firstGroup.FirstLineNr + firstLineOffsetNr
 	nrLinesToRemove := lastGroup.FirstLineNr + lastLine.OffsetNr - firstLineNr + 1
 
-	if thisFrame == ScrFrame {
+	if thisFrame == Screen.Frame {
 		var firstScrLine *LineHdrObject
 		var lastScrLine *LineHdrObject
 
 		if firstLine.ScrRowNr != 0 {
 			firstScrLine = firstLine
-		} else if firstLineNr < ScrTopLine.Group.FirstLineNr+ScrTopLine.OffsetNr {
-			firstScrLine = ScrTopLine
+		} else if firstLineNr < Screen.TopLine.Group.FirstLineNr+Screen.TopLine.OffsetNr {
+			firstScrLine = Screen.TopLine
 		}
 
 		if lastLine.ScrRowNr != 0 {
 			lastScrLine = lastLine
-		} else if lastLine.Group.FirstLineNr+lastLine.OffsetNr > ScrBotLine.Group.FirstLineNr+ScrBotLine.OffsetNr {
-			lastScrLine = ScrBotLine
+		} else if lastLine.Group.FirstLineNr+lastLine.OffsetNr > Screen.BotLine.Group.FirstLineNr+Screen.BotLine.OffsetNr {
+			lastScrLine = Screen.BotLine
 		}
 
 		if firstScrLine != nil && lastScrLine != nil {
-			ScreenLinesExtract(firstScrLine, lastScrLine)
+			ScreenLinesExtract(&Screen, firstScrLine, lastScrLine)
 		}
 	}
 

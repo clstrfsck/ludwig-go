@@ -110,7 +110,7 @@ func UserKeyInitialize() {
 // UserCommandIntroducer enters command introducer into text in correct keyboard mode
 func UserCommandIntroducer(frame *FrameObject) bool {
 	if !ChIsPrintable(rune(CommandIntroducer)) {
-		ScreenMessage(MsgNonprintableIntroducer)
+		ScreenMessage(&Screen, MsgNonprintableIntroducer)
 		return false
 	}
 
@@ -149,7 +149,7 @@ func UserKey(frame *FrameObject, key *TParObject, strng *TParObject) (*FrameObje
 		keyName := key.Str.Slice(1, key.Len)
 		var found bool
 		if keyCode, found = UserKeyNameToCode(keyName); !found {
-			ScreenMessage(MsgUnrecognizedKeyName)
+			ScreenMessage(&Screen, MsgUnrecognizedKeyName)
 			return frame, false
 		}
 	}
@@ -208,6 +208,6 @@ func UserSubprocess() bool {
 
 // UserUndo performs undo operation (not implemented)
 func UserUndo() bool {
-	ScreenMessage(MsgNotImplemented)
+	ScreenMessage(&Screen, MsgNotImplemented)
 	return false
 }

@@ -77,11 +77,7 @@ var CommandIntroducer int
 
 var PromptRegion [MaxTpCount + 1]PromptRegionAttrib
 
-var ScrFrame *FrameObject
-var ScrTopLine *LineHdrObject
-var ScrBotLine *LineHdrObject
-var ScrMsgRow int
-var ScrNeedsFix bool
+var Screen ScreenState
 
 // Compiler variables
 var CompilerCode [MaxCode + 1]CodeObject

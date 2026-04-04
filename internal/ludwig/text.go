@@ -219,13 +219,13 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 	// Check for the simple case
 	if tp.Con == nil {
 		if !TextInsert(true, 1, tp.Str, tp.Len, beforeMark) {
-			ScreenMessage(MsgNoRoomOnLine)
+			ScreenMessage(&Screen, MsgNoRoomOnLine)
 			return false
 		}
 		MarkCreate(beforeMark.Line, beforeMark.Col-tp.Len, equalsMark)
 	} else {
 		if beforeMark.Col+tp.Len > MaxStrLen {
-			ScreenMessage(MsgNoRoomOnLine)
+			ScreenMessage(&Screen, MsgNoRoomOnLine)
 			return false
 		}
 		lineCount := 0
@@ -235,7 +235,7 @@ func TextInsertTpar(tp *TParObject, beforeMark *MarkObject, equalsMark **MarkObj
 			tmpTp = tmpTp.Con
 		}
 		if tmpTp.Len+(beforeMark.Line.Used-beforeMark.Col) > MaxStrLen {
-			ScreenMessage(MsgNoRoomOnLine)
+			ScreenMessage(&Screen, MsgNoRoomOnLine)
 			return false
 		}
 		firstLine, lastLine := LinesCreate(lineCount)
@@ -679,14 +679,14 @@ func textInterMove(
 		dstLine.Used = dstCol + textLen - 1
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
-			ScreenDrawLine(dstLine)
+			ScreenDrawLine(&Screen, dstLine)
 		}
 	} else if dstCol <= dstLine.Used {
 		dstLine.Str.Fill(' ', dstCol, dstLine.Used)
 		dstLine.Used = dstLine.Str.TrimmedLen(' ', dstCol)
 		SyntaxMarkLineDirty(dstLine.Group.Frame, dstLine)
 		if dstLine.ScrRowNr != 0 {
-			ScreenDrawLine(dstLine)
+			ScreenDrawLine(&Screen, dstLine)
 		}
 	}
 
@@ -715,7 +715,7 @@ func TextMove(
 			return false
 		}
 		if !cmdSuccess {
-			ScreenMessage(MsgNoRoomOnLine)
+			ScreenMessage(&Screen, MsgNoRoomOnLine)
 			return false
 		}
 		if !copy {
@@ -731,7 +731,7 @@ func TextMove(
 // TextSplitLine splits a line at a mark position
 func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) bool {
 	if beforeMark.Line.FLink == nil {
-		ScreenMessage(MsgCantSplitNullLine)
+		ScreenMessage(&Screen, MsgCantSplitNullLine)
 		return false
 	}
 	if newCol == 0 {
@@ -742,7 +742,7 @@ func TextSplitLine(beforeMark *MarkObject, newCol int, equalsMark **MarkObject) 
 		length = 0
 	} else {
 		if (newCol + length) > MaxStrLenP {
-			ScreenMessage(MsgNoRoomOnLine)
+			ScreenMessage(&Screen, MsgNoRoomOnLine)
 			return false
 		}
 	}

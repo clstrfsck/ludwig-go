@@ -337,16 +337,16 @@ func SyntaxApplyDirty(frame *FrameObject) {
 		frame.DirtyLine = 0
 		SyntaxRehighlightFrom(frame, h, idx)
 		// Redraw visible lines so updated HlMatch values are shown.
-		if ScrFrame == frame && ScrTopLine != nil {
-			scrTopLineNum := ScrTopLine.Group.FirstLineNr + ScrTopLine.OffsetNr
-			line := ScrTopLine
+		if Screen.Frame == frame && Screen.TopLine != nil {
+			scrTopLineNum := Screen.TopLine.Group.FirstLineNr + Screen.TopLine.OffsetNr
+			line := Screen.TopLine
 			for idx+1 > scrTopLineNum && line.FLink != nil {
 				line = line.FLink
 				scrTopLineNum++
 			}
 			for line != nil {
-				ScreenDrawLine(line)
-				if line == ScrBotLine {
+				ScreenDrawLine(&Screen, line)
+				if line == Screen.BotLine {
 					break
 				}
 				line = line.FLink

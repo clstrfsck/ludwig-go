@@ -29,9 +29,9 @@ func progWindup(setHangup bool) {
 	// THIS EXIT HANDLER WAS, HENCE THE VDU IS NO LONGER AVAIL.
 
 	LudwigMode = LudwigBatch
-	ScrFrame = nil
-	ScrTopLine = nil
-	ScrBotLine = nil
+	Screen.Frame = nil
+	Screen.TopLine = nil
+	Screen.BotLine = nil
 	TtControlC = false
 	ExitAbort = false
 
@@ -515,7 +515,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 
 	for _, arg := range argv {
 		if len(arg) > FileNameLen {
-			ScreenMessage(MsgParameterTooLong)
+			ScreenMessage(&Screen, MsgParameterTooLong)
 			return nil, false
 		}
 	}
@@ -550,7 +550,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 	// be zero). This avoids any need for special checks about Ludwig being
 	// in Screen mode before clearing messages.
 
-	ScrMsgRow = TerminalInfo.Height + 1
+	Screen.MsgRow = TerminalInfo.Height + 1
 
 	// Create the three automatically defined frames: OOPS, COMMAND and LUDWIG.
 	// Save pointers to COMMAND & OOPS  frames for use in later frame routines.
@@ -585,7 +585,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 	}
 
 	if LudwigMode == LudwigScreen {
-		ScreenFixup(currentFrame)
+		ScreenFixup(&Screen, currentFrame)
 	}
 
 	// Load the key definitions.
@@ -607,7 +607,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 	// Load the input file.
 
 	if LudwigMode != LudwigBatch {
-		ScreenMessage(MsgCopyrightAndLoadingFile)
+		ScreenMessage(&Screen, MsgCopyrightAndLoadingFile)
 		if LudwigMode == LudwigScreen {
 			VduFlush()
 		}
@@ -616,10 +616,10 @@ func startUp(argv []string) (*FrameObject, bool) {
 		return currentFrame, false
 	}
 	if LudwigMode != LudwigBatch {
-		ScreenClearMsgs(false)
+		ScreenClearMsgs(&Screen, false)
 	}
 	if LudwigMode == LudwigScreen {
-		ScreenFixup(currentFrame)
+		ScreenFixup(&Screen, currentFrame)
 	}
 
 	// Execute the user's initialization string.

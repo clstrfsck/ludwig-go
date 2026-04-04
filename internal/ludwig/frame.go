@@ -74,7 +74,7 @@ func (p *tparParser) setOptions(frame *FrameObject, setInitial bool) bool {
 			ok = setOpt(frame, ch, seton, &frame.Options)
 			ch = p.nextChar()
 			if ch != ',' && ch != ')' {
-				ScreenMessage(MsgSyntaxErrorInOptions)
+				ScreenMessage(&Screen, MsgSyntaxErrorInOptions)
 				return false
 			}
 			if !ok || ch == ')' {
@@ -106,7 +106,7 @@ func (p *tparParser) setMode() bool {
 	case 'C':
 		EditMode = ModeCommand
 	default:
-		ScreenMessage(MsgModeError)
+		ScreenMessage(&Screen, MsgModeError)
 		// FIXME: Original always returns true, but this should probably fail.
 		// return false
 	}
@@ -133,20 +133,20 @@ func (p *tparParser) setCmdIntr() bool {
 				VduNewIntroducer(CommandIntroducer)
 				return true
 			}
-			ScreenMessage(MsgInvalidCmdIntroducer)
+			ScreenMessage(&Screen, MsgInvalidCmdIntroducer)
 		} else if keyCode, found := UserKeyNameToCode(keyNameStr); found {
 			if _, found := KeyIntroducers[keyCode]; found {
-				ScreenMessage(MsgInvalidCmdIntroducer)
+				ScreenMessage(&Screen, MsgInvalidCmdIntroducer)
 			} else {
 				CommandIntroducer = keyCode
 				VduNewIntroducer(CommandIntroducer)
 				return true
 			}
 		} else {
-			ScreenMessage(MsgUnrecognizedKeyName)
+			ScreenMessage(&Screen, MsgUnrecognizedKeyName)
 		}
 	} else {
-		ScreenMessage(MsgScreenModeOnly)
+		ScreenMessage(&Screen, MsgScreenModeOnly)
 	}
 	return false
 }
@@ -235,7 +235,7 @@ func (p *tparParser) setTabs(frame *FrameObject, setInitial bool) bool {
 		}
 		legal = legal && (lastMargin == lmRight)
 		if !legal {
-			ScreenMessage(MsgInvalidRuler)
+			ScreenMessage(&Screen, MsgInvalidRuler)
 			return false
 		}
 
@@ -275,7 +275,7 @@ func (p *tparParser) setTabs(frame *FrameObject, setInitial bool) bool {
 
 	case 'S': // Set tab
 		if frame.Dot.Col == MaxStrLenP {
-			ScreenMessage(MsgOutOfRangeTabValue)
+			ScreenMessage(&Screen, MsgOutOfRangeTabValue)
 			return false
 		}
 		if setInitial {
@@ -285,7 +285,7 @@ func (p *tparParser) setTabs(frame *FrameObject, setInitial bool) bool {
 
 	case 'C': // Clear tab
 		if frame.Dot.Col == MaxStrLenP {
-			ScreenMessage(MsgOutOfRangeTabValue)
+			ScreenMessage(&Screen, MsgOutOfRangeTabValue)
 			return false
 		}
 		if setInitial {
@@ -318,18 +318,18 @@ func (p *tparParser) setTabs(frame *FrameObject, setInitial bool) bool {
 		for {
 			n, found := p.toInt()
 			if !found {
-				ScreenMessage(MsgBadFormatInTabTable)
+				ScreenMessage(&Screen, MsgBadFormatInTabTable)
 				return false
 			}
 			if n >= 1 && n <= MaxStrLen {
 				temptab[n] = true
 			} else {
-				ScreenMessage(MsgOutOfRangeTabValue)
+				ScreenMessage(&Screen, MsgOutOfRangeTabValue)
 				return false
 			}
 			ch = p.nextChar()
 			if ch != ',' && ch != ')' {
-				ScreenMessage(MsgBadFormatInTabTable)
+				ScreenMessage(&Screen, MsgBadFormatInTabTable)
 				return false
 			}
 			if ch == ')' {
@@ -342,7 +342,7 @@ func (p *tparParser) setTabs(frame *FrameObject, setInitial bool) bool {
 		frame.TabStops = temptab
 
 	default:
-		ScreenMessage(MsgInvalidTOption)
+		ScreenMessage(&Screen, MsgInvalidTOption)
 		return false
 	}
 	return true
@@ -369,7 +369,7 @@ func (p *tparParser) setLRMargin(frame *FrameObject, setInitial bool) bool {
 		frame.MarginLeft = tl
 		frame.MarginRight = tr
 	} else {
-		ScreenMessage(MsgLeftMarginGeRight)
+		ScreenMessage(&Screen, MsgLeftMarginGeRight)
 		return false
 	}
 	return true
@@ -389,7 +389,7 @@ func (p *tparParser) setTBMargin(frame *FrameObject, setInitial bool) bool {
 		return false
 	}
 	if tt+tb >= frame.ScrHeight {
-		ScreenMessage(MsgMarginOutOfRange)
+		ScreenMessage(&Screen, MsgMarginOutOfRange)
 		return false
 	}
 	if setInitial {
@@ -412,7 +412,7 @@ func (p *tparParser) getMargins(
 ) bool {
 	ch := p.nextChar()
 	if ch != '(' {
-		ScreenMessage(MsgMarginSyntaxError)
+		ScreenMessage(&Screen, MsgMarginSyntaxError)
 		return false
 	}
 	ch = p.nextChar()
@@ -440,7 +440,7 @@ func (p *tparParser) getMargins(
 		}
 	}
 	if ch != ')' {
-		ScreenMessage(MsgMarginSyntaxError)
+		ScreenMessage(&Screen, MsgMarginSyntaxError)
 		return false
 	}
 	return true
@@ -455,7 +455,7 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 			return false
 		}
 		if m < loBnd || m > hiBnd {
-			ScreenMessage(MsgMarginOutOfRange)
+			ScreenMessage(&Screen, MsgMarginOutOfRange)
 			return false
 		}
 		*ch = p.nextChar()
@@ -485,7 +485,7 @@ func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 			}
 			return ptr.Frame, true
 		}
-		ScreenMessage(MsgSpanOfThatNameExists)
+		ScreenMessage(&Screen, MsgSpanOfThatNameExists)
 		return nil, false
 	}
 
@@ -565,22 +565,22 @@ func FrameKill(frame *FrameObject, frameName string) bool {
 	var sptr *SpanObject
 
 	if !SpanFind(frameName, &sptr, &oldp) {
-		ScreenMessage(MsgNoSuchFrame)
+		ScreenMessage(&Screen, MsgNoSuchFrame)
 		return false
 	}
 	if sptr.Frame == nil {
-		ScreenMessage(MsgNoSuchFrame)
+		ScreenMessage(&Screen, MsgNoSuchFrame)
 		return false
 	}
 
 	thisFrame := sptr.Frame
-	if thisFrame == frame || thisFrame == ScrFrame || thisFrame.Options.Has(OptSpecialFrame) {
-		ScreenMessage(MsgCantKillFrame)
+	if thisFrame == frame || thisFrame == Screen.Frame || thisFrame.Options.Has(OptSpecialFrame) {
+		ScreenMessage(&Screen, MsgCantKillFrame)
 		return false
 	}
 
 	if thisFrame.InputFile != 0 || thisFrame.OutputFile != 0 {
-		ScreenMessage(MsgFrameHasFilesAttached)
+		ScreenMessage(&Screen, MsgFrameHasFilesAttached)
 		return false
 	}
 
@@ -668,7 +668,7 @@ func FrameSetHeight(frame *FrameObject, sh int, setInitial bool) bool {
 		frame.MarginBottom = band
 		return true
 	}
-	ScreenMessage(MsgInvalidScreenHeight)
+	ScreenMessage(&Screen, MsgInvalidScreenHeight)
 	return false
 }
 
@@ -681,13 +681,13 @@ func setwidth(frame *FrameObject, wid int, setInitial bool) bool {
 		frame.ScrWidth = wid
 		return true
 	}
-	ScreenMessage(MsgScreenWidthInvalid)
+	ScreenMessage(&Screen, MsgScreenWidthInvalid)
 	return false
 }
 
 // showOptions displays the current frame options
 func showOptions(frame *FrameObject) {
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 	ScreenWriteStr(0, "    Ludwig Option         Code    State")
 	ScreenWriteln()
@@ -718,7 +718,7 @@ func showOptions(frame *FrameObject) {
 	}
 	ScreenWriteln()
 	ScreenWriteln()
-	ScreenPause()
+	ScreenPause(&Screen)
 	ScreenHome(true) // wipe out the display
 }
 
@@ -746,7 +746,7 @@ func setOpt(frame *FrameObject, ch byte, seton bool, options *FrameOptions) bool
 			options.Clear(OptNewLine)
 		}
 	default:
-		ScreenMessage(MsgUnknownOption)
+		ScreenMessage(&Screen, MsgUnknownOption)
 		return false
 	}
 	return true
@@ -763,7 +763,7 @@ func setparam(frame *FrameObject, request *TParObject) bool {
 			ch = p.nextChar()
 		}
 		if p.nextChar() != '=' {
-			ScreenMessage(MsgOptionsSyntaxError)
+			ScreenMessage(&Screen, MsgOptionsSyntaxError)
 			return false
 		}
 		ok := false
@@ -793,7 +793,7 @@ func setparam(frame *FrameObject, request *TParObject) bool {
 		case 'K':
 			ok = p.setMode()
 		default:
-			ScreenMessage(MsgInvalidParameterCode)
+			ScreenMessage(&Screen, MsgInvalidParameterCode)
 			return false
 		}
 		if !ok {
@@ -803,7 +803,7 @@ func setparam(frame *FrameObject, request *TParObject) bool {
 		if ch == ',' || ch == 0 {
 			ch = p.nextChar()
 		} else {
-			ScreenMessage(MsgSyntaxErrorInParamCmd)
+			ScreenMessage(&Screen, MsgSyntaxErrorInParamCmd)
 			return false
 		}
 	}
@@ -869,18 +869,17 @@ func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 	}
 
 	// Display parameters and stats
-	ScreenUnload()
+	ScreenUnload(&Screen)
 	ScreenHome(true)
 	for {
 		ScreenHome(false) // Don't clear the screen here!
 		ScreenWriteStr(0, " Ludwig ")
-		for i := 0; i < 8 && i < len(LudwigVersion); i++ {
-			ScreenWriteCh(0, LudwigVersion[i])
-		}
+		ScreenWriteStr(0, LudwigVersion)
 		ScreenWriteStr(5, "Parameters      Frame: ")
 		ScreenWriteNameStr(0, frame.Span.Name, NameLen)
 		ScreenWritelnClel()
-		ScreenWriteStr(0, " ===============     ==========      =====")
+		ScreenWriteStr(1, strings.Repeat("=", 7+len(LudwigVersion)))
+		ScreenWriteStr(0, "     ==========      =====")
 		ScreenWritelnClel()
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Unused  memory available in frame    =")
@@ -968,7 +967,7 @@ func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 		}
 		ScreenWriteln()
 		ScreenWritelnClel()
-		request.Str, request.Len = ScreenGetLineP(frame, newValues, 1, 1)
+		request.Str, request.Len = ScreenGetLineP(&Screen, frame, newValues, 1, 1)
 		if request.Len > 0 {
 			request.Str.ApplyN(ChToUpper, request.Len, 1)
 			if !setparam(frame, &request) {

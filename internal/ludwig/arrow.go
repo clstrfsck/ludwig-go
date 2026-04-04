@@ -71,7 +71,7 @@ func ArrowCommand(frame *FrameObject, command Commands, rept LeadParam, count in
 		if fromSpan {
 			break
 		}
-		ScreenFixup(frame)
+		ScreenFixup(&Screen, frame)
 		if !cmdValid || ((command == CmdDown) && (rept != LeadParamPIndef) &&
 			(frame.Dot.Line.FLink == nil)) {
 			VduBeep()
@@ -134,8 +134,8 @@ func doCmdDown(frame *FrameObject, rept LeadParam, count int, newEql *MarkObject
 
 func doCmdHome(frame *FrameObject, newEql *MarkObject) bool {
 	*newEql = *frame.Dot
-	if frame == ScrFrame {
-		MarkCreate(ScrTopLine, frame.ScrOffset+1, &frame.Dot)
+	if frame == Screen.Frame {
+		MarkCreate(Screen.TopLine, frame.ScrOffset+1, &frame.Dot)
 	}
 	return true
 }
