@@ -874,13 +874,12 @@ func FrameParameter(frame *FrameObject, tpar *TParObject) bool {
 	for {
 		ScreenHome(false) // Don't clear the screen here!
 		ScreenWriteStr(0, " Ludwig ")
-		for i := 0; i < 8 && i < len(LudwigVersion); i++ {
-			ScreenWriteCh(0, LudwigVersion[i])
-		}
+		ScreenWriteStr(0, LudwigVersion)
 		ScreenWriteStr(5, "Parameters      Frame: ")
 		ScreenWriteNameStr(0, frame.Span.Name, NameLen)
 		ScreenWritelnClel()
-		ScreenWriteStr(0, " ===============     ==========      =====")
+		ScreenWriteStr(1, strings.Repeat("=", 7+len(LudwigVersion)))
+		ScreenWriteStr(0, "     ==========      =====")
 		ScreenWritelnClel()
 		ScreenWritelnClel()
 		ScreenWriteStr(3, "Unused  memory available in frame    =")
