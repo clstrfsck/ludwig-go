@@ -79,7 +79,7 @@ func epsilonClosures(
 			stack[stackTop] = state
 			closure.EquivSet[state] = true
 		} else {
-			ScreenMessage(MsgPatPatternTooComplex)
+			ScreenMessage(&Screen, MsgPatPatternTooComplex)
 			return false
 		}
 		return true
@@ -299,7 +299,7 @@ func PatternDFAConvert(
 			dts.LeftContextCheck = false
 			dts.FinalAccept = false
 		} else {
-			ScreenMessage(MsgPatPatternTooComplex)
+			ScreenMessage(&Screen, MsgPatPatternTooComplex)
 			return false
 		}
 		*stateCount = statesUsed

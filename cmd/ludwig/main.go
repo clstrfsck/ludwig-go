@@ -515,7 +515,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 
 	for _, arg := range argv {
 		if len(arg) > FileNameLen {
-			ScreenMessage(MsgParameterTooLong)
+			ScreenMessage(&Screen, MsgParameterTooLong)
 			return nil, false
 		}
 	}
@@ -607,7 +607,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 	// Load the input file.
 
 	if LudwigMode != LudwigBatch {
-		ScreenMessage(MsgCopyrightAndLoadingFile)
+		ScreenMessage(&Screen, MsgCopyrightAndLoadingFile)
 		if LudwigMode == LudwigScreen {
 			VduFlush()
 		}

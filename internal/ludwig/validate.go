@@ -30,12 +30,12 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 	)
 
 	if currentFrame == nil || frameOops == nil || frameCmd == nil || frameHeap == nil {
-		ScreenMessage(DbgInvalidFramePtr)
+		ScreenMessage(&Screen, DbgInvalidFramePtr)
 		return false
 	}
 
 	if FirstSpan == nil {
-		ScreenMessage(DbgInvalidSpanPtr)
+		ScreenMessage(&Screen, DbgInvalidSpanPtr)
 		return false
 	}
 
@@ -47,16 +47,16 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 
 	for thisSpan != nil {
 		if thisSpan.BLink != prevSpan {
-			ScreenMessage(DbgInvalidBlink)
+			ScreenMessage(&Screen, DbgInvalidBlink)
 			return false
 		}
 		if thisSpan.MarkOne == nil || thisSpan.MarkTwo == nil {
-			ScreenMessage(DbgMarkPtrIsNil)
+			ScreenMessage(&Screen, DbgMarkPtrIsNil)
 			return false
 		}
 		if thisSpan.Code != nil {
 			if thisSpan.Code.Ref == 0 {
-				ScreenMessage(DbgRefCountIsZero)
+				ScreenMessage(&Screen, DbgRefCountIsZero)
 				return false
 			}
 		}
@@ -72,16 +72,16 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 			}
 
 			if thisFrame.FirstGroup == nil || thisFrame.LastGroup == nil {
-				ScreenMessage(DbgInvalidGroupPtr)
+				ScreenMessage(&Screen, DbgInvalidGroupPtr)
 				return false
 			}
 			if thisFrame.FirstGroup.BLink != nil {
-				ScreenMessage(DbgFirstNotAtTop)
+				ScreenMessage(&Screen, DbgFirstNotAtTop)
 				return false
 			}
 			endGroup := thisFrame.LastGroup.FLink
 			if endGroup != nil {
-				ScreenMessage(DbgLastNotAtEnd)
+				ScreenMessage(&Screen, DbgLastNotAtEnd)
 				return false
 			}
 			thisGroup := thisFrame.FirstGroup
@@ -93,19 +93,19 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 
 			for thisGroup != endGroup {
 				if thisGroup.BLink != prevGroup {
-					ScreenMessage(DbgInvalidBlink)
+					ScreenMessage(&Screen, DbgInvalidBlink)
 					return false
 				}
 				if thisGroup.Frame != thisFrame {
-					ScreenMessage(DbgInvalidFramePtr)
+					ScreenMessage(&Screen, DbgInvalidFramePtr)
 					return false
 				}
 				if thisGroup.FirstLine == nil || thisGroup.LastLine == nil {
-					ScreenMessage(DbgLinePtrIsNil)
+					ScreenMessage(&Screen, DbgLinePtrIsNil)
 					return false
 				}
 				if thisGroup.FirstLine != thisLine {
-					ScreenMessage(DbgFirstNotAtTop)
+					ScreenMessage(&Screen, DbgFirstNotAtTop)
 					return false
 				}
 				lineCount := 0
@@ -113,36 +113,36 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 
 				for thisLine != endLine {
 					if thisLine.BLink != prevLine {
-						ScreenMessage(DbgInvalidBlink)
+						ScreenMessage(&Screen, DbgInvalidBlink)
 						return false
 					}
 					if thisLine.Group != thisGroup {
-						ScreenMessage(DbgInvalidGroupPtr)
+						ScreenMessage(&Screen, DbgInvalidGroupPtr)
 						return false
 					}
 					if thisLine.OffsetNr != lineCount {
-						ScreenMessage(DbgInvalidOffsetNr)
+						ScreenMessage(&Screen, DbgInvalidOffsetNr)
 						return false
 					}
 					for _, thisMark := range thisLine.Marks {
 						if thisMark.Line != thisLine {
-							ScreenMessage(DbgInvalidLinePtr)
+							ScreenMessage(&Screen, DbgInvalidLinePtr)
 							return false
 						}
 					}
 					if thisLine.Str == nil && thisLine.Len() != 0 {
-						ScreenMessage(DbgInvalidLineLength)
+						ScreenMessage(&Screen, DbgInvalidLineLength)
 						return false
 					}
 					if thisLine.Used > thisLine.Len() {
-						ScreenMessage(DbgInvalidLineUsedLength)
+						ScreenMessage(&Screen, DbgInvalidLineUsedLength)
 						return false
 					}
 					if thisLine.ScrRowNr != scrRow {
 						if thisLine == Screen.TopLine {
 							scrRow = thisLine.ScrRowNr
 						} else {
-							ScreenMessage(DbgInvalidScrRowNr)
+							ScreenMessage(&Screen, DbgInvalidScrRowNr)
 							return false
 						}
 					}
@@ -159,15 +159,15 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 				}
 
 				if thisGroup.LastLine != prevLine {
-					ScreenMessage(DbgLastNotAtEnd)
+					ScreenMessage(&Screen, DbgLastNotAtEnd)
 					return false
 				}
 				if thisGroup.FirstLineNr != lineNr {
-					ScreenMessage(DbgInvalidLineNr)
+					ScreenMessage(&Screen, DbgInvalidLineNr)
 					return false
 				}
 				if thisGroup.NrLines != lineCount {
-					ScreenMessage(DbgInvalidNrLines)
+					ScreenMessage(&Screen, DbgInvalidNrLines)
 					return false
 				}
 				lineNr = lineNr + thisGroup.NrLines
@@ -176,52 +176,52 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 			}
 
 			if thisFrame.FirstGroup.FirstLine.BLink != nil {
-				ScreenMessage(DbgFirstNotAtTop)
+				ScreenMessage(&Screen, DbgFirstNotAtTop)
 				return false
 			}
 			if endLine != nil {
-				ScreenMessage(DbgLastNotAtEnd)
+				ScreenMessage(&Screen, DbgLastNotAtEnd)
 				return false
 			}
 			if thisFrame.Dot == nil {
-				ScreenMessage(DbgMarkPtrIsNil)
+				ScreenMessage(&Screen, DbgMarkPtrIsNil)
 				return false
 			}
 			if thisFrame.Dot.Line.Group.Frame != thisFrame {
-				ScreenMessage(DbgMarkInWrongFrame)
+				ScreenMessage(&Screen, DbgMarkInWrongFrame)
 				return false
 			}
 			for markNr := 0; markNr <= MaxMarkNumber; markNr++ {
 				if thisFrame.Marks[markNr] != nil {
 					if thisFrame.Marks[markNr].Line.Group.Frame != thisFrame {
-						ScreenMessage(DbgMarkInWrongFrame)
+						ScreenMessage(&Screen, DbgMarkInWrongFrame)
 						return false
 					}
 				}
 			}
 			if thisFrame.ScrHeight == 0 || thisFrame.ScrHeight > TerminalInfo.Height {
-				ScreenMessage(DbgInvalidScrParam)
+				ScreenMessage(&Screen, DbgInvalidScrParam)
 				return false
 			}
 			if thisFrame.ScrWidth == 0 || thisFrame.ScrWidth > TerminalInfo.Width {
-				ScreenMessage(DbgInvalidScrParam)
+				ScreenMessage(&Screen, DbgInvalidScrParam)
 				return false
 			}
 			if thisFrame.Span != thisSpan {
-				ScreenMessage(DbgInvalidSpanPtr)
+				ScreenMessage(&Screen, DbgInvalidSpanPtr)
 				return false
 			}
 			if thisFrame.MarginLeft >= thisFrame.MarginRight {
-				ScreenMessage(MsgLeftMarginGeRight)
+				ScreenMessage(&Screen, MsgLeftMarginGeRight)
 				return false
 			}
 			if thisSpan.MarkOne.Line.Group.Frame != thisFrame ||
 				thisSpan.MarkTwo.Line.Group.Frame != thisFrame {
-				ScreenMessage(DbgMarkInWrongFrame)
+				ScreenMessage(&Screen, DbgMarkInWrongFrame)
 				return false
 			}
 		} else if thisSpan.MarkOne.Line.Group.Frame != thisSpan.MarkTwo.Line.Group.Frame {
-			ScreenMessage(DbgMarksFromDiffFrames)
+			ScreenMessage(&Screen, DbgMarksFromDiffFrames)
 			return false
 		}
 		prevSpan = thisSpan
@@ -229,7 +229,7 @@ func ValidateCommand(currentFrame, frameOops, frameCmd, frameHeap *FrameObject) 
 	}
 
 	if frameList != (cmd | oops | heap) {
-		ScreenMessage(DbgNeededFrameNotFound)
+		ScreenMessage(&Screen, DbgNeededFrameNotFound)
 		return false
 	}
 

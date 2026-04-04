@@ -58,7 +58,7 @@ func CaseDittoCommand(frame *FrameObject, command Commands, rept LeadParam, coun
 	case CmdDittoUp, CmdDittoDown:
 		if insert && (rept == LeadParamMinus || rept == LeadParamNInt ||
 			rept == LeadParamNIndef) {
-			ScreenMessage(MsgNotAllowedInInsertMode)
+			ScreenMessage(&Screen, MsgNotAllowedInInsertMode)
 			return false
 		}
 	}

@@ -78,7 +78,7 @@ func TparDuplicate(fromTp *TParObject) *TParObject {
 // TparToMark converts a tpar string to a mark number
 func TparToMark(strng *TParObject) (int, bool) {
 	if strng.Len == 0 {
-		ScreenMessage(MsgIllegalMarkNumber)
+		ScreenMessage(&Screen, MsgIllegalMarkNumber)
 		return -1, false
 	}
 	mch := strng.Str.Get(1)
@@ -89,13 +89,13 @@ func TparToMark(strng *TParObject) (int, bool) {
 			return -1, false
 		}
 		if (i <= strng.Len) || ((mark < 1) || (mark > MaxUserMarkNumber)) {
-			ScreenMessage(MsgIllegalMarkNumber)
+			ScreenMessage(&Screen, MsgIllegalMarkNumber)
 			return -1, false
 		}
 		return mark, true
 	} else {
 		if (strng.Len > 1) || (mch != '=' && mch != '%') {
-			ScreenMessage(MsgIllegalMarkNumber)
+			ScreenMessage(&Screen, MsgIllegalMarkNumber)
 			return -1, false
 		}
 		if mch == '=' {
@@ -115,7 +115,7 @@ func TparToInt(strng *TParObject, chpos *int) (int, bool) {
 		ch = strng.Str.Get(*chpos)
 	}
 	if ch < '0' || ch > '9' {
-		ScreenMessage(MsgInvalidInteger)
+		ScreenMessage(&Screen, MsgInvalidInteger)
 		return 0, false
 	}
 	number := 0
@@ -125,7 +125,7 @@ func TparToInt(strng *TParObject, chpos *int) (int, bool) {
 			number *= 10
 			number += digit
 		} else {
-			ScreenMessage(MsgInvalidInteger)
+			ScreenMessage(&Screen, MsgInvalidInteger)
 			return 0, false
 		}
 		(*chpos)++
@@ -144,7 +144,7 @@ func TparToInt(strng *TParObject, chpos *int) (int, bool) {
 // tparSubstitute substitutes span content into tpar
 func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 	if tpar.Con != nil {
-		ScreenMessage(MsgSpanNamesAreOneLine)
+		ScreenMessage(&Screen, MsgSpanNamesAreOneLine)
 		return false
 	}
 	// Get the span name and uppercase it
@@ -167,7 +167,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			}
 			tpar.Str.FillCopy(startMark.Line.Str, startMark.Col, srclen, 1, tpar.Len, ' ')
 		} else if !CmdAttrib[cmd].TparInfo[thisTp].MlAllowed {
-			ScreenMessage(MsgSpanMustBeOneLine)
+			ScreenMessage(&Screen, MsgSpanMustBeOneLine)
 			return false
 		} else {
 			// Copy entire span into a tpar
@@ -214,7 +214,7 @@ func tparSubstitute(tpar *TParObject, cmd Commands, thisTp int) bool {
 			tmpTp.Str.FillCopy(endMark.Line.Str, 1, endMark.Line.Used, 1, tmpTp.Len, ' ')
 		}
 	} else {
-		ScreenMessage(MsgNoSuchSpan)
+		ScreenMessage(&Screen, MsgNoSuchSpan)
 		return false
 	}
 	return true
@@ -317,7 +317,7 @@ func findEnquiry(frame *FrameObject, name string) (string, bool) {
 				return SystemName, true
 			case "COMMAND_INTRODUCER":
 				if !ChIsPrintable(rune(CommandIntroducer)) {
-					ScreenMessage(MsgNonprintableIntroducer)
+					ScreenMessage(&Screen, MsgNonprintableIntroducer)
 					return "", true
 				} else {
 					return string(rune(CommandIntroducer)), true
@@ -353,7 +353,7 @@ func tparEnquire(frame *FrameObject, tpar *TParObject) bool {
 		tpar.Len = len(result)
 		return true
 	}
-	ScreenMessage(MsgUnknownItem)
+	ScreenMessage(&Screen, MsgUnknownItem)
 	ExitAbort = true
 	return false
 }
@@ -361,7 +361,7 @@ func tparEnquire(frame *FrameObject, tpar *TParObject) bool {
 // TparAnalyse analyses and processes trailing parameters
 func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, thisTp int) bool {
 	if depth > MaxTparRecursion {
-		ScreenMessage(MsgTparTooDeep)
+		ScreenMessage(&Screen, MsgTparTooDeep)
 		return false
 	}
 	if tran.Dlm != TpdSmart && tran.Dlm != TpdExact && tran.Dlm != TpdLit {
@@ -412,7 +412,7 @@ func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, 
 				}
 			case TpdEnvironment:
 				if FileData.OldCmds {
-					ScreenMessage(MsgReservedTpd)
+					ScreenMessage(&Screen, MsgReservedTpd)
 					return false
 				} else {
 					if !tparEnquire(frame, tran) {
@@ -446,7 +446,7 @@ func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, 
 						tran.Str, tran.Len = ScreenGetLineP(&Screen, frame, prompt, CmdAttrib[cmd].TpCount, thisTp)
 					} else {
 						if tran.Con != nil {
-							ScreenMessage(MsgPromptsAreOneLine)
+							ScreenMessage(&Screen, MsgPromptsAreOneLine)
 							return false
 						} else {
 							prompt := tran.Str.Slice(1, tran.Len)
@@ -455,7 +455,7 @@ func TparAnalyse(frame *FrameObject, cmd Commands, tran *TParObject, depth int, 
 					}
 					tran.Dlm = '\x00'
 				} else {
-					ScreenMessage(MsgInteractiveModeOnly)
+					ScreenMessage(&Screen, MsgInteractiveModeOnly)
 					return false
 				}
 			default:

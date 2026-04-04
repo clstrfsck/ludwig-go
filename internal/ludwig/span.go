@@ -52,7 +52,7 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 
 	if SpanFind(spanName, &p, &oldp) {
 		if p.Frame != nil {
-			ScreenMessage(MsgFrameOfThatNameExists)
+			ScreenMessage(&Screen, MsgFrameOfThatNameExists)
 			return false
 		}
 		ptr = p
@@ -106,7 +106,7 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 // Fails if span is a frame or if span is not destroyed.
 func SpanDestroy(span **SpanObject) bool {
 	if (*span).Frame != nil {
-		ScreenMessage(MsgCantKillFrame)
+		ScreenMessage(&Screen, MsgCantKillFrame)
 		return false
 	}
 	if (*span).Code != nil {

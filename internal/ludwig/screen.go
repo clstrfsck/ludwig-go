@@ -56,14 +56,14 @@ func spc(count int) string {
 }
 
 // ScreenMessage puts a message out to the user
-func ScreenMessage(message string) {
+func ScreenMessage(ss *ScreenState, message string) {
 	if Hangup {
 		return
 	}
 
 	if LudwigMode == LudwigScreen {
 		for i := 0; i < len(message); {
-			ScreenFreeBottomLine(&Screen)
+			ScreenFreeBottomLine(ss)
 			VduMoveCurs(1, TerminalInfo.Height)
 			j := min(len(message)-i, TerminalInfo.Width-1)
 			VduBold()
@@ -1189,9 +1189,9 @@ func ScreenVerify(ss *ScreenState, frame *FrameObject, prompt string) VerifyResp
 			ScreenFixup(ss, frame)
 			VduBold()
 			if usePrompt {
-				ScreenMessage(prompt)
+				ScreenMessage(ss, prompt)
 			} else {
-				ScreenMessage(YNAQM_MSG)
+				ScreenMessage(ss, YNAQM_MSG)
 			}
 			VduNormal()
 			VduMoveCurs(

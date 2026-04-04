@@ -53,7 +53,7 @@ func QuitCommand(frame *FrameObject) (*FrameObject, bool) {
 	}
 	ScreenUnload(&Screen)
 	if LudwigMode != LudwigBatch {
-		ScreenMessage(MsgQuitting)
+		ScreenMessage(&Screen, MsgQuitting)
 	}
 	if LudwigMode == LudwigScreen {
 		VduFlush()
@@ -131,7 +131,7 @@ func QuitCloseFiles() {
 		LudwigMode = LudwigBatch
 	}
 	if LudwigAborted {
-		ScreenMessage(MsgNotRenamed)
-		ScreenMessage(MsgAbort)
+		ScreenMessage(&Screen, MsgNotRenamed)
+		ScreenMessage(&Screen, MsgAbort)
 	}
 }

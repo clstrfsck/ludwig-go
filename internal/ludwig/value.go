@@ -32,6 +32,7 @@ func setupInitialValues() {
 	FirstSpan = nil
 	LudwigMode = LudwigBatch
 	CommandIntroducer = '\\'
+	Screen = ScreenState{}
 	Screen.MsgRow = MaxInt
 	VduFreeFlag = false
 	ExecLevel = 0
