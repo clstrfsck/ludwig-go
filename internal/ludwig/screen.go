@@ -1099,12 +1099,26 @@ func (ss *ScreenState) GetLineP(
 	if LudwigMode != LudwigScreen {
 		fmt.Print(prompt)
 
-		line, err := ss.StdinReader.ReadString('\n')
-		if err != nil && len(line) == 0 {
-			// no input was read before EOF or another error
-			return nil, 0
+		var sb strings.Builder
+		for {
+			chunk, err := ss.StdinReader.ReadString('\n')
+			// We will discard everything >MaxStrLen later anyway
+			if sb.Len() < MaxStrLen {
+				sb.WriteString(chunk)
+			}
+			if err == nil {
+				break
+			}
+			if err != bufio.ErrBufferFull {
+				// EOF or real error — if nothing was read at all, bail
+				if sb.Len() == 0 {
+					return nil, 0
+				}
+				break
+			}
+			// ErrBufferFull: partial line, keep reading
 		}
-		line = strings.TrimRight(line, "\r\n")
+		line := strings.TrimRight(sb.String(), "\r\n")
 		if len(line) > MaxStrLen {
 			line = line[:MaxStrLen]
 		}
