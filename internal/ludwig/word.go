@@ -621,7 +621,7 @@ func WordAdvanceWord(frame *FrameObject, rept LeadParam, count int) bool {
 	pos := frame.Dot.Col
 
 	if rept == LeadParamMarker {
-		Screen.Message( MsgSyntaxError)
+		Screen.Message(MsgSyntaxError)
 		return false
 	}
 	if rept == LeadParamNone || rept == LeadParamPlus || rept == LeadParamPIndef ||
@@ -763,7 +763,7 @@ func WordDeleteWord(frame *FrameObject, rept LeadParam, count int) bool {
 	}()
 
 	if rept == LeadParamMarker {
-		Screen.Message( MsgSyntaxError)
+		Screen.Message(MsgSyntaxError)
 		return false
 	}
 	MarkCreate(frame.Dot.Line, frame.Dot.Col, &oldPos)
