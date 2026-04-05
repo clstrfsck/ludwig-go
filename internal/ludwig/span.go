@@ -52,7 +52,7 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 
 	if SpanFind(spanName, &p, &oldp) {
 		if p.Frame != nil {
-			ScreenMessage(&Screen, MsgFrameOfThatNameExists)
+			Screen.Message(MsgFrameOfThatNameExists)
 			return false
 		}
 		ptr = p
@@ -106,7 +106,7 @@ func SpanCreate(spanName string, firstMark *MarkObject, lastMark *MarkObject) bo
 // Fails if span is a frame or if span is not destroyed.
 func SpanDestroy(span **SpanObject) bool {
 	if (*span).Frame != nil {
-		ScreenMessage(&Screen, MsgCantKillFrame)
+		Screen.Message(MsgCantKillFrame)
 		return false
 	}
 	if (*span).Code != nil {
@@ -128,7 +128,7 @@ func SpanDestroy(span **SpanObject) bool {
 
 // SpanIndex displays the list of spans. This is the \SI command.
 func SpanIndex() bool {
-	ScreenUnload(&Screen)
+	Screen.Unload()
 	ScreenHome(true)
 	p := FirstSpan
 	haveSpan := false
@@ -142,7 +142,7 @@ func SpanIndex() bool {
 		if p.Frame == nil {
 			haveSpan = true
 			if lineCount > TerminalInfo.Height-2 {
-				ScreenPause(&Screen)
+				Screen.Pause()
 				ScreenHome(true)
 				ScreenWriteln()
 				ScreenWriteStr(0, "Spans")
@@ -187,7 +187,7 @@ func SpanIndex() bool {
 		if p.Frame != nil {
 			if lineCount > TerminalInfo.Height-2 {
 				if !firstTime {
-					ScreenPause(&Screen)
+					Screen.Pause()
 					ScreenHome(true)
 				}
 				ScreenWriteln()
@@ -220,6 +220,6 @@ func SpanIndex() bool {
 		}
 		p = p.FLink
 	}
-	ScreenPause(&Screen)
+	Screen.Pause()
 	return true
 }

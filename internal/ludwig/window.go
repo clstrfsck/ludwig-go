@@ -34,16 +34,16 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 				line := frame.Dot.Line
 				if line.ScrRowNr != 0 {
 					if line.ScrRowNr > frame.ScrHeight-frame.MarginBottom {
-						ScreenScroll(&Screen,
+						Screen.Scroll(
 							-2*frame.ScrHeight+line.ScrRowNr+frame.MarginBottom,
 							true,
 						)
 					} else {
-						ScreenScroll(&Screen, -frame.ScrHeight, true)
+						Screen.Scroll(-frame.ScrHeight, true)
 					}
 				}
 			} else {
-				ScreenUnload(&Screen)
+				Screen.Unload()
 			}
 			MarkCreate(newLine, frame.Dot.Col, &frame.Dot)
 		}
@@ -69,16 +69,16 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 				line := dot.Line
 				if line.ScrRowNr != 0 {
 					if line.ScrRowNr <= frame.MarginTop {
-						ScreenScroll(&Screen,
+						Screen.Scroll(
 							frame.ScrHeight+line.ScrRowNr-frame.MarginTop-1,
 							true,
 						)
 					} else {
-						ScreenScroll(&Screen, frame.ScrHeight, true)
+						Screen.Scroll(frame.ScrHeight, true)
 					}
 				}
 			} else {
-				ScreenUnload(&Screen)
+				Screen.Unload()
 			}
 			MarkCreate(newLine, dot.Col, &frame.Dot)
 		}
@@ -93,7 +93,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 			if frame.ScrOffset < count {
 				count = frame.ScrOffset
 			}
-			ScreenSlide(&Screen, -count)
+			Screen.Slide(-count)
 			if frame.ScrOffset+frame.ScrWidth < frame.Dot.Col {
 				frame.Dot.Col = frame.ScrOffset + frame.ScrWidth
 			}
@@ -105,12 +105,12 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 			lineNr := LineToNumber(frame.Dot.Line)
 			line2Nr := LineToNumber(Screen.TopLine)
 			line3Nr := LineToNumber(Screen.BotLine)
-			ScreenScroll(&Screen, lineNr-((line2Nr+line3Nr)/2), true)
+			Screen.Scroll(lineNr-((line2Nr+line3Nr)/2), true)
 		}
 
 	case CmdWindowNew:
 		cmdSuccess = true
-		ScreenRedraw(&Screen)
+		Screen.Redraw()
 
 	case CmdWindowRight:
 		cmdSuccess = true
@@ -121,7 +121,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 			if MaxStrLenP < (frame.ScrOffset+frame.ScrWidth)+count {
 				count = MaxStrLenP - (frame.ScrOffset + frame.ScrWidth)
 			}
-			ScreenSlide(&Screen, count)
+			Screen.Slide(count)
 			if frame.Dot.Col <= frame.ScrOffset {
 				frame.Dot.Col = frame.ScrOffset + 1
 			}
@@ -139,7 +139,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 					count = frame.Dot.Line.ScrRowNr - frame.ScrHeight
 				}
 				if rept != LeadParamNone {
-					ScreenScroll(&Screen, count, true)
+					Screen.Scroll(count, true)
 				}
 				key = 0
 
@@ -189,7 +189,7 @@ func WindowCommand(frame *FrameObject, command Commands, rept LeadParam, count i
 	case CmdWindowUpdate:
 		cmdSuccess = true
 		if LudwigMode == LudwigScreen {
-			ScreenFixup(&Screen, frame)
+			Screen.Fixup(frame)
 		}
 
 	default:

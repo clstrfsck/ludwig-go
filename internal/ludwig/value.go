@@ -14,6 +14,11 @@
 
 package ludwig
 
+import (
+	"bufio"
+	"os"
+)
+
 // setupInitialValues initializes all global variables to their default values
 func setupInitialValues() {
 	LudwigAborted = false
@@ -32,7 +37,9 @@ func setupInitialValues() {
 	FirstSpan = nil
 	LudwigMode = LudwigBatch
 	CommandIntroducer = '\\'
-	Screen = ScreenState{}
+	Screen = ScreenState{
+		StdinReader: bufio.NewReader(os.Stdin),
+	}
 	Screen.MsgRow = MaxInt
 	VduFreeFlag = false
 	ExecLevel = 0

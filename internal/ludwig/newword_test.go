@@ -136,7 +136,7 @@ func TestCurrentWord(t *testing.T) {
 	t.Run("LeadingSpacesBLinkNil", func(t *testing.T) {
 		// dot at col 1 which is a space, BLink is nil → false
 		_, lines := buildWordFrame([]string{"  abc"})
-		lines[0].BLink = nil // ensure no predecessor
+		lines[0].BLink = nil           // ensure no predecessor
 		dot := newDotMark(lines[0], 1) // col 1 = ' '
 		defer MarkDestroy(&dot)
 

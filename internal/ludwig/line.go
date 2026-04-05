@@ -211,7 +211,7 @@ func LinesInject(firstLine *LineHdrObject, lastLine *LineHdrObject, beforeLine *
 
 	// Update the screen
 	if beforeLine.ScrRowNr != 0 && beforeLine != Screen.TopLine {
-		ScreenLinesInject(&Screen, firstLine, nrNewLines, beforeLine)
+		Screen.LinesInject(firstLine, nrNewLines, beforeLine)
 	}
 }
 
@@ -251,7 +251,7 @@ func LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) {
 		}
 
 		if firstScrLine != nil && lastScrLine != nil {
-			ScreenLinesExtract(&Screen, firstScrLine, lastScrLine)
+			Screen.LinesExtract(firstScrLine, lastScrLine)
 		}
 	}
 

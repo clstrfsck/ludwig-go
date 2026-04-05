@@ -51,7 +51,7 @@ func FileName(fp *FileObject, maxLen int) string {
 
 // FileTable lists the current files.
 func FileTable() {
-	ScreenUnload(&Screen)
+	Screen.Unload()
 	ScreenHome(true)
 	ScreenWriteStrWidth(0, "Usage   Mod Frame  Filename", 27)
 	ScreenWriteln()
@@ -115,7 +115,7 @@ func FileTable() {
 			ScreenWriteln()
 		}
 	}
-	ScreenPause(&Screen)
+	Screen.Pause()
 }
 
 // FileFixEOP updates the end-of-page marker
@@ -127,7 +127,7 @@ func FileFixEOP(eof bool, eopLine *LineHdrObject) {
 	}
 	if eopLine.ScrRowNr != 0 {
 		VduDim()
-		ScreenDrawLine(&Screen, eopLine)
+		Screen.DrawLine(eopLine)
 		VduNormal()
 	}
 }
@@ -137,7 +137,7 @@ func FileCreateOpen(argv []string, parse ParseType, inputfp **FileObject, output
 	switch parse {
 	case ParseCommand, ParseInput, ParseEdit, ParseStdin, ParseExecute:
 		if *inputfp != nil {
-			ScreenMessage(&Screen, MsgFileAlreadyInUse)
+			Screen.Message(MsgFileAlreadyInUse)
 			return false
 		}
 		*inputfp = &FileObject{}
@@ -152,7 +152,7 @@ func FileCreateOpen(argv []string, parse ParseType, inputfp **FileObject, output
 	switch parse {
 	case ParseCommand, ParseOutput, ParseEdit:
 		if *outputfp != nil {
-			ScreenMessage(&Screen, MsgFileAlreadyInUse)
+			Screen.Message(MsgFileAlreadyInUse)
 			return false
 		}
 		*outputfp = &FileObject{}
@@ -191,7 +191,7 @@ func FileCloseDelete(fp **FileObject, delet bool, msgs bool) bool {
 // FileRead reads a series of lines from input file.
 func FileRead(fp *FileObject, count int, bestTry bool) (*LineHdrObject, *LineHdrObject, int, bool) {
 	if fp.OutputFlag {
-		ScreenMessage(&Screen, MsgNotInputFile)
+		Screen.Message(MsgNotInputFile)
 		return nil, nil, 0, false
 	}
 
@@ -224,7 +224,7 @@ func FileRead(fp *FileObject, count int, bestTry bool) (*LineHdrObject, *LineHdr
 	// Check there are enough lines.
 	if fp.LineCount < count {
 		if !bestTry {
-			ScreenMessage(&Screen, MsgNotEnoughInputLeft)
+			Screen.Message(MsgNotEnoughInputLeft)
 			return nil, nil, 0, false
 		}
 		count = fp.LineCount
@@ -292,14 +292,14 @@ func FileWindthru(current *FrameObject, fromSpan bool) bool {
 		return false
 	}
 	if current.TextModified && !fromSpan {
-		ScreenMessage(&Screen, MsgWritingFile)
+		Screen.Message(MsgWritingFile)
 		if LudwigMode == LudwigScreen {
 			VduFlush()
 		}
 	}
 	defer func() {
 		if current.TextModified && !fromSpan {
-			ScreenClearMsgs(&Screen, false)
+			Screen.ClearMsgs(false)
 		}
 	}()
 
@@ -362,7 +362,7 @@ func FileRewind(fp **FileObject) bool {
 func FilePage(currentFrame *FrameObject, exitAbort *bool) bool {
 	var firstLine, lastLine *LineHdrObject
 	if !ExecComputeLineRange(currentFrame, LeadParamNIndef, 0, &firstLine, &lastLine) {
-		ScreenMessage(&Screen, DbgInternalLogicError)
+		Screen.Message(DbgInternalLogicError)
 		return false
 	}
 
@@ -504,7 +504,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 
 	defer func() {
 		if err != nil && err != errEmpty {
-			ScreenMessage(&Screen, err.Error())
+			Screen.Message(err.Error())
 		}
 	}()
 
@@ -527,14 +527,14 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		frame.InputFile = fileSlot
 		FilesFrames[fileSlot] = frame
 		if !fromSpan {
-			ScreenMessage(&Screen, MsgLoadingFile)
+			Screen.Message(MsgLoadingFile)
 			if LudwigMode == LudwigScreen {
 				VduFlush()
 			}
 		}
 		FilePage(frame, &ExitAbort)
 		if !fromSpan {
-			ScreenClearMsgs(&Screen, false)
+			Screen.ClearMsgs(false)
 		}
 
 	case CmdFileGlobalInput:
@@ -582,14 +582,14 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		frame.OutputFile = fileSlot2
 		FilesFrames[fileSlot2] = frame
 		if !fromSpan {
-			ScreenMessage(&Screen, MsgLoadingFile)
+			Screen.Message(MsgLoadingFile)
 			if LudwigMode == LudwigScreen {
 				VduFlush()
 			}
 		}
 		FilePage(frame, &ExitAbort)
 		if !fromSpan {
-			ScreenClearMsgs(&Screen, false)
+			Screen.ClearMsgs(false)
 		}
 
 	case CmdFileExecute:
@@ -634,7 +634,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			if !FileWindthru(frame, fromSpan) {
 				return false
 			}
-			ScreenFixup(&Screen, frame)
+			Screen.Fixup(frame)
 		}
 		if err = freeFile(fileSlot); err != nil {
 			return false
@@ -748,7 +748,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return false
 		}
 		if !fromSpan {
-			ScreenMessage(&Screen, MsgWritingFile)
+			Screen.Message(MsgWritingFile)
 			if LudwigMode == LudwigScreen {
 				VduFlush()
 			}
@@ -763,7 +763,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			}
 		}
 		if !fromSpan {
-			ScreenClearMsgs(&Screen, false)
+			Screen.ClearMsgs(false)
 		}
 
 	case CmdFileRewind:
@@ -774,14 +774,14 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return false
 		}
 		if !fromSpan {
-			ScreenMessage(&Screen, MsgLoadingFile)
+			Screen.Message(MsgLoadingFile)
 			if LudwigMode == LudwigScreen {
 				VduFlush()
 			}
 		}
 		FilePage(frame, &ExitAbort)
 		if !fromSpan {
-			ScreenClearMsgs(&Screen, false)
+			Screen.ClearMsgs(false)
 		}
 
 	case CmdFileGlobalRewind:
@@ -799,7 +799,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 		}
 		if !frame.TextModified {
 			if !fromSpan {
-				ScreenMessage(&Screen, MsgNotModified)
+				Screen.Message(MsgNotModified)
 				if LudwigMode == LudwigScreen {
 					VduFlush()
 				}
@@ -807,7 +807,7 @@ func FileCommand(frame *FrameObject, command Commands, rept LeadParam, count int
 			return true
 		}
 		if !fromSpan {
-			ScreenMessage(&Screen, MsgSavingFile)
+			Screen.Message(MsgSavingFile)
 			if LudwigMode == LudwigScreen {
 				VduFlush()
 			}

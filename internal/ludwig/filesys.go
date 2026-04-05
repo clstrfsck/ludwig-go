@@ -47,14 +47,14 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 		if !ordinaryOpen { // really executing a command
 			osFile := SysOpenCommand(fyle.Filename)
 			if osFile == nil {
-				ScreenMessage(&Screen, "Cannot create pipe")
+				Screen.Message("Cannot create pipe")
 				return false
 			}
 			fyle.OsFile = osFile
 			fyle.Reader = bufio.NewReader(fyle.OsFile)
 		} else {
 			if !SysExpandFilename(&fyle.Filename) {
-				ScreenMessage(&Screen, fmt.Sprintf("Error in filename (%s)", fyle.Filename))
+				Screen.Message(fmt.Sprintf("Error in filename (%s)", fyle.Filename))
 				return false
 			}
 			fs := SysFileStatus(fyle.Filename)
@@ -82,7 +82,7 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 		if fyle.Filename == "" {
 			return false
 		} else if !SysExpandFilename(&fyle.Filename) {
-			ScreenMessage(&Screen, fmt.Sprintf("Error in filename (%s)", fyle.Filename))
+			Screen.Message(fmt.Sprintf("Error in filename (%s)", fyle.Filename))
 			return false
 		}
 		// if the file given is a directory create a filename using the input
@@ -96,17 +96,17 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 		if fs.Valid {
 			// if we wanted to create a new file then complain
 			if fyle.Create {
-				ScreenMessage(&Screen, fmt.Sprintf("File (%s) already exists", fyle.Filename))
+				Screen.Message(fmt.Sprintf("File (%s) already exists", fyle.Filename))
 				return false
 			}
 			// check that the file we may overwrite is not a directory
 			if fs.IsDir {
-				ScreenMessage(&Screen, fmt.Sprintf("File (%s) is a directory", fyle.Filename))
+				Screen.Message(fmt.Sprintf("File (%s) is a directory", fyle.Filename))
 				return false
 			}
 			// check that we can write over the current version
 			if !SysFileWriteable(fyle.Filename) {
-				ScreenMessage(&Screen, fmt.Sprintf("Write access to file (%s) is denied", fyle.Filename))
+				Screen.Message(fmt.Sprintf("Write access to file (%s) is denied", fyle.Filename))
 				return false
 			}
 			fyle.Mode = fs.Mode
@@ -124,7 +124,7 @@ func FilesysCreateOpen(fyle *FileObject, rfyle *FileObject, ordinaryOpen bool) b
 		}
 		f, err := os.OpenFile(fyle.Tnm, os.O_RDWR|os.O_CREATE, 0600)
 		if err != nil || f == nil {
-			ScreenMessage(&Screen, fmt.Sprintf("Error opening (%s) as output", fyle.Tnm))
+			Screen.Message(fmt.Sprintf("Error opening (%s) as output", fyle.Tnm))
 			return false
 		}
 		fyle.OsFile = f
@@ -153,7 +153,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 			if fyle.LCounter == 1 {
 				plural = ""
 			}
-			ScreenMessage(&Screen, fmt.Sprintf("File %s closed (%d line%s read).",
+			Screen.Message(fmt.Sprintf("File %s closed (%d line%s read).",
 				fyle.Filename, fyle.LCounter, plural))
 		}
 		return true
@@ -167,7 +167,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 		// remove the file
 		if os.Remove(fyle.Tnm) == nil {
 			if msgs {
-				ScreenMessage(&Screen, fmt.Sprintf("Output file %s deleted.", fyle.Tnm))
+				Screen.Message(fmt.Sprintf("Output file %s deleted.", fyle.Tnm))
 			}
 			return true
 		} else {
@@ -179,7 +179,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 	// with the name we are going to use as the output name
 	fs := SysFileStatus(fyle.Filename)
 	if fs.Valid && fs.Mtime != fyle.PreviousFileId {
-		ScreenMessage(&Screen, fmt.Sprintf("%s was modified by another process", fyle.Filename))
+		Screen.Message(fmt.Sprintf("%s was modified by another process", fyle.Filename))
 	}
 
 	tname := fyle.Filename + "~"
@@ -226,7 +226,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 	// now rename the temp file to the real thing
 	SysChmod(fyle.Tnm, fyle.Mode&0777)
 	if os.Rename(fyle.Tnm, fyle.Filename) != nil {
-		ScreenMessage(&Screen, fmt.Sprintf("Cannot rename %s to %s", fyle.Tnm, fyle.Filename))
+		Screen.Message(fmt.Sprintf("Cannot rename %s to %s", fyle.Tnm, fyle.Filename))
 		return false
 	} else {
 		if msgs {
@@ -234,7 +234,7 @@ func FilesysClose(fyle *FileObject, action int, msgs bool) bool {
 			if fyle.LCounter == 1 {
 				plural = ""
 			}
-			ScreenMessage(&Screen, fmt.Sprintf("File %s created (%d line%s written).",
+			Screen.Message(fmt.Sprintf("File %s created (%d line%s written).",
 				fyle.Filename, fyle.LCounter, plural))
 		}
 		// Time to set the memory, if it's required and we aren't writing in
@@ -447,7 +447,7 @@ func FilesysParse(
 	if parseType == ParseStdin {
 		input.Valid = true
 		input.OsFile = os.Stdin
-		input.Reader = bufio.NewReader(input.OsFile)
+		input.Reader = Screen.StdinReader
 		input.Eof = false
 		input.LCounter = 0
 		return true
@@ -580,9 +580,9 @@ func FilesysParse(
 
 	if usageFlag || errors > 0 {
 		if parseType == ParseCommand {
-			ScreenMessage(&Screen, usage)
+			Screen.Message(usage)
 		} else {
-			ScreenMessage(&Screen, fileUsage)
+			Screen.Message(fileUsage)
 		}
 		return false
 	}
@@ -602,7 +602,7 @@ func FilesysParse(
 	var file []string
 	for filesCount := 0; optind < len(argv); filesCount++ {
 		if filesCount >= 2 {
-			ScreenMessage(&Screen, "More than two files specified")
+			Screen.Message("More than two files specified")
 			return false
 		}
 		file = append(file, argv[optind])
@@ -613,7 +613,7 @@ func FilesysParse(
 		checkInput = true
 		if parseType == ParseInput || parseType == ParseOutput ||
 			parseType == ParseExecute || createFlag || readOnlyFlag {
-			ScreenMessage(&Screen, "Only one file name can be specified")
+			Screen.Message("Only one file name can be specified")
 			return false
 		}
 	}
@@ -632,7 +632,7 @@ func FilesysParse(
 					input.Filename = ""
 					return true
 				}
-				ScreenMessage(&Screen, fmt.Sprintf("Error opening memory file (%s)", memory))
+				Screen.Message(fmt.Sprintf("Error opening memory file (%s)", memory))
 				return false
 			}
 		} else if parseType == ParseCommand {
@@ -656,7 +656,7 @@ func FilesysParse(
 		if readOnlyFlag {
 			input.Create = false
 			if !FilesysCreateOpen(input, nil, true) {
-				ScreenMessage(&Screen, fmt.Sprintf("Error opening (%s) as input", input.Filename))
+				Screen.Message(fmt.Sprintf("Error opening (%s) as input", input.Filename))
 				return false
 			}
 			input.Valid = true
@@ -672,7 +672,7 @@ func FilesysParse(
 			if FilesysCreateOpen(input, nil, true) {
 				input.Valid = true
 			} else if checkInput || parseType == ParseEdit {
-				ScreenMessage(&Screen, fmt.Sprintf("Error opening (%s) as input", input.Filename))
+				Screen.Message(fmt.Sprintf("Error opening (%s) as input", input.Filename))
 				return false
 			}
 			if FilesysCreateOpen(output, input, true) {
@@ -690,7 +690,7 @@ func FilesysParse(
 			if filename, found := SysReadFilename(memory); found {
 				input.Filename = filename
 			} else {
-				ScreenMessage(&Screen, fmt.Sprintf("Error opening (%s) as input", memory))
+				Screen.Message(fmt.Sprintf("Error opening (%s) as input", memory))
 				return false
 			}
 		default:
@@ -698,7 +698,7 @@ func FilesysParse(
 		}
 		input.Create = false
 		if input.Filename == "" || !FilesysCreateOpen(input, nil, true) {
-			ScreenMessage(&Screen, fmt.Sprintf("Error opening (%s) as input", input.Filename))
+			Screen.Message(fmt.Sprintf("Error opening (%s) as input", input.Filename))
 			return false
 		}
 		input.Valid = true

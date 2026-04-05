@@ -216,7 +216,7 @@ func PatternParser(
 			(*statesUsed)++
 			return newNfa, true
 		}
-		ScreenMessage(&Screen, MsgPatPatternTooComplex)
+		Screen.Message(MsgPatPatternTooComplex)
 		return 0, false
 	}
 
@@ -224,7 +224,7 @@ func PatternParser(
 	patternDuplicateNFA := func(copyThisStart, copyThisFinish, currentState int, duplicateFinish *int) bool {
 		offset := (currentState - copyThisStart) + 1
 		if (*statesUsed + offset) > MaxNFAStateRange {
-			ScreenMessage(&Screen, MsgPatPatternTooComplex)
+			Screen.Message(MsgPatPatternTooComplex)
 			return false
 		}
 		duplicateStart := *statesUsed
@@ -275,7 +275,7 @@ func PatternParser(
 			*ch = inString.Str.Get(*parseCount)
 			patternDefinition.Length++
 			if patternDefinition.Length > MaxStrLen {
-				ScreenMessage(&Screen, MsgPatPatternTooComplex)
+				Screen.Message(MsgPatPatternTooComplex)
 				parseErr = true
 				return false
 			}
@@ -340,7 +340,7 @@ func PatternParser(
 			case PatternLRangeDelim:
 				if !patternGetch(parseCount, patCh, inString) {
 					if !parseErr {
-						ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+						Screen.Message(MsgPatNoMatchingDelim)
 					}
 					return false
 				}
@@ -357,13 +357,13 @@ func PatternParser(
 				if *patCh == PatternComma {
 					if !patternGetch(parseCount, patCh, inString) {
 						if !parseErr {
-							ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+							Screen.Message(MsgPatNoMatchingDelim)
 						}
 						return false
 					}
 				} else {
 					if !parseErr {
-						ScreenMessage(&Screen, MsgPatErrorInRange)
+						Screen.Message(MsgPatErrorInRange)
 					}
 					return false
 				}
@@ -379,7 +379,7 @@ func PatternParser(
 					*rangeEnd = 0
 				}
 				if *patCh != PatternRRangeDelim {
-					ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+					Screen.Message(MsgPatNoMatchingDelim)
 					return false
 				}
 			}
@@ -454,7 +454,7 @@ func PatternParser(
 		derefSpan.Con = nil
 
 		if depth > PatternMaxDepth {
-			ScreenMessage(&Screen, MsgPatPatternTooComplex)
+			Screen.Message(MsgPatPatternTooComplex)
 			return false
 		}
 
@@ -470,7 +470,7 @@ func PatternParser(
 
 		for (*patCh != PatternComma && *patCh != PatternRParen && *patCh != PatternBar) && !endOfInput {
 			if !syntaxSet[*patCh] {
-				ScreenMessage(&Screen, MsgPatIllegalSymbol)
+				Screen.Message(MsgPatIllegalSymbol)
 				return false
 			}
 
@@ -481,7 +481,7 @@ func PatternParser(
 				aux = 0
 				if !patternGetch(parseCount, patCh, inString) {
 					if !parseErr {
-						ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+						Screen.Message(MsgPatNoMatchingDelim)
 					}
 					return false
 				}
@@ -490,7 +490,7 @@ func PatternParser(
 					derefTpar.Str.Set(aux, *patCh)
 					if !patternGetch(parseCount, patCh, inString) {
 						if !parseErr {
-							ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+							Screen.Message(MsgPatNoMatchingDelim)
 						}
 						return false
 					}
@@ -518,7 +518,7 @@ func PatternParser(
 						return false
 					}
 					if (auxCount != derefSpan.Len) || (derefSpan.Str.Get(auxCount) == PatternComma) {
-						ScreenMessage(&Screen, MsgPatErrorInSpan)
+						Screen.Message(MsgPatErrorInSpan)
 						return false
 					}
 				} else if parseErr {
@@ -542,7 +542,7 @@ func PatternParser(
 					}
 					if !patternGetch(parseCount, patCh, inString) {
 						if !parseErr {
-							ScreenMessage(&Screen, MsgPatPrematurePatternEnd)
+							Screen.Message(MsgPatPrematurePatternEnd)
 						}
 						return false
 					}
@@ -555,7 +555,7 @@ func PatternParser(
 					auxCount = *parseCount
 					if !patternGetch(parseCount, patCh, inString) {
 						if !parseErr {
-							ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+							Screen.Message(MsgPatNoMatchingDelim)
 						}
 						return false
 					}
@@ -567,7 +567,7 @@ func PatternParser(
 						for {
 							if !patternGetch(parseCount, patCh, inString) {
 								if !parseErr {
-									ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+									Screen.Message(MsgPatNoMatchingDelim)
 								}
 								return false
 							}
@@ -631,7 +631,7 @@ func PatternParser(
 								currentState = nextState
 								if !patternGetch(parseCount, patCh, inString) {
 									if !parseErr {
-										ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+										Screen.Message(MsgPatNoMatchingDelim)
 									}
 									return false
 								}
@@ -663,7 +663,7 @@ func PatternParser(
 								currentState = nextState
 								if !patternGetch(parseCount, patCh, inString) {
 									if !parseErr {
-										ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+										Screen.Message(MsgPatNoMatchingDelim)
 									}
 									return false
 								}
@@ -681,14 +681,14 @@ func PatternParser(
 					}
 					currentState = auxState
 					if *patCh != PatternRParen {
-						ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+						Screen.Message(MsgPatNoMatchingDelim)
 						return false
 					}
 
 				case PatternMark:
 					if patternGetnumb(parseCount, &auxi, patCh, inString) {
 						if (auxi == 0) || (auxi > MaxUserMarkNumber) {
-							ScreenMessage(&Screen, MsgPatIllegalMarkNumber)
+							Screen.Message(MsgPatIllegalMarkNumber)
 							return false
 						}
 						nfaTable[currentState].EpsilonOut = false
@@ -702,7 +702,7 @@ func PatternParser(
 						currentState = nextState
 					} else {
 						if !parseErr {
-							ScreenMessage(&Screen, MsgPatIllegalMarkNumber)
+							Screen.Message(MsgPatIllegalMarkNumber)
 						}
 						return false
 					}
@@ -729,7 +729,7 @@ func PatternParser(
 						negate = true
 						if !patternGetch(parseCount, patCh, inString) {
 							if !parseErr {
-								ScreenMessage(&Screen, MsgPatPrematurePatternEnd)
+								Screen.Message(MsgPatPrematurePatternEnd)
 							}
 							return false
 						}
@@ -740,7 +740,7 @@ func PatternParser(
 						setClear(auxSet)
 						if !patternGetch(parseCount, patCh, inString) {
 							if !parseErr {
-								ScreenMessage(&Screen, MsgPatPrematurePatternEnd)
+								Screen.Message(MsgPatPrematurePatternEnd)
 							}
 							return false
 						}
@@ -755,7 +755,7 @@ func PatternParser(
 							}
 							if !patternGetch(parseCount, patCh, inString) {
 								if !parseErr {
-									ScreenMessage(&Screen, MsgPatPrematurePatternEnd)
+									Screen.Message(MsgPatPrematurePatternEnd)
 								}
 								return false
 							}
@@ -765,7 +765,7 @@ func PatternParser(
 								derefTpar.Str.Set(aux, *patCh)
 								if !patternGetch(parseCount, patCh, inString) {
 									if !parseErr {
-										ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+										Screen.Message(MsgPatNoMatchingDelim)
 									}
 									return false
 								}
@@ -779,7 +779,7 @@ func PatternParser(
 							aux = 0
 							if !patternGetch(parseCount, patCh, inString) {
 								if !parseErr {
-									ScreenMessage(&Screen, MsgPatPrematurePatternEnd)
+									Screen.Message(MsgPatPrematurePatternEnd)
 								}
 								return false
 							}
@@ -789,7 +789,7 @@ func PatternParser(
 								derefSpan.Str.Set(aux, *patCh)
 								if !patternGetch(parseCount, patCh, inString) {
 									if !parseErr {
-										ScreenMessage(&Screen, MsgPatNoMatchingDelim)
+										Screen.Message(MsgPatNoMatchingDelim)
 									}
 									return false
 								}
@@ -834,7 +834,7 @@ func PatternParser(
 						nfaTable[currentState].EpsilonOut = false
 						if positionalsSet[*patCh] {
 							if negate {
-								ScreenMessage(&Screen, MsgPatIllegalParameter)
+								Screen.Message(MsgPatIllegalParameter)
 								return false
 							}
 							setClear(&nfaTable[currentState].AcceptSet)
@@ -881,7 +881,7 @@ func PatternParser(
 						nfaTable[currentState].NextState = nextState
 						currentState = nextState
 					} else {
-						ScreenMessage(&Screen, MsgPatSetNotDefined)
+						Screen.Message(MsgPatSetNotDefined)
 						return false
 					}
 				}
@@ -915,7 +915,7 @@ func PatternParser(
 		var currentEStart int
 
 		if depth > PatternMaxDepth {
-			ScreenMessage(&Screen, MsgPatPatternTooComplex)
+			Screen.Message(MsgPatPatternTooComplex)
 			return false
 		}
 
@@ -1010,7 +1010,7 @@ func PatternParser(
 		}
 	} else {
 		if !parseErr {
-			ScreenMessage(&Screen, MsgPatNullPattern)
+			Screen.Message(MsgPatNullPattern)
 		}
 		return false
 	}

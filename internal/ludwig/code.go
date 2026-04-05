@@ -620,7 +620,7 @@ func CodeCompile(frame *FrameObject, span *SpanObject, fromSpan bool) (*FrameObj
 	defer func() {
 		if ps.status != "" {
 			ExitAbort = true
-			ScreenMessage(&Screen, ps.status)
+			Screen.Message(ps.status)
 		}
 	}()
 
@@ -720,7 +720,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 
 		for pc != 0 {
 			if pc > codeHead.Len {
-				ScreenMessage(&Screen, DbgPcOutOfRange)
+				Screen.Message(DbgPcOutOfRange)
 				return frame, false
 			}
 
@@ -791,7 +791,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 
 				case CmdExtended:
 					if currCode == nil {
-						ScreenMessage(&Screen, DbgCodePtrIsNil)
+						Screen.Message(DbgCodePtrIsNil)
 						return frame, false
 					}
 					frame, _ = CodeInterpret(frame, currRep, currCnt, currCode, true)
@@ -806,7 +806,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 							if request.Len == 0 {
 								request = frame.VerifyTpar
 								if request.Len == 0 {
-									ScreenMessage(&Screen, MsgNoDefaultStr)
+									Screen.Message(MsgNoDefaultStr)
 									return frame, false
 								}
 							} else {
@@ -828,7 +828,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 					}
 
 				case CmdNoop:
-					ScreenMessage(&Screen, DbgIllegalInstruction)
+					Screen.Message(DbgIllegalInstruction)
 					return frame, false
 				}
 			} else {
