@@ -1101,11 +1101,14 @@ func (ss *ScreenState) GetLineP(
 		r := bufio.NewReader(os.Stdin)
 
 		line, err := r.ReadString('\n')
-		if err != nil {
-			// handle EOF or other errors
+		if err != nil && len(line) == 0 {
+			// no input was read before EOF or another error
 			return nil, 0
 		}
-		line = line[:MaxStrLen]
+		line = strings.TrimRight(line, "\r\n")
+		if len(line) > MaxStrLen {
+			line = line[:MaxStrLen]
+		}
 		return NewStrObjectFrom(line), len(line)
 	}
 
