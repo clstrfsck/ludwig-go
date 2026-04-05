@@ -22,7 +22,6 @@ package ludwig
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -35,11 +34,12 @@ const (
 
 // ScreenState holds all screen display state
 type ScreenState struct {
-	Frame    *FrameObject
-	TopLine  *LineHdrObject
-	BotLine  *LineHdrObject
-	MsgRow   int
-	NeedsFix bool
+	Frame       *FrameObject
+	TopLine     *LineHdrObject
+	BotLine     *LineHdrObject
+	MsgRow      int
+	NeedsFix    bool
+	StdinReader *bufio.Reader
 }
 
 // Slide types
@@ -1098,9 +1098,8 @@ func (ss *ScreenState) GetLineP(
 
 	if LudwigMode != LudwigScreen {
 		fmt.Print(prompt)
-		r := bufio.NewReader(os.Stdin)
 
-		line, err := r.ReadString('\n')
+		line, err := ss.StdinReader.ReadString('\n')
 		if err != nil && len(line) == 0 {
 			// no input was read before EOF or another error
 			return nil, 0

@@ -447,7 +447,7 @@ func FilesysParse(
 	if parseType == ParseStdin {
 		input.Valid = true
 		input.OsFile = os.Stdin
-		input.Reader = bufio.NewReader(input.OsFile)
+		input.Reader = Screen.StdinReader
 		input.Eof = false
 		input.LCounter = 0
 		return true
