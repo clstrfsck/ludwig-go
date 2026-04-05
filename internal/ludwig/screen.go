@@ -20,7 +20,9 @@
 package ludwig
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -1096,8 +1098,15 @@ func (ss *ScreenState) GetLineP(
 
 	if LudwigMode != LudwigScreen {
 		fmt.Print(prompt)
-		// Read from stdin (simplified version)
-		return nil, 0
+		r := bufio.NewReader(os.Stdin)
+
+		line, err := r.ReadString('\n')
+		if err != nil {
+			// handle EOF or other errors
+			return nil, 0
+		}
+		line = line[:MaxStrLen]
+		return NewStrObjectFrom(line), len(line)
 	}
 
 	ss.computePromptPosition(frame, thisTp, maxTp)
