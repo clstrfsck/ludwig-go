@@ -257,7 +257,7 @@ outerLoop:
 					MarkCreate(line, startCol, &frame.Dot)
 					verified := true
 					if !fromSpan {
-						switch ScreenVerify(&Screen, frame, thisOne) {
+						switch Screen.Verify(frame, thisOne) {
 						case VerifyReplyAlways, VerifyReplyYes:
 							// accepted
 						case VerifyReplyQuit, VerifyReplyNo:
@@ -363,7 +363,7 @@ outerLoop:
 					}
 					verified := true
 					if !fromSpan {
-						switch ScreenVerify(&Screen, frame, thisOne) {
+						switch Screen.Verify(frame, thisOne) {
 						case VerifyReplyAlways, VerifyReplyYes:
 							// accepted
 						case VerifyReplyQuit, VerifyReplyNo:
@@ -492,7 +492,7 @@ outerLoop:
 				break outerLoop
 			}
 			if !fromSpan {
-				switch ScreenVerify(&Screen, frame, replaceThisOne) {
+				switch Screen.Verify(frame, replaceThisOne) {
 				case VerifyReplyAlways:
 					fromSpan = true
 				case VerifyReplyYes:

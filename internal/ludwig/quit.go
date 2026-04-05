@@ -34,10 +34,10 @@ func QuitCommand(frame *FrameObject) (*FrameObject, bool) {
 						&newSpan.Frame.Dot,
 					)
 					if LudwigMode == LudwigScreen {
-						ScreenFixup(&Screen, frame)
+						Screen.Fixup(frame)
 					}
 					ScreenBeep()
-					switch ScreenVerify(&Screen, frame, noOutputFileMsg) {
+					switch Screen.Verify(frame, noOutputFileMsg) {
 					case VerifyReplyYes:
 						// Nothing to do here
 					case VerifyReplyAlways:
@@ -51,9 +51,9 @@ func QuitCommand(frame *FrameObject) (*FrameObject, bool) {
 			newSpan = newSpan.FLink
 		}
 	}
-	ScreenUnload(&Screen)
+	Screen.Unload()
 	if LudwigMode != LudwigBatch {
-		ScreenMessage(&Screen, MsgQuitting)
+		Screen.Message(MsgQuitting)
 	}
 	if LudwigMode == LudwigScreen {
 		VduFlush()
@@ -131,7 +131,7 @@ func QuitCloseFiles() {
 		LudwigMode = LudwigBatch
 	}
 	if LudwigAborted {
-		ScreenMessage(&Screen, MsgNotRenamed)
-		ScreenMessage(&Screen, MsgAbort)
+		Screen.Message(MsgNotRenamed)
+		Screen.Message(MsgAbort)
 	}
 }

@@ -565,15 +565,6 @@ type CmdAttribRec struct {
 	TparInfo  [MaxTpCount + 1]TParAttribute
 }
 
-// ScreenState holds all screen display state
-type ScreenState struct {
-	Frame    *FrameObject
-	TopLine  *LineHdrObject
-	BotLine  *LineHdrObject
-	MsgRow   int
-	NeedsFix bool
-}
-
 // HelpRecord represents a help record
 type HelpRecord struct {
 	Key string

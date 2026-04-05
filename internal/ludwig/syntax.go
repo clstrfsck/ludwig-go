@@ -345,7 +345,7 @@ func SyntaxApplyDirty(frame *FrameObject) {
 				scrTopLineNum++
 			}
 			for line != nil {
-				ScreenDrawLine(&Screen, line)
+				Screen.DrawLine(line)
 				if line == Screen.BotLine {
 					break
 				}

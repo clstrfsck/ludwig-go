@@ -70,7 +70,7 @@ func CharcmdInsert(frame *FrameObject, rept LeadParam, count int, fromSpan bool)
 			return
 		}
 		if cmdValid {
-			ScreenFixup(&Screen, frame)
+			Screen.Fixup(frame)
 		} else {
 			VduBeep()
 		}
@@ -232,7 +232,7 @@ func CharcmdDelete(frame *FrameObject, rept LeadParam, count int, fromSpan bool)
 			return
 		}
 		if cmdValid {
-			ScreenFixup(&Screen, frame)
+			Screen.Fixup(frame)
 		} else {
 			VduBeep()
 		}
@@ -312,7 +312,7 @@ func CharcmdRubout(frame *FrameObject, rept LeadParam, count int, fromSpan bool)
 				return
 			}
 			if cmdValid {
-				ScreenFixup(&Screen, frame)
+				Screen.Fixup(frame)
 			} else {
 				VduBeep()
 			}

@@ -515,7 +515,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 
 	for _, arg := range argv {
 		if len(arg) > FileNameLen {
-			ScreenMessage(&Screen, MsgParameterTooLong)
+			Screen.Message(MsgParameterTooLong)
 			return nil, false
 		}
 	}
@@ -585,7 +585,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 	}
 
 	if LudwigMode == LudwigScreen {
-		ScreenFixup(&Screen, currentFrame)
+		Screen.Fixup(currentFrame)
 	}
 
 	// Load the key definitions.
@@ -607,7 +607,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 	// Load the input file.
 
 	if LudwigMode != LudwigBatch {
-		ScreenMessage(&Screen, MsgCopyrightAndLoadingFile)
+		Screen.Message(MsgCopyrightAndLoadingFile)
 		if LudwigMode == LudwigScreen {
 			VduFlush()
 		}
@@ -616,10 +616,10 @@ func startUp(argv []string) (*FrameObject, bool) {
 		return currentFrame, false
 	}
 	if LudwigMode != LudwigBatch {
-		ScreenClearMsgs(&Screen, false)
+		Screen.ClearMsgs(false)
 	}
 	if LudwigMode == LudwigScreen {
-		ScreenFixup(&Screen, currentFrame)
+		Screen.Fixup(currentFrame)
 	}
 
 	// Execute the user's initialization string.

@@ -71,7 +71,7 @@ func ArrowCommand(frame *FrameObject, command Commands, rept LeadParam, count in
 		if fromSpan {
 			break
 		}
-		ScreenFixup(&Screen, frame)
+		Screen.Fixup(frame)
 		if !cmdValid || ((command == CmdDown) && (rept != LeadParamPIndef) &&
 			(frame.Dot.Line.FLink == nil)) {
 			VduBeep()

@@ -149,7 +149,7 @@ func Execute(
 		return
 	}
 	if ExecLevel == MaxExecRecursion {
-		ScreenMessage(&Screen, MsgCommandRecursionLimit)
+		Screen.Message(MsgCommandRecursionLimit)
 		return
 	}
 
@@ -157,13 +157,13 @@ func Execute(
 	switch command {
 	case CmdMark:
 		if count == 0 || iabs(count) > MaxUserMarkNumber {
-			ScreenMessage(&Screen, MsgIllegalMarkNumber)
+			Screen.Message(MsgIllegalMarkNumber)
 			return
 		}
 	case CmdSpanDefine:
 		if rept == LeadParamNone || rept == LeadParamPInt {
 			if count == 0 || count > MaxUserMarkNumber {
-				ScreenMessage(&Screen, MsgIllegalMarkNumber)
+				Screen.Message(MsgIllegalMarkNumber)
 				return
 			}
 			rept = LeadParamMarker
@@ -175,7 +175,7 @@ func Execute(
 	if rept == LeadParamMarker {
 		theMark = currentFrame.Marks[count]
 		if theMark == nil {
-			ScreenMessage(&Screen, MsgMarkNotDefined)
+			Screen.Message(MsgMarkNotDefined)
 			return
 		}
 	}
@@ -423,7 +423,7 @@ func Execute(
 				// If didn't specify, use default
 				request = currentFrame.EqsTpar
 				if request.Len == 0 {
-					ScreenMessage(&Screen, MsgNoDefaultStr)
+					Screen.Message(MsgNoDefaultStr)
 					return
 				}
 			} else {
@@ -434,7 +434,7 @@ func Execute(
 
 	case CmdDoLastCommand, CmdExecuteString:
 		if currentFrame == FrameCmd {
-			ScreenMessage(&Screen, MsgNotWhileEditingCmd)
+			Screen.Message(MsgNotWhileEditingCmd)
 			return
 		}
 		if command == CmdExecuteString {
@@ -480,7 +480,7 @@ func Execute(
 
 	case CmdFileExecute:
 		if currentFrame == FrameCmd {
-			ScreenMessage(&Screen, MsgNotWhileEditingCmd)
+			Screen.Message(MsgNotWhileEditingCmd)
 			return
 		}
 		var request TParObject
@@ -554,7 +554,7 @@ func Execute(
 				// If didn't specify, use default
 				request = currentFrame.GetTpar
 				if request.Len == 0 {
-					ScreenMessage(&Screen, MsgNoDefaultStr)
+					Screen.Message(MsgNoDefaultStr)
 					return
 				}
 			} else {
@@ -565,7 +565,7 @@ func Execute(
 
 	case CmdHelp:
 		if LudwigMode == LudwigBatch {
-			ScreenMessage(&Screen, MsgInteractiveModeOnly)
+			Screen.Message(MsgInteractiveModeOnly)
 			return
 		}
 		var request TParObject
@@ -604,7 +604,7 @@ func Execute(
 				EditMode = ModeInsert
 				cmdSuccess = true
 			} else {
-				ScreenMessage(&Screen, MsgSyntaxError)
+				Screen.Message(MsgSyntaxError)
 			}
 		} else {
 			var request TParObject
@@ -756,7 +756,7 @@ func Execute(
 				EditMode = PreviousMode
 			} else {
 				if LudwigMode != LudwigScreen {
-					ScreenMessage(&Screen, MsgScreenModeOnly)
+					Screen.Message(MsgScreenModeOnly)
 					return
 				}
 				if !UserCommandIntroducer(currentFrame) {
@@ -776,7 +776,7 @@ func Execute(
 				EditMode = ModeOvertype
 				cmdSuccess = true
 			} else {
-				ScreenMessage(&Screen, MsgSyntaxError)
+				Screen.Message(MsgSyntaxError)
 			}
 		} else {
 			var request TParObject
@@ -791,7 +791,7 @@ func Execute(
 
 	case CmdPage:
 		if !fromSpan {
-			ScreenMessage(&Screen, MsgPaging)
+			Screen.Message(MsgPaging)
 			if LudwigMode == LudwigScreen {
 				VduFlush()
 			}
@@ -799,7 +799,7 @@ func Execute(
 		cmdSuccess = FilePage(currentFrame, &ExitAbort)
 		// Clean up the PAGING message
 		if !fromSpan {
-			ScreenClearMsgs(&Screen, false)
+			Screen.ClearMsgs(false)
 		}
 
 	case CmdOpSysCommand:
@@ -844,7 +844,7 @@ func Execute(
 		if TparGet2(currentFrame, tparam, command, &request, &request2) {
 			if request.Len == 0 { // If didn't specify, use default
 				if currentFrame.Rep1Tpar.Len == 0 {
-					ScreenMessage(&Screen, MsgNoDefaultStr)
+					Screen.Message(MsgNoDefaultStr)
 					return
 				}
 			} else {
@@ -870,7 +870,7 @@ func Execute(
 			currentFrame.MarginLeft = InitialMarginLeft
 		} else {
 			if currentFrame.Dot.Col >= currentFrame.MarginRight {
-				ScreenMessage(&Screen, MsgLeftMarginGeRight)
+				Screen.Message(MsgLeftMarginGeRight)
 				return
 			}
 			currentFrame.MarginLeft = currentFrame.Dot.Col
@@ -882,7 +882,7 @@ func Execute(
 			currentFrame.MarginRight = InitialMarginRight
 		} else {
 			if currentFrame.Dot.Col <= currentFrame.MarginLeft {
-				ScreenMessage(&Screen, MsgLeftMarginGeRight)
+				Screen.Message(MsgLeftMarginGeRight)
 				return
 			}
 			currentFrame.MarginRight = currentFrame.Dot.Col
@@ -901,7 +901,7 @@ func Execute(
 					if SpanFind(newName, &newSpan, &oldSpan) {
 						cmdSuccess = SpanDestroy(&newSpan)
 					} else {
-						ScreenMessage(&Screen, MsgNoSuchSpan)
+						Screen.Message(MsgNoSuchSpan)
 					}
 				} else {
 					cmdSuccess = SpanCreate(newName, theMark, currentFrame.Dot)
@@ -936,7 +936,7 @@ func Execute(
 						}
 					}
 				} else {
-					ScreenMessage(&Screen, MsgNoSuchSpan)
+					Screen.Message(MsgNoSuchSpan)
 				}
 
 			case CmdSpanCopy, CmdSpanTransfer:
@@ -960,7 +960,7 @@ func Execute(
 						MarkCreate(currentFrame.Dot.Line, currentFrame.Dot.Col, &newSpan.MarkTwo)
 					}
 				} else {
-					ScreenMessage(&Screen, MsgNoSuchSpan)
+					Screen.Message(MsgNoSuchSpan)
 				}
 
 			case CmdSpanCompile, CmdSpanExecute, CmdSpanExecuteNoRecompile:
@@ -979,7 +979,7 @@ func Execute(
 						currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, newSpan.Code, true)
 					}
 				} else {
-					ScreenMessage(&Screen, MsgNoSuchSpan)
+					Screen.Message(MsgNoSuchSpan)
 				}
 			}
 		}
@@ -1048,14 +1048,14 @@ func Execute(
 
 	case CmdUserCommandIntroducer:
 		if LudwigMode != LudwigScreen {
-			ScreenMessage(&Screen, MsgScreenModeOnly)
+			Screen.Message(MsgScreenModeOnly)
 			return
 		}
 		cmdSuccess = UserCommandIntroducer(currentFrame)
 
 	case CmdUserKey:
 		if LudwigMode != LudwigScreen {
-			ScreenMessage(&Screen, MsgScreenModeOnly)
+			Screen.Message(MsgScreenModeOnly)
 			return
 		}
 		var request, request2 TParObject
@@ -1069,14 +1069,14 @@ func Execute(
 
 	case CmdUserParent:
 		if LudwigMode == LudwigBatch {
-			ScreenMessage(&Screen, MsgInteractiveModeOnly)
+			Screen.Message(MsgInteractiveModeOnly)
 			return
 		}
 		cmdSuccess = UserParent()
 
 	case CmdUserSubprocess:
 		if LudwigMode == LudwigBatch {
-			ScreenMessage(&Screen, MsgInteractiveModeOnly)
+			Screen.Message(MsgInteractiveModeOnly)
 			return
 		}
 		cmdSuccess = UserSubprocess()
@@ -1090,17 +1090,17 @@ func Execute(
 		cmdSuccess = WindowCommand(currentFrame, command, rept, count, fromSpan)
 
 	case CmdResizeWindow:
-		ScreenResize(&Screen, currentFrame)
+		Screen.Resize(currentFrame)
 		cmdSuccess = true
 
 	case CmdValidate:
 		cmdSuccess = ValidateCommand(currentFrame, FrameOops, FrameCmd, FrameHeap)
 
 	case CmdBlockDefine, CmdBlockTransfer, CmdBlockCopy:
-		ScreenMessage(&Screen, MsgNotImplemented)
+		Screen.Message(MsgNotImplemented)
 
 	default:
-		ScreenMessage(&Screen, DbgInternalLogicError)
+		Screen.Message(DbgInternalLogicError)
 	}
 
 	if cmdSuccess {
@@ -1116,7 +1116,7 @@ func Execute(
 			eqSet = true
 		}
 		if !eqSet {
-			ScreenMessage(&Screen, MsgEqualsNotSet)
+			Screen.Message(MsgEqualsNotSet)
 		}
 	}
 	return

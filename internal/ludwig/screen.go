@@ -31,6 +31,15 @@ const (
 	YNAQM_CHARS = " YNAQM123456789"
 )
 
+// ScreenState holds all screen display state
+type ScreenState struct {
+	Frame    *FrameObject
+	TopLine  *LineHdrObject
+	BotLine  *LineHdrObject
+	MsgRow   int
+	NeedsFix bool
+}
+
 // Slide types
 type slideType int
 
@@ -55,15 +64,15 @@ func spc(count int) string {
 	return strings.Repeat(" ", count)
 }
 
-// ScreenMessage puts a message out to the user
-func ScreenMessage(ss *ScreenState, message string) {
+// Message puts a message out to the user
+func (ss *ScreenState) Message(message string) {
 	if Hangup {
 		return
 	}
 
 	if LudwigMode == LudwigScreen {
 		for i := 0; i < len(message); {
-			ScreenFreeBottomLine(ss)
+			ss.FreeBottomLine()
 			VduMoveCurs(1, TerminalInfo.Height)
 			j := min(len(message)-i, TerminalInfo.Width-1)
 			VduBold()
@@ -76,8 +85,8 @@ func ScreenMessage(ss *ScreenState, message string) {
 	}
 }
 
-// ScreenDrawLine draws a line if it is on the screen
-func ScreenDrawLine(ss *ScreenState, line *LineHdrObject) {
+// DrawLine draws a line if it is on the screen
+func (ss *ScreenState) DrawLine(line *LineHdrObject) {
 	VduMoveCurs(1, line.ScrRowNr)
 	offset := ss.Frame.ScrOffset
 	var strlen int
@@ -114,23 +123,23 @@ func ScreenDrawLine(ss *ScreenState, line *LineHdrObject) {
 	}
 }
 
-// ScreenRedraw redraws the screen exactly as is
-func ScreenRedraw(ss *ScreenState) {
+// Redraw redraws the screen exactly as is
+func (ss *ScreenState) Redraw() {
 	if ss.Frame != nil {
 		VduClearScr()
 		ss.MsgRow = TerminalInfo.Height + 1
 		ss.NeedsFix = false
 		line := ss.TopLine
 		for line != ss.BotLine {
-			ScreenDrawLine(ss, line)
+			ss.DrawLine(line)
 			line = line.FLink
 		}
-		ScreenDrawLine(ss, line)
+		ss.DrawLine(line)
 	}
 }
 
-// screenSlideLine slides a line according to slide_dist and slide_state
-func screenSlideLine(ss *ScreenState, line *LineHdrObject, slideDist int, slideState slideType) {
+// slideLine slides a line according to slide_dist and slide_state
+func (ss *ScreenState) slideLine(line *LineHdrObject, slideDist int, slideState slideType) {
 	if line.FLink == nil {
 		return
 	}
@@ -169,8 +178,8 @@ func screenSlideLine(ss *ScreenState, line *LineHdrObject, slideDist int, slideS
 	}
 }
 
-// ScreenSlide slides the whole screen the specified distance
-func ScreenSlide(ss *ScreenState, dist int) {
+// Slide slides the whole screen the specified distance
+func (ss *ScreenState) Slide(dist int) {
 	if ss.Frame != nil {
 		if dist != 0 {
 			ss.Frame.ScrOffset += dist
@@ -183,7 +192,7 @@ func ScreenSlide(ss *ScreenState, dist int) {
 			}
 			l := ss.TopLine
 			for l != nil {
-				screenSlideLine(ss, l, dist, s)
+				ss.slideLine(l, dist, s)
 				if l == ss.BotLine {
 					l = nil
 				} else {
@@ -194,8 +203,8 @@ func ScreenSlide(ss *ScreenState, dist int) {
 	}
 }
 
-// ScreenUnload unloads the screen
-func ScreenUnload(ss *ScreenState) {
+// Unload unloads the screen
+func (ss *ScreenState) Unload() {
 	if ss.Frame != nil {
 		if ss.Frame.Dot.Line.ScrRowNr == 0 {
 			ss.Frame.ScrDotLine =
@@ -218,8 +227,8 @@ func ScreenUnload(ss *ScreenState) {
 	}
 }
 
-// ScreenScroll scrolls the screen forward or back
-func ScreenScroll(ss *ScreenState, count int, expand bool) {
+// Scroll scrolls the screen forward or back
+func (ss *ScreenState) Scroll(count int, expand bool) {
 	if ss.Frame == nil {
 		return
 	}
@@ -243,7 +252,7 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 				for rowNr := botLineRow + 1; rowNr <= botLineRow+freeLines; rowNr++ {
 					botLine = botLine.FLink
 					botLine.ScrRowNr = rowNr
-					ScreenDrawLine(ss, botLine)
+					ss.DrawLine(botLine)
 				}
 				ss.BotLine = botLine
 				count -= freeLines
@@ -261,14 +270,14 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 				botLineNr += count
 				botLine = LineFromNumber(ss.Frame, botLineNr)
 			}
-			ScreenUnload(ss)
+			ss.Unload()
 			if expand {
 				ss.Frame = frame
 				ss.TopLine = botLine
 				ss.BotLine = botLine
 				botLine.ScrRowNr = TerminalInfo.Height
-				ScreenDrawLine(ss, botLine)
-				screenExpand(ss, true, false)
+				ss.DrawLine(botLine)
+				ss.expand(true, false)
 			}
 			return
 		}
@@ -283,7 +292,7 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 
 			if expand {
 				botLine.FLink.ScrRowNr = botLine.ScrRowNr
-				ScreenDrawLine(ss, botLine.FLink)
+				ss.DrawLine(botLine.FLink)
 				botLine = botLine.FLink
 			} else {
 				botLine.ScrRowNr--
@@ -312,7 +321,7 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 				for rowNr := topLineRow - 1; rowNr >= topLineRow-freeLines; rowNr-- {
 					topLine = topLine.BLink
 					topLine.ScrRowNr = rowNr
-					ScreenDrawLine(ss, topLine)
+					ss.DrawLine(topLine)
 				}
 				ss.TopLine = topLine
 				count -= freeLines
@@ -331,14 +340,14 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 				topLineNr -= count
 				tmpTopLine = LineFromNumber(ss.Frame, topLineNr)
 			}
-			ScreenUnload(ss)
+			ss.Unload()
 			if expand {
 				ss.Frame = frame
 				ss.TopLine = tmpTopLine
 				ss.BotLine = tmpTopLine
 				tmpTopLine.ScrRowNr = 1 + TerminalInfo.Height - ss.Frame.ScrHeight
-				ScreenDrawLine(ss, tmpTopLine)
-				screenExpand(ss, false, true)
+				ss.DrawLine(tmpTopLine)
+				ss.expand(false, true)
 			}
 			return
 		}
@@ -354,7 +363,7 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 
 			if expand {
 				topLine.BLink.ScrRowNr = topLine.ScrRowNr
-				ScreenDrawLine(ss, topLine.BLink)
+				ss.DrawLine(topLine.BLink)
 				topLine = topLine.BLink
 			} else {
 				topLine.ScrRowNr--
@@ -382,8 +391,8 @@ func ScreenScroll(ss *ScreenState, count int, expand bool) {
 	}
 }
 
-// screenExpand expands a screen out to at least the frame's specified screen height
-func screenExpand(ss *ScreenState, initUpwards bool, initDownwards bool) {
+// expand expands a screen out to at least the frame's specified screen height
+func (ss *ScreenState) expand(initUpwards bool, initDownwards bool) {
 	upwards := initUpwards
 	downwards := initDownwards
 
@@ -403,7 +412,7 @@ func screenExpand(ss *ScreenState, initUpwards bool, initDownwards bool) {
 					linesOnScr++
 					botLine = botLine.FLink
 					botLine.ScrRowNr = curRow + 1
-					ScreenDrawLine(ss, botLine)
+					ss.DrawLine(botLine)
 				}
 			}
 		}
@@ -417,7 +426,7 @@ func screenExpand(ss *ScreenState, initUpwards bool, initDownwards bool) {
 					linesOnScr += 1
 					topLine = topLine.BLink
 					topLine.ScrRowNr = curRow - 1
-					ScreenDrawLine(ss, topLine)
+					ss.DrawLine(topLine)
 				}
 			}
 		}
@@ -430,7 +439,7 @@ func screenExpand(ss *ScreenState, initUpwards bool, initDownwards bool) {
 	if linesOnScr < height {
 		if initDownwards {
 			if botLine.FLink != nil {
-				ScreenScroll(ss, height-linesOnScr, true)
+				ss.Scroll(height-linesOnScr, true)
 				linesOnScr = ss.BotLine.ScrRowNr + 1 - ss.TopLine.ScrRowNr
 			}
 		}
@@ -439,7 +448,7 @@ func screenExpand(ss *ScreenState, initUpwards bool, initDownwards bool) {
 			if nrLines >= height-linesOnScr {
 				nrLines = height - linesOnScr
 			}
-			ScreenScroll(ss, -nrLines, true)
+			ss.Scroll(-nrLines, true)
 		}
 	}
 
@@ -466,8 +475,8 @@ func screenExpand(ss *ScreenState, initUpwards bool, initDownwards bool) {
 	}
 }
 
-// ScreenLinesExtract extracts lines from the screen
-func ScreenLinesExtract(ss *ScreenState, firstLine *LineHdrObject, lastLine *LineHdrObject) {
+// LinesExtract extracts lines from the screen
+func (ss *ScreenState) LinesExtract(firstLine *LineHdrObject, lastLine *LineHdrObject) {
 	if lastLine != ss.BotLine {
 		// EXTRACTION NOT AT BOT-OF-SCR ACCOMPLISHED VIA TERMINAL H/W
 		VduMoveCurs(1, firstLine.ScrRowNr)
@@ -501,7 +510,7 @@ func ScreenLinesExtract(ss *ScreenState, firstLine *LineHdrObject, lastLine *Lin
 	}
 
 	if firstLine == ss.TopLine {
-		ScreenUnload(ss)
+		ss.Unload()
 	} else {
 		lineLimit := firstLine.BLink
 		for {
@@ -517,8 +526,8 @@ func ScreenLinesExtract(ss *ScreenState, firstLine *LineHdrObject, lastLine *Lin
 	}
 }
 
-// ScreenLinesInject injects lines into the screen
-func ScreenLinesInject(ss *ScreenState, firstLine *LineHdrObject, count int, beforeLine *LineHdrObject) {
+// LinesInject injects lines into the screen
+func (ss *ScreenState) LinesInject(firstLine *LineHdrObject, count int, beforeLine *LineHdrObject) {
 	// HEURISTIC -- KEEP AS MANY LINES ON THE SCREEN AS POSSIBLE
 	freeSpaceBelow := TerminalInfo.Height - ss.BotLine.ScrRowNr
 	freeSpaceAbove := ss.TopLine.ScrRowNr - 1
@@ -557,7 +566,7 @@ func ScreenLinesInject(ss *ScreenState, firstLine *LineHdrObject, count int, bef
 		for rowNr > 1 && count > 0 {
 			ss.TopLine = ss.TopLine.BLink
 			ss.TopLine.ScrRowNr = rowNr
-			ScreenDrawLine(ss, ss.TopLine)
+			ss.DrawLine(ss.TopLine)
 			rowNr--
 			count--
 		}
@@ -596,7 +605,7 @@ func ScreenLinesInject(ss *ScreenState, firstLine *LineHdrObject, count int, bef
 			for {
 				if line.ScrRowNr == 0 {
 					line.ScrRowNr = rowNr
-					ScreenDrawLine(ss, line)
+					ss.DrawLine(line)
 				} else {
 					line.ScrRowNr = rowNr
 				}
@@ -607,19 +616,19 @@ func ScreenLinesInject(ss *ScreenState, firstLine *LineHdrObject, count int, bef
 				}
 			}
 			line.ScrRowNr = rowNr
-			ScreenDrawLine(ss, line)
+			ss.DrawLine(line)
 		} else {
 			// No lines were left on the screen
 			ss.BotLine = firstLine
 			firstLine.ScrRowNr = rowNr
-			ScreenDrawLine(ss, firstLine)
-			screenExpand(ss, false, true)
+			ss.DrawLine(firstLine)
+			ss.expand(false, true)
 		}
 	}
 }
 
-// ScreenLoad loads a screen centered on the given line
-func ScreenLoad(ss *ScreenState, line *LineHdrObject) {
+// Load loads a screen centered on the given line
+func (ss *ScreenState) Load(line *LineHdrObject) {
 	frame := line.Group.Frame
 
 	switch LudwigMode {
@@ -666,7 +675,7 @@ func ScreenLoad(ss *ScreenState, line *LineHdrObject) {
 
 	case LudwigScreen:
 		if ss.Frame != nil {
-			ScreenUnload(ss)
+			ss.Unload()
 		} else {
 			VduClearScr()
 			ss.MsgRow = TerminalInfo.Height + 1
@@ -709,15 +718,15 @@ func ScreenLoad(ss *ScreenState, line *LineHdrObject) {
 		ss.Frame = frame
 		ss.BotLine = line
 		ss.TopLine = line
-		ScreenDrawLine(ss, line)
-		screenExpand(ss, true, true)
+		ss.DrawLine(line)
+		ss.expand(true, true)
 	}
 }
 
-// ScreenPosition positions the screen and cursor
-func ScreenPosition(ss *ScreenState, newLine *LineHdrObject, newCol int) {
+// Position positions the screen and cursor
+func (ss *ScreenState) Position(newLine *LineHdrObject, newCol int) {
 	if newLine.Group.Frame != ss.Frame {
-		ScreenLoad(ss, newLine)
+		ss.Load(newLine)
 		return
 	}
 
@@ -790,7 +799,7 @@ func ScreenPosition(ss *ScreenState, newLine *LineHdrObject, newCol int) {
 
 		// Execute the scroll and slide operations
 		if scrollState == scrollRedraw || slideState == slideRedraw {
-			ScreenLoad(ss, newLine)
+			ss.Load(newLine)
 		} else {
 			if slideState != slideDont {
 				// Adjust the screen offset
@@ -817,7 +826,7 @@ func ScreenPosition(ss *ScreenState, newLine *LineHdrObject, newCol int) {
 					// Adjust lines that will be left on screen
 					for line != nil {
 						if line.ScrRowNr > rowNr {
-							screenSlideLine(ss, line, slideDist, slideState)
+							ss.slideLine(line, slideDist, slideState)
 						}
 						if line != botLine {
 							line = line.FLink
@@ -838,7 +847,7 @@ func ScreenPosition(ss *ScreenState, newLine *LineHdrObject, newCol int) {
 					// Adjust lines that will be left on screen
 					for line != nil {
 						if line.ScrRowNr <= rowNr {
-							screenSlideLine(ss, line, slideDist, slideState)
+							ss.slideLine(line, slideDist, slideState)
 						}
 						if line != topLine {
 							line = line.BLink
@@ -851,17 +860,17 @@ func ScreenPosition(ss *ScreenState, newLine *LineHdrObject, newCol int) {
 
 			switch scrollState {
 			case scrollForward:
-				ScreenScroll(ss, scrollDist, true)
+				ss.Scroll(scrollDist, true)
 			case scrollBack:
-				ScreenScroll(ss, -scrollDist, true)
+				ss.Scroll(-scrollDist, true)
 			}
 		}
 	}
-	screenExpand(ss, true, true)
+	ss.expand(true, true)
 }
 
-// ScreenPause waits until user types RETURN
-func ScreenPause(ss *ScreenState) {
+// Pause waits until user types RETURN
+func (ss *ScreenState) Pause() {
 	if LudwigMode == LudwigScreen {
 		if ss.Frame != nil {
 			VduMoveCurs(1, 1)
@@ -871,7 +880,7 @@ func ScreenPause(ss *ScreenState) {
 		VduGetInput(PAUSE_MSG, MaxStrLen)
 		if ss.TopLine != nil {
 			if ss.TopLine.ScrRowNr == 1 {
-				ScreenDrawLine(ss, ss.TopLine)
+				ss.DrawLine(ss.TopLine)
 			} else {
 				VduMoveCurs(1, 1)
 				VduClearEOL()
@@ -883,11 +892,11 @@ func ScreenPause(ss *ScreenState) {
 	}
 }
 
-// ScreenClearMsgs clears any messages off the screen
-func ScreenClearMsgs(ss *ScreenState, pause bool) {
+// ClearMsgs clears any messages off the screen
+func (ss *ScreenState) ClearMsgs(pause bool) {
 	if ss.MsgRow <= TerminalInfo.Height {
 		if pause {
-			ScreenPause(ss)
+			ss.Pause()
 		}
 		if ss.Frame == nil {
 			VduClearScr()
@@ -921,8 +930,8 @@ func changeFrameSize(frm *FrameObject, band int, halfScreen int) {
 	}
 }
 
-// ScreenResize handles screen resize
-func ScreenResize(ss *ScreenState, frame *FrameObject) {
+// Resize handles screen resize
+func (ss *ScreenState) Resize(frame *FrameObject) {
 	TtWinChanged = false
 	TerminalInfo.Width, TerminalInfo.Height = VduGetNewDimensions()
 	ss.MsgRow = TerminalInfo.Height + 1
@@ -945,9 +954,9 @@ func ScreenResize(ss *ScreenState, frame *FrameObject) {
 	InitialScrWidth = TerminalInfo.Width
 	InitialScrHeight = TerminalInfo.Height
 
-	ScreenLoad(ss, frame.Dot.Line)
+	ss.Load(frame.Dot.Line)
 	ss.NeedsFix = false
-	screenExpand(ss, true, true)
+	ss.expand(true, true)
 	VduMoveCurs(
 		frame.Dot.Col-frame.ScrOffset,
 		frame.Dot.Line.ScrRowNr,
@@ -962,16 +971,16 @@ func advance(line *LineHdrObject, count int) *LineHdrObject {
 	return line
 }
 
-// ScreenFixup makes sure the screen is correct
-func ScreenFixup(ss *ScreenState, frame *FrameObject) {
+// Fixup makes sure the screen is correct
+func (ss *ScreenState) Fixup(frame *FrameObject) {
 	if TtWinChanged {
-		ScreenResize(ss, frame)
+		ss.Resize(frame)
 	} else {
 		if ss.Frame != frame {
 			if ss.MsgRow <= TerminalInfo.Height {
-				ScreenClearMsgs(ss, true)
+				ss.ClearMsgs(true)
 			}
-			ScreenLoad(ss, frame.Dot.Line)
+			ss.Load(frame.Dot.Line)
 		} else {
 			needsReposition := frame.Dot.Line.ScrRowNr == 0 ||
 				(frame.Dot.Line.ScrRowNr-ss.TopLine.ScrRowNr < frame.MarginTop &&
@@ -983,16 +992,16 @@ func ScreenFixup(ss *ScreenState, frame *FrameObject) {
 
 			if needsReposition {
 				if ss.MsgRow <= TerminalInfo.Height {
-					ScreenClearMsgs(ss, true)
+					ss.ClearMsgs(true)
 				}
-				ScreenPosition(ss, frame.Dot.Line, frame.Dot.Col)
+				ss.Position(frame.Dot.Line, frame.Dot.Col)
 			} else if ss.MsgRow <= TerminalInfo.Height {
 				VduMoveCurs(
 					frame.Dot.Col-frame.ScrOffset,
 					frame.Dot.Line.ScrRowNr,
 				)
 				key := VduGetKey()
-				ScreenClearMsgs(ss, false)
+				ss.ClearMsgs(false)
 				if TtControlC {
 					return
 				}
@@ -1001,7 +1010,7 @@ func ScreenFixup(ss *ScreenState, frame *FrameObject) {
 		}
 		ss.NeedsFix = false
 		SyntaxApplyDirty(frame)
-		screenExpand(ss, true, true)
+		ss.expand(true, true)
 		VduMoveCurs(
 			frame.Dot.Col-frame.ScrOffset,
 			frame.Dot.Line.ScrRowNr,
@@ -1015,7 +1024,7 @@ func ScreenFixup(ss *ScreenState, frame *FrameObject) {
 // below the prompt band, only LineNr is set. When the prompt must overwrite
 // an existing screen line, Redraw records that line so it can be restored
 // after input is complete.
-func computePromptPosition(ss *ScreenState, frame *FrameObject, thisTp, maxTp int) {
+func (ss *ScreenState) computePromptPosition(frame *FrameObject, thisTp, maxTp int) {
 	PromptRegion[thisTp].LineNr = 0
 	PromptRegion[thisTp].Redraw = nil
 
@@ -1023,7 +1032,7 @@ func computePromptPosition(ss *ScreenState, frame *FrameObject, thisTp, maxTp in
 		return
 	}
 
-	ScreenFixup(ss, frame)
+	ss.Fixup(frame)
 	PromptRegion[thisTp].LineNr = thisTp
 
 	if ss.TopLine.ScrRowNr > maxTp {
@@ -1061,10 +1070,10 @@ func computePromptPosition(ss *ScreenState, frame *FrameObject, thisTp, maxTp in
 
 // restorePromptLines redraws or clears any screen lines that were displaced
 // by prompt regions during multi-line input.
-func restorePromptLines(ss *ScreenState, maxTp int) {
+func (ss *ScreenState) restorePromptLines(maxTp int) {
 	for index := 1; index <= maxTp; index++ {
 		if PromptRegion[index].Redraw != nil {
-			ScreenDrawLine(ss, PromptRegion[index].Redraw)
+			ss.DrawLine(PromptRegion[index].Redraw)
 		} else if PromptRegion[index].LineNr != 0 {
 			VduMoveCurs(1, PromptRegion[index].LineNr)
 			VduClearEOL()
@@ -1072,9 +1081,8 @@ func restorePromptLines(ss *ScreenState, maxTp int) {
 	}
 }
 
-// ScreenGetLineP gets a line from the user
-func ScreenGetLineP(
-	ss *ScreenState,
+// GetLineP gets a line from the user
+func (ss *ScreenState) GetLineP(
 	frame *FrameObject,
 	prompt string,
 	maxTp int,
@@ -1092,7 +1100,7 @@ func ScreenGetLineP(
 		return nil, 0
 	}
 
-	computePromptPosition(ss, frame, thisTp, maxTp)
+	ss.computePromptPosition(frame, thisTp, maxTp)
 	if PromptRegion[thisTp].LineNr != 0 {
 		VduMoveCurs(1, PromptRegion[thisTp].LineNr)
 	}
@@ -1109,13 +1117,13 @@ func ScreenGetLineP(
 		}
 	}
 	if thisTp == maxTp || outlen == 0 {
-		restorePromptLines(ss, maxTp)
+		ss.restorePromptLines(maxTp)
 	}
 	return outbuf, outlen
 }
 
-// ScreenFreeBottomLine frees the bottom line of the screen
-func ScreenFreeBottomLine(ss *ScreenState) {
+// FreeBottomLine frees the bottom line of the screen
+func (ss *ScreenState) FreeBottomLine() {
 	// This routine assumes that the editor is in SCREEN mode.
 	// This routine frees the bottom line of the screen for use by the caller.
 	// The main use of the area is the outputting of messages.
@@ -1136,7 +1144,7 @@ func ScreenFreeBottomLine(ss *ScreenState) {
 		VduDeleteLines(1)
 	} else if ss.TopLine.ScrRowNr != 1 {
 		// IF TOP LINE FREE.
-		ScreenScroll(ss, 1, false)
+		ss.Scroll(1, false)
 	} else {
 		if ss.BotLine.ScrRowNr+1 < ss.MsgRow {
 			// IF ROOM FOR MORE MSGS.
@@ -1147,7 +1155,7 @@ func ScreenFreeBottomLine(ss *ScreenState) {
 				(ss.BotLine.ScrRowNr == TerminalInfo.Height)) {
 			// IF DOT NOT ON TOP LINE,
 			// AND WE CANT USE THE BOT.
-			ScreenScroll(ss, 1, false)
+			ss.Scroll(1, false)
 		} else if ss.MsgRow <= TerminalInfo.Height/2 {
 			// 1/2 SCREEN ALREADY MSGS.
 			VduMoveCurs(1, ss.MsgRow)
@@ -1164,8 +1172,8 @@ func ScreenFreeBottomLine(ss *ScreenState) {
 	ss.MsgRow -= 1
 }
 
-// ScreenVerify gets verification from user
-func ScreenVerify(ss *ScreenState, frame *FrameObject, prompt string) VerifyResponse {
+// Verify gets verification from user
+func (ss *ScreenState) Verify(frame *FrameObject, prompt string) VerifyResponse {
 	const verHeight = 4
 
 	verify := VerifyReplyQuit
@@ -1186,12 +1194,12 @@ func ScreenVerify(ss *ScreenState, frame *FrameObject, prompt string) VerifyResp
 	for {
 		switch LudwigMode {
 		case LudwigScreen:
-			ScreenFixup(ss, frame)
+			ss.Fixup(frame)
 			VduBold()
 			if usePrompt {
-				ScreenMessage(ss, prompt)
+				ss.Message(prompt)
 			} else {
-				ScreenMessage(ss, YNAQM_MSG)
+				ss.Message(YNAQM_MSG)
 			}
 			VduNormal()
 			VduMoveCurs(
@@ -1205,15 +1213,15 @@ func ScreenVerify(ss *ScreenState, frame *FrameObject, prompt string) VerifyResp
 			if key == 13 {
 				key = 'N' // RETURN <=> NO
 			}
-			ScreenClearMsgs(ss, false)
+			ss.ClearMsgs(false)
 
 		case LudwigBatch, LudwigHardcopy:
 			var response *StrObject
 			var respLen int
 			if usePrompt {
-				response, respLen = ScreenGetLineP(ss, frame, prompt, 1, 1)
+				response, respLen = ss.GetLineP(frame, prompt, 1, 1)
 			} else {
-				response, respLen = ScreenGetLineP(ss, frame, YNAQM_MSG, 1, 1)
+				response, respLen = ss.GetLineP(frame, YNAQM_MSG, 1, 1)
 			}
 			if respLen == 0 {
 				key = 'N'
@@ -1256,9 +1264,9 @@ func ScreenVerify(ss *ScreenState, frame *FrameObject, prompt string) VerifyResp
 					frame.ScrHeight = TerminalInfo.Height
 				}
 				if ss.TopLine == nil {
-					ScreenLoad(ss, frame.Dot.Line)
+					ss.Load(frame.Dot.Line)
 				} else {
-					screenExpand(ss, true, true)
+					ss.expand(true, true)
 				}
 				more = true
 				usePrompt = true
