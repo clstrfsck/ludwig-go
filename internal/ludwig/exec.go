@@ -133,6 +133,7 @@ func ExecComputeLineRange(
 // Execute executes a command with the specified parameters
 func Execute(
 	frame *FrameObject,
+	frameOops *FrameObject,
 	command Commands,
 	rept LeadParam,
 	count int,
@@ -270,20 +271,20 @@ func Execute(
 				theMark = theOtherMark
 				theOtherMark = anotherMark
 			}
-			if currentFrame != FrameOops {
+			if currentFrame != frameOops {
 				// Make sure oops_span is okay
-				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
+				MarkCreate(frameOops.LastGroup.LastLine, 1, &frameOops.Span.MarkTwo)
 				cmdSuccess = TextMove(
 					false,                        // Don't copy, transfer
 					1,                            // One instance of
 					theOtherMark,                 // starting pos
 					theMark,                      // ending pos
-					FrameOops.Span.MarkTwo,       // destination
-					&FrameOops.Marks[MarkEquals], // leave at start
-					&FrameOops.Dot,               // leave at end
+					frameOops.Span.MarkTwo,       // destination
+					&frameOops.Marks[MarkEquals], // leave at start
+					&frameOops.Dot,               // leave at end
 				)
-				FrameOops.TextModified = true
-				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified])
+				frameOops.TextModified = true
+				MarkCreate(frameOops.Dot.Line, frameOops.Dot.Col, &frameOops.Marks[MarkModified])
 			} else {
 				cmdSuccess = TextRemove(theOtherMark, theMark)
 			}
@@ -304,12 +305,12 @@ func Execute(
 			}
 			MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 			LinesExtract(firstLine, lastLine)
-			if currentFrame != FrameOops {
-				LinesInject(firstLine, lastLine, FrameOops.LastGroup.LastLine)
-				MarkCreate(firstLine, 1, &FrameOops.Marks[MarkEquals])
-				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Dot)
-				FrameOops.TextModified = true
-				MarkCreate(FrameOops.Dot.Line, FrameOops.Dot.Col, &FrameOops.Marks[MarkModified])
+			if currentFrame != frameOops {
+				LinesInject(firstLine, lastLine, frameOops.LastGroup.LastLine)
+				MarkCreate(firstLine, 1, &frameOops.Marks[MarkEquals])
+				MarkCreate(frameOops.LastGroup.LastLine, 1, &frameOops.Dot)
+				frameOops.TextModified = true
+				MarkCreate(frameOops.Dot.Line, frameOops.Dot.Col, &frameOops.Marks[MarkModified])
 			}
 			currentFrame.Dot.Col = dotCol
 			currentFrame.TextModified = true
@@ -324,7 +325,7 @@ func Execute(
 				TextRealizeNull(currentFrame.Dot.Line)
 				cmdSuccess = ArrowCommand(currentFrame, command, rept, count, fromSpan)
 			} else {
-				currentFrame, cmdSuccess = Execute(currentFrame, CmdSplitLine, rept, count, tparam, fromSpan)
+				currentFrame, cmdSuccess = Execute(currentFrame, frameOops, CmdSplitLine, rept, count, tparam, fromSpan)
 			}
 		} else {
 			cmdSuccess = ArrowCommand(currentFrame, command, rept, count, fromSpan)
@@ -470,7 +471,7 @@ func Execute(
 			if !ok {
 				return
 			}
-			currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, FrameCmd.Span.Code, true)
+			currentFrame, cmdSuccess = CodeInterpret(currentFrame, frameOops, rept, count, FrameCmd.Span.Code, true)
 		}
 
 	case CmdFileInput, CmdFileOutput, CmdFileEdit, CmdFileRead, CmdFileWrite,
@@ -503,7 +504,7 @@ func Execute(
 					var ok bool
 					currentFrame, ok = CodeCompile(currentFrame, FrameCmd.Span, true)
 					if ok {
-						currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, FrameCmd.Span.Code, true)
+						currentFrame, cmdSuccess = CodeInterpret(currentFrame, frameOops, rept, count, FrameCmd.Span.Code, true)
 					}
 				}
 			} else {
@@ -721,16 +722,16 @@ func Execute(
 
 	case CmdWordDelete:
 		if FileData.OldCmds {
-			cmdSuccess = WordDeleteWord(currentFrame, rept, count)
+			cmdSuccess = WordDeleteWord(currentFrame, frameOops, rept, count)
 		} else {
-			cmdSuccess = NewwordDeleteWord(currentFrame, rept, count)
+			cmdSuccess = NewwordDeleteWord(currentFrame, frameOops, rept, count)
 		}
 
 	case CmdAdvanceParagraph:
 		cmdSuccess = NewwordAdvanceParagraph(currentFrame, rept, count)
 
 	case CmdDeleteParagraph:
-		cmdSuccess = NewwordDeleteParagraph(currentFrame, rept, count)
+		cmdSuccess = NewwordDeleteParagraph(currentFrame, frameOops, rept, count)
 
 	case CmdMark:
 		cmdSuccess = true
@@ -976,7 +977,7 @@ func Execute(
 					if command == CmdSpanCompile {
 						cmdSuccess = true
 					} else {
-						currentFrame, cmdSuccess = CodeInterpret(currentFrame, rept, count, newSpan.Code, true)
+						currentFrame, cmdSuccess = CodeInterpret(currentFrame, frameOops, rept, count, newSpan.Code, true)
 					}
 				} else {
 					Screen.Message(MsgNoSuchSpan)
@@ -999,21 +1000,21 @@ func Execute(
 		var newSpan, oldSpan *SpanObject
 		if SpanFind(newName, &newSpan, &oldSpan) {
 			// Grunge the old one
-			if newSpan == FrameOops.Span {
-				if !TextRemove(FrameOops.Span.MarkOne, FrameOops.Span.MarkTwo) {
+			if newSpan == frameOops.Span {
+				if !TextRemove(frameOops.Span.MarkOne, frameOops.Span.MarkTwo) {
 					return
 				}
 			} else {
 				// Make sure oops_span is okay
-				MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
+				MarkCreate(frameOops.LastGroup.LastLine, 1, &frameOops.Span.MarkTwo)
 				if !TextMove(
 					false, // Don't copy, transfer
 					1,     // One instance of
 					newSpan.MarkOne,
 					newSpan.MarkTwo,
-					FrameOops.Span.MarkTwo,       // destination
-					&FrameOops.Marks[MarkEquals], // leave at start
-					&FrameOops.Dot,               // leave at end
+					frameOops.Span.MarkTwo,       // destination
+					&frameOops.Marks[MarkEquals], // leave at start
+					&frameOops.Dot,               // leave at end
 				) {
 					return
 				}
@@ -1094,7 +1095,7 @@ func Execute(
 		cmdSuccess = true
 
 	case CmdValidate:
-		cmdSuccess = ValidateCommand(currentFrame, FrameOops, FrameCmd, FrameHeap)
+		cmdSuccess = ValidateCommand(currentFrame, frameOops, FrameCmd, FrameHeap)
 
 	case CmdBlockDefine, CmdBlockTransfer, CmdBlockCopy:
 		Screen.Message(MsgNotImplemented)

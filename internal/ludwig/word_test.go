@@ -599,21 +599,13 @@ func TestWordAdvanceWord(t *testing.T) {
 // ---- WordDeleteWord -----------------------------------------------------
 
 func TestWordDeleteWord(t *testing.T) {
-	// Use FrameOops=frame so delete takes TextRemove path (no oops buffer needed)
-	withFrameOops := func(t *testing.T, frame *FrameObject) {
-		t.Helper()
-		old := FrameOops
-		FrameOops = frame
-		t.Cleanup(func() { FrameOops = old })
-	}
 
 	t.Run("MarkerReturnsFalse", func(t *testing.T) {
 		frame, lines := buildWordFrame([]string{"hello world"})
-		withFrameOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := WordDeleteWord(frame, LeadParamMarker, 1)
+		ok := WordDeleteWord(frame, frame, LeadParamMarker, 1)
 
 		assert.False(t, ok)
 	})
@@ -621,11 +613,10 @@ func TestWordDeleteWord(t *testing.T) {
 	t.Run("DeleteOneWordForward", func(t *testing.T) {
 		// "hello world", dot at col 1, NoneCount=1 → deletes "hello " → "world"
 		frame, lines := buildWordFrame([]string{"hello world"})
-		withFrameOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := WordDeleteWord(frame, LeadParamNone, 1)
+		ok := WordDeleteWord(frame, frame, LeadParamNone, 1)
 
 		assert.True(t, ok)
 		assert.Equal(t, "world", getLineContent(lines[0]))
@@ -634,11 +625,10 @@ func TestWordDeleteWord(t *testing.T) {
 	t.Run("FailsWhenNoNextWord_DotRestored", func(t *testing.T) {
 		// "hello" single word: second advance fails → dot restored → false
 		frame, lines := buildWordFrame([]string{"hello"})
-		withFrameOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 3
 
-		ok := WordDeleteWord(frame, LeadParamNone, 1)
+		ok := WordDeleteWord(frame, frame, LeadParamNone, 1)
 
 		assert.False(t, ok)
 		assert.Equal(t, 3, frame.Dot.Col) // dot restored

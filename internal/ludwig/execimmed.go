@@ -21,7 +21,7 @@ const (
 	defaultSpanName = "L. Wittgenstein und Sohn."
 )
 
-func executeImmedScreen(frame *FrameObject) {
+func executeImmedScreen(frame *FrameObject, frameOops *FrameObject) {
 	cmdSpan := SpanObject{
 		Name: defaultSpanName,
 	}
@@ -186,16 +186,16 @@ outerLoop:
 				var ok bool
 				frame, ok = CodeCompile(frame, &cmdSpan, false)
 				if ok {
-					frame, cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, false)
+					frame, cmdSuccess = CodeInterpret(frame, frameOops, LeadParamNone, 1, cmdSpan.Code, false)
 				} else {
 					cmdSuccess = false
 				}
 			} else {
 				if Lookup[key].Command == CmdExtended {
-					frame, cmdSuccess = CodeInterpret(frame, LeadParamNone, 1, Lookup[key].Code, true)
+					frame, cmdSuccess = CodeInterpret(frame, frameOops, LeadParamNone, 1, Lookup[key].Code, true)
 				} else {
 					frame, cmdSuccess = Execute(
-						frame, Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
+						frame, frameOops, Lookup[key].Command, LeadParamNone, 1, Lookup[key].Tpar, false,
 					)
 				}
 			}
@@ -218,7 +218,7 @@ outerLoop:
 	}
 }
 
-func executeImmedBatchHardcopy(frame *FrameObject) {
+func executeImmedBatchHardcopy(frame *FrameObject, frameOops *FrameObject) {
 	cmdSpan := SpanObject{
 		Name: defaultSpanName,
 	}
@@ -263,7 +263,7 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 					cmdSpan.MarkTwo.Col = cmdSpan.MarkTwo.Line.Used + 1
 					frame, ok = CodeCompile(frame, &cmdSpan, true)
 					if ok {
-						frame, ok = CodeInterpret(frame, LeadParamNone, 1, cmdSpan.Code, true)
+						frame, ok = CodeInterpret(frame, frameOops, LeadParamNone, 1, cmdSpan.Code, true)
 						if !ok {
 							fmt.Println("\aCOMMAND FAILED")
 						}
@@ -282,14 +282,14 @@ func executeImmedBatchHardcopy(frame *FrameObject) {
 }
 
 // ExecuteImmed is the main execution loop for Ludwig
-func ExecuteImmed(frame *FrameObject) {
+func ExecuteImmed(frame *FrameObject, frameOops *FrameObject) {
 	// Vector off to the appropriate main execution mode. Each mode behaves
 	// slightly differently at this level.
 	switch LudwigMode {
 	case LudwigScreen:
-		executeImmedScreen(frame)
+		executeImmedScreen(frame, frameOops)
 
 	case LudwigHardcopy, LudwigBatch:
-		executeImmedBatchHardcopy(frame)
+		executeImmedBatchHardcopy(frame, frameOops)
 	}
 }

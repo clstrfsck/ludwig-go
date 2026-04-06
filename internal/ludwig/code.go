@@ -686,7 +686,14 @@ type labelsType struct {
 }
 
 // CodeInterpret interprets compiled code
-func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *CodeHeader, fromSpan bool) (*FrameObject, bool) {
+func CodeInterpret(
+	frame *FrameObject,
+	frameOops *FrameObject,
+	rept LeadParam,
+	count int,
+	codeHead *CodeHeader,
+	fromSpan bool,
+) (*FrameObject, bool) {
 	const maxLevel = 100
 	labels := make([]labelsType, maxLevel+1)
 
@@ -794,7 +801,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 						Screen.Message(DbgCodePtrIsNil)
 						return frame, false
 					}
-					frame, _ = CodeInterpret(frame, currRep, currCnt, currCode, true)
+					frame, _ = CodeInterpret(frame, frameOops, currRep, currCnt, currCode, true)
 
 				case CmdVerify:
 					if !verifyAlways[currCnt] {
@@ -834,7 +841,7 @@ func CodeInterpret(frame *FrameObject, rept LeadParam, count int, codeHead *Code
 			} else {
 				// Call execute command
 				var ok bool
-				frame, ok = Execute(frame, currOp, currRep, currCnt, currTpar, fromSpan)
+				frame, ok = Execute(frame, frameOops, currOp, currRep, currCnt, currTpar, fromSpan)
 				if !ok {
 					interpStatus = failure
 					pc = currLbl

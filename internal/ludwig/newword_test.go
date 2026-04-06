@@ -717,22 +717,14 @@ func TestNewwordAdvanceParagraph(t *testing.T) {
 // ---- NewwordDeleteWord -------------------------------------------------
 
 func TestNewwordDeleteWord(t *testing.T) {
-	// Use FrameOops=frame so delete takes TextRemove path (no oops buffer needed)
-	withOops := func(t *testing.T, frame *FrameObject) {
-		t.Helper()
-		old := FrameOops
-		FrameOops = frame
-		t.Cleanup(func() { FrameOops = old })
-	}
 
 	t.Run("DeleteOneWordForward", func(t *testing.T) {
 		// "hello world" → delete from "hello" to "world" → "world" remains
 		frame, lines := buildWordFrame([]string{"hello world"})
-		withOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := NewwordDeleteWord(frame, LeadParamNone, 1)
+		ok := NewwordDeleteWord(frame, frame, LeadParamNone, 1)
 
 		assert.True(t, ok)
 		assert.Equal(t, "world", getLineContent(lines[0]))
@@ -741,11 +733,10 @@ func TestNewwordDeleteWord(t *testing.T) {
 	t.Run("DeleteOnlyWordFails", func(t *testing.T) {
 		// Single word with no next word → second advance fails → false
 		frame, lines := buildWordFrame([]string{"hello"})
-		withOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := NewwordDeleteWord(frame, LeadParamNone, 1)
+		ok := NewwordDeleteWord(frame, frame, LeadParamNone, 1)
 
 		assert.False(t, ok)
 		// Dot restored to original position
@@ -756,22 +747,15 @@ func TestNewwordDeleteWord(t *testing.T) {
 // ---- NewwordDeleteParagraph --------------------------------------------
 
 func TestNewwordDeleteParagraph(t *testing.T) {
-	withOops := func(t *testing.T, frame *FrameObject) {
-		t.Helper()
-		old := FrameOops
-		FrameOops = frame
-		t.Cleanup(func() { FrameOops = old })
-	}
 
 	t.Run("DeleteFirstParagraph", func(t *testing.T) {
 		// para1 (line0), blank (line1), para2 (line2)
 		// Delete para1 → para2 remains as first content
 		frame, lines := buildWordFrame([]string{"hello world", "", "foo bar"})
-		withOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 1
 
-		ok := NewwordDeleteParagraph(frame, LeadParamNone, 1)
+		ok := NewwordDeleteParagraph(frame, frame, LeadParamNone, 1)
 
 		assert.True(t, ok)
 	})
@@ -779,11 +763,10 @@ func TestNewwordDeleteParagraph(t *testing.T) {
 	t.Run("DeleteFailsWhenNoNextParagraph", func(t *testing.T) {
 		// Single paragraph, no next → forward advance fails → false, dot restored
 		frame, lines := buildWordFrame([]string{"hello world"})
-		withOops(t, frame)
 		frame.Dot.Line = lines[0]
 		frame.Dot.Col = 3
 
-		ok := NewwordDeleteParagraph(frame, LeadParamNone, 1)
+		ok := NewwordDeleteParagraph(frame, frame, LeadParamNone, 1)
 
 		assert.False(t, ok)
 		assert.Equal(t, 3, frame.Dot.Col) // dot restored

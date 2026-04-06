@@ -199,7 +199,7 @@ func NewwordAdvanceWord(frame *FrameObject, rept LeadParam, count int) bool {
 }
 
 // NewwordDeleteWord deletes words (same words as advance word advances over)
-func NewwordDeleteWord(frame *FrameObject, rept LeadParam, count int) bool {
+func NewwordDeleteWord(frame *FrameObject, frameOops *FrameObject, rept LeadParam, count int) bool {
 	result := false
 	var oldPos *MarkObject
 	var here *MarkObject
@@ -234,17 +234,17 @@ func NewwordDeleteWord(frame *FrameObject, rept LeadParam, count int) bool {
 		here = theOtherMark
 		theOtherMark = anotherMark
 	}
-	if frame != FrameOops {
+	if frame != frameOops {
 		// Make sure oops_span is okay.
-		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
+		MarkCreate(frameOops.LastGroup.LastLine, 1, &frameOops.Span.MarkTwo)
 		result = TextMove(
 			false,                        // Don't copy, transfer
 			1,                            // One instance of
 			theOtherMark,                 // starting pos.
 			here,                         // ending pos.
-			FrameOops.Span.MarkTwo,       // destination.
-			&FrameOops.Marks[MarkEquals], // leave at start.
-			&FrameOops.Dot,               // leave at end.
+			frameOops.Span.MarkTwo,       // destination.
+			&frameOops.Marks[MarkEquals], // leave at start.
+			&frameOops.Dot,               // leave at end.
 		)
 	} else {
 		result = TextRemove(
@@ -407,7 +407,7 @@ func NewwordAdvanceParagraph(frame *FrameObject, rept LeadParam, count int) bool
 }
 
 // NewwordDeleteParagraph deletes paragraphs
-func NewwordDeleteParagraph(frame *FrameObject, rept LeadParam, count int) bool {
+func NewwordDeleteParagraph(frame *FrameObject, frameOops *FrameObject, rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject
 	var theOtherMark *MarkObject
@@ -440,17 +440,17 @@ func NewwordDeleteParagraph(frame *FrameObject, rept LeadParam, count int) bool 
 		here = theOtherMark
 		theOtherMark = anotherMark
 	}
-	if frame != FrameOops {
+	if frame != frameOops {
 		// Make sure oops_span is okay.
-		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
+		MarkCreate(frameOops.LastGroup.LastLine, 1, &frameOops.Span.MarkTwo)
 		return TextMove(
 			false,                        // Don't copy, transfer
 			1,                            // One instance of
 			theOtherMark,                 // starting pos.
 			here,                         // ending pos.
-			FrameOops.Span.MarkTwo,       // destination.
-			&FrameOops.Marks[MarkEquals], // leave at start.
-			&FrameOops.Dot,               // leave at end.
+			frameOops.Span.MarkTwo,       // destination.
+			&frameOops.Marks[MarkEquals], // leave at start.
+			&frameOops.Dot,               // leave at end.
 		)
 	} else {
 		return TextRemove(

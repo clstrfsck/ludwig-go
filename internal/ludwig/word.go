@@ -752,7 +752,7 @@ func WordAdvanceWord(frame *FrameObject, rept LeadParam, count int) bool {
 }
 
 // WordDeleteWord deletes words at cursor
-func WordDeleteWord(frame *FrameObject, rept LeadParam, count int) bool {
+func WordDeleteWord(frame *FrameObject, frameOops *FrameObject, rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject
 	var theOtherMark *MarkObject
@@ -790,17 +790,17 @@ func WordDeleteWord(frame *FrameObject, rept LeadParam, count int) bool {
 		theOtherMark = anotherMark
 	}
 	result := false
-	if frame != FrameOops {
+	if frame != frameOops {
 		// Make sure oops_span is okay
-		MarkCreate(FrameOops.LastGroup.LastLine, 1, &FrameOops.Span.MarkTwo)
+		MarkCreate(frameOops.LastGroup.LastLine, 1, &frameOops.Span.MarkTwo)
 		result = TextMove(
 			false,
 			1,
 			theOtherMark,
 			here,
-			FrameOops.Span.MarkTwo,
-			&FrameOops.Marks[MarkEquals],
-			&FrameOops.Dot,
+			frameOops.Span.MarkTwo,
+			&frameOops.Marks[MarkEquals],
+			&frameOops.Dot,
 		)
 	} else {
 		result = TextRemove(theOtherMark, here)
