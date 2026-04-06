@@ -199,6 +199,7 @@ func NewwordAdvanceWord(frame *FrameObject, rept LeadParam, count int) bool {
 }
 
 // NewwordDeleteWord deletes words (same words as advance word advances over)
+// Note that frameOops must not be nil.
 func NewwordDeleteWord(frame *FrameObject, frameOops *FrameObject, rept LeadParam, count int) bool {
 	result := false
 	var oldPos *MarkObject
@@ -406,7 +407,8 @@ func NewwordAdvanceParagraph(frame *FrameObject, rept LeadParam, count int) bool
 	return true
 }
 
-// NewwordDeleteParagraph deletes paragraphs
+// NewwordDeleteParagraph deletes paragraphs.
+// Note that frameOops must not be nil.
 func NewwordDeleteParagraph(frame *FrameObject, frameOops *FrameObject, rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject

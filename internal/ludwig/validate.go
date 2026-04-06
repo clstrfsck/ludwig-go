@@ -29,7 +29,11 @@ func ValidateCommand(currentFrame *FrameObject, specialFrames *SpecialFrames) bo
 		heap = 0x0004
 	)
 
-	if currentFrame == nil || specialFrames.Oops == nil || specialFrames.Cmd == nil || specialFrames.Heap == nil {
+	if currentFrame == nil || specialFrames == nil {
+		Screen.Message(DbgInvalidFramePtr)
+		return false
+	}
+	if specialFrames.Oops == nil || specialFrames.Cmd == nil || specialFrames.Heap == nil {
 		Screen.Message(DbgInvalidFramePtr)
 		return false
 	}

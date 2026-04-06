@@ -138,7 +138,8 @@ func UserCommandIntroducer(frame *FrameObject) bool {
 	return cmdSuccess
 }
 
-// UserKey assigns a key to a command string
+// UserKey assigns a key to a command string.
+// Note that frameHeap must not be nil.
 func UserKey(frame *FrameObject, frameHeap *FrameObject, key *TParObject, strng *TParObject) (*FrameObject, bool) {
 	result := false
 	var keyCode int

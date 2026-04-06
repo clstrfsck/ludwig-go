@@ -751,7 +751,8 @@ func WordAdvanceWord(frame *FrameObject, rept LeadParam, count int) bool {
 	return true
 }
 
-// WordDeleteWord deletes words at cursor
+// WordDeleteWord deletes words at cursor.
+// Note that frameOops must not be nil.
 func WordDeleteWord(frame *FrameObject, frameOops *FrameObject, rept LeadParam, count int) bool {
 	var oldPos *MarkObject
 	var here *MarkObject
