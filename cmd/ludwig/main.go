@@ -508,21 +508,21 @@ func loadCommandTable(oldVersion bool) {
 	}
 }
 
-func startUp(argv []string) (*FrameObject, bool) {
+func startUp(argv []string) (*FrameObject, *SpecialFrames, bool) {
 	const frameNameCmd = "COMMAND"
-	const frameNameOops = "OOPS"
 	const frameNameHeap = "HEAP"
+	const frameNameOops = "OOPS"
 
 	for _, arg := range argv {
 		if len(arg) > FileNameLen {
 			Screen.Message(MsgParameterTooLong)
-			return nil, false
+			return nil, nil, false
 		}
 	}
 
 	// Open the files.
 	if !FileCreateOpen(argv[1:], ParseCommand, &Files[1], &Files[2]) {
-		return nil, false
+		return nil, nil, false
 	}
 	SetRegularTabStops(FileData.TabWidth)
 
@@ -552,36 +552,37 @@ func startUp(argv []string) (*FrameObject, bool) {
 
 	Screen.MsgRow = TerminalInfo.Height + 1
 
-	// Create the three automatically defined frames: OOPS, COMMAND and LUDWIG.
-	// Save pointers to COMMAND & OOPS  frames for use in later frame routines.
+	// Create the automatically defined frames: COMMAND, HEAP, OOPS and LUDWIG.
+	// Save pointers to frames for use in later frame routines.
 
+	specialFrames := SpecialFrames{}
 	var ok bool
-	FrameOops, ok = FrameEdit(nil, frameNameOops)
+	specialFrames.Oops, ok = FrameEdit(nil, frameNameOops)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
-	if !FrameSetHeight(FrameOops, InitialScrHeight, true) {
-		return nil, false
+	if !FrameSetHeight(specialFrames.Oops, InitialScrHeight, true) {
+		return nil, nil, false
 	}
-	FrameOops.SpaceLimit = MaxSpace     // Big !
-	FrameOops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
-	FrameOops.Options.Set(OptSpecialFrame)
+	specialFrames.Oops.SpaceLimit = MaxSpace     // Big !
+	specialFrames.Oops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
+	specialFrames.Oops.Options.Set(OptSpecialFrame)
 
-	FrameCmd, ok = FrameEdit(nil, frameNameCmd)
+	specialFrames.Cmd, ok = FrameEdit(nil, frameNameCmd)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
-	FrameCmd.Options.Set(OptSpecialFrame)
+	specialFrames.Cmd.Options.Set(OptSpecialFrame)
 
-	FrameHeap, ok = FrameEdit(nil, frameNameHeap)
+	specialFrames.Heap, ok = FrameEdit(nil, frameNameHeap)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
-	FrameHeap.Options.Set(OptSpecialFrame)
+	specialFrames.Heap.Options.Set(OptSpecialFrame)
 
 	currentFrame, currentFrameOk := FrameEdit(nil, DefaultFrameName)
 	if !currentFrameOk {
-		return currentFrame, false
+		return nil, nil, false
 	}
 
 	if LudwigMode == LudwigScreen {
@@ -613,7 +614,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 		}
 	}
 	if !FilePage(currentFrame, &ExitAbort) {
-		return currentFrame, false
+		return nil, nil, false
 	}
 	if LudwigMode != LudwigBatch {
 		Screen.ClearMsgs(false)
@@ -633,7 +634,15 @@ func startUp(argv []string) (*FrameObject, bool) {
 			Dlm: TpdExact,
 			Str: NewStrObjectFrom(FileData.Initial),
 		}
-		if currentFrame, ok = Execute(currentFrame, CmdFileExecute, LeadParamNone, 1, tparam, true); !ok {
+		if currentFrame, ok = Execute(
+			currentFrame,
+			&specialFrames,
+			CmdFileExecute,
+			LeadParamNone,
+			1,
+			tparam,
+			true,
+		); !ok {
 			if ExitAbort {
 				// something is wrong, but let the user continue anyway!
 				if LudwigMode != LudwigBatch {
@@ -646,7 +655,7 @@ func startUp(argv []string) (*FrameObject, bool) {
 
 	// Set the Abort Flag now.  This will suppress spurious start-up messages
 	LudwigAborted = true
-	return currentFrame, true
+	return currentFrame, &specialFrames, true
 }
 
 func main() {
@@ -659,9 +668,11 @@ func main() {
 	}()
 	SysInitSig()
 	ValueInitializations()
-	initialize()                                  // Stuff VALUE can't do, like creating frames etc.
-	if currentFrame, ok := startUp(os.Args); ok { // Parse command line, get files attached, etc.
-		ExecuteImmed(currentFrame)
+	// Stuff VALUE can't do, like creating frames etc.
+	initialize()
+	// Parse command line, get files attached, etc.
+	if currentFrame, specialFrames, ok := startUp(os.Args); ok {
+		ExecuteImmed(currentFrame, specialFrames)
 		SysExitSuccess()
 	}
 	if LudwigAborted {

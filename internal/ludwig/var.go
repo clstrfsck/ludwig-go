@@ -50,11 +50,6 @@ var NrKeyNames int
 var KeyNameList []KeyNameRecord
 var KeyIntroducers map[int]struct{}
 
-// Special frames
-var FrameOops *FrameObject
-var FrameCmd *FrameObject
-var FrameHeap *FrameObject
-
 // Global variables
 var LudwigAborted bool
 var ExitAbort bool

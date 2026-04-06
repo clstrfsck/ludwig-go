@@ -138,8 +138,9 @@ func UserCommandIntroducer(frame *FrameObject) bool {
 	return cmdSuccess
 }
 
-// UserKey assigns a key to a command string
-func UserKey(frame *FrameObject, key *TParObject, strng *TParObject) (*FrameObject, bool) {
+// UserKey assigns a key to a command string.
+// Note that frameHeap must not be nil.
+func UserKey(frame *FrameObject, frameHeap *FrameObject, key *TParObject, strng *TParObject) (*FrameObject, bool) {
 	result := false
 	var keyCode int
 
@@ -155,8 +156,8 @@ func UserKey(frame *FrameObject, key *TParObject, strng *TParObject) (*FrameObje
 	}
 
 	// Create a span in frame "HEAP"
-	MarkCreate(FrameHeap.LastGroup.LastLine, 1, &FrameHeap.Span.MarkTwo)
-	if !SpanCreate(BlankFrameName, FrameHeap.Span.MarkTwo, FrameHeap.Span.MarkTwo) {
+	MarkCreate(frameHeap.LastGroup.LastLine, 1, &frameHeap.Span.MarkTwo)
+	if !SpanCreate(BlankFrameName, frameHeap.Span.MarkTwo, frameHeap.Span.MarkTwo) {
 		return frame, false
 	}
 

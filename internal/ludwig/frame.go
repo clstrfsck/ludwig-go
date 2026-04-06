@@ -469,7 +469,7 @@ func (p *tparParser) getMar(ch *byte, loBnd int, hiBnd int, margin *int) bool {
 // indicating success.  FrameEdit does not update any global "current frame"
 // variable as a side effect; callers must assign the returned *FrameObject
 // themselves if they wish to make it the current frame.
-func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
+func FrameEdit(returnFrame *FrameObject, frameName string) (*FrameObject, bool) {
 	fname := frameName
 	if fname == "" {
 		fname = DefaultFrameName
@@ -480,8 +480,8 @@ func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 
 	if SpanFind(fname, &ptr, &oldp) {
 		if ptr.Frame != nil {
-			if ptr.Frame != frame {
-				ptr.Frame.ReturnFrame = frame
+			if ptr.Frame != returnFrame {
+				ptr.Frame.ReturnFrame = returnFrame
 			}
 			return ptr.Frame, true
 		}
@@ -526,7 +526,7 @@ func FrameEdit(frame *FrameObject, frameName string) (*FrameObject, bool) {
 	fptr.ScrOffset = InitialScrOffset
 	fptr.ScrDotLine = 1
 	fptr.Span = sptr
-	fptr.ReturnFrame = frame
+	fptr.ReturnFrame = returnFrame
 	fptr.InputCount = 0
 	fptr.SpaceLimit = FileData.Space
 	fptr.SpaceLeft = FileData.Space
