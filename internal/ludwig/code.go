@@ -688,7 +688,7 @@ type labelsType struct {
 // CodeInterpret interprets compiled code
 func CodeInterpret(
 	frame *FrameObject,
-	frameOops *FrameObject,
+	specialFrames *SpecialFrames,
 	rept LeadParam,
 	count int,
 	codeHead *CodeHeader,
@@ -801,7 +801,7 @@ func CodeInterpret(
 						Screen.Message(DbgCodePtrIsNil)
 						return frame, false
 					}
-					frame, _ = CodeInterpret(frame, frameOops, currRep, currCnt, currCode, true)
+					frame, _ = CodeInterpret(frame, specialFrames, currRep, currCnt, currCode, true)
 
 				case CmdVerify:
 					if !verifyAlways[currCnt] {
@@ -841,7 +841,7 @@ func CodeInterpret(
 			} else {
 				// Call execute command
 				var ok bool
-				frame, ok = Execute(frame, frameOops, currOp, currRep, currCnt, currTpar, fromSpan)
+				frame, ok = Execute(frame, specialFrames, currOp, currRep, currCnt, currTpar, fromSpan)
 				if !ok {
 					interpStatus = failure
 					pc = currLbl

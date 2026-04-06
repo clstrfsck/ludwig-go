@@ -508,14 +508,7 @@ func loadCommandTable(oldVersion bool) {
 	}
 }
 
-type initialFrames struct {
-	current *FrameObject
-	cmd     *FrameObject
-	heap    *FrameObject
-	oops    *FrameObject
-}
-
-func startUp(argv []string) (*initialFrames, bool) {
+func startUp(argv []string) (*FrameObject, *SpecialFrames, bool) {
 	const frameNameCmd = "COMMAND"
 	const frameNameHeap = "HEAP"
 	const frameNameOops = "OOPS"
@@ -523,13 +516,13 @@ func startUp(argv []string) (*initialFrames, bool) {
 	for _, arg := range argv {
 		if len(arg) > FileNameLen {
 			Screen.Message(MsgParameterTooLong)
-			return nil, false
+			return nil, nil, false
 		}
 	}
 
 	// Open the files.
 	if !FileCreateOpen(argv[1:], ParseCommand, &Files[1], &Files[2]) {
-		return nil, false
+		return nil, nil, false
 	}
 	SetRegularTabStops(FileData.TabWidth)
 
@@ -562,42 +555,38 @@ func startUp(argv []string) (*initialFrames, bool) {
 	// Create the automatically defined frames: COMMAND, HEAP, OOPS and LUDWIG.
 	// Save pointers to frames for use in later frame routines.
 
-	frames := initialFrames{}
+	specialFrames := SpecialFrames{}
 	var ok bool
-	frames.oops, ok = FrameEdit(nil, frameNameOops)
+	specialFrames.Oops, ok = FrameEdit(nil, frameNameOops)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
-	if !FrameSetHeight(frames.oops, InitialScrHeight, true) {
-		return nil, false
+	if !FrameSetHeight(specialFrames.Oops, InitialScrHeight, true) {
+		return nil, nil, false
 	}
-	frames.oops.SpaceLimit = MaxSpace     // Big !
-	frames.oops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
-	frames.oops.Options.Set(OptSpecialFrame)
+	specialFrames.Oops.SpaceLimit = MaxSpace     // Big !
+	specialFrames.Oops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
+	specialFrames.Oops.Options.Set(OptSpecialFrame)
 
-	frames.cmd, ok = FrameEdit(nil, frameNameCmd)
+	specialFrames.Cmd, ok = FrameEdit(nil, frameNameCmd)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
-	frames.cmd.Options.Set(OptSpecialFrame)
+	specialFrames.Cmd.Options.Set(OptSpecialFrame)
 
-	frames.heap, ok = FrameEdit(nil, frameNameHeap)
+	specialFrames.Heap, ok = FrameEdit(nil, frameNameHeap)
 	if !ok {
-		return nil, false
+		return nil, nil, false
 	}
-	frames.heap.Options.Set(OptSpecialFrame)
+	specialFrames.Heap.Options.Set(OptSpecialFrame)
 
-	// FIXME: Remove this when cmd and heap sorted out
-	FrameCmd = frames.cmd
-	FrameHeap = frames.heap
-
-	frames.current, ok = FrameEdit(nil, DefaultFrameName)
-	if !ok {
-		return &frames, false
+	currentFrame, currentFrameOk := FrameEdit(nil, DefaultFrameName)
+	if !currentFrameOk {
+		return nil, nil, false
 	}
 
 	if LudwigMode == LudwigScreen {
-		Screen.Fixup(frames.current)
+		Screen.Fixup(currentFrame)
 	}
 
 	// Load the key definitions.
@@ -608,12 +597,12 @@ func startUp(argv []string) (*initialFrames, bool) {
 
 	// Hook our input and output files into the current frame.
 	if Files[1] != nil {
-		frames.current.InputFile = 1
-		FilesFrames[1] = frames.current
+		currentFrame.InputFile = 1
+		FilesFrames[1] = currentFrame
 	}
 	if Files[2] != nil {
-		frames.current.OutputFile = 2
-		FilesFrames[2] = frames.current
+		currentFrame.OutputFile = 2
+		FilesFrames[2] = currentFrame
 	}
 
 	// Load the input file.
@@ -624,14 +613,14 @@ func startUp(argv []string) (*initialFrames, bool) {
 			VduFlush()
 		}
 	}
-	if !FilePage(frames.current, &ExitAbort) {
-		return &frames, false
+	if !FilePage(currentFrame, &ExitAbort) {
+		return nil, nil, false
 	}
 	if LudwigMode != LudwigBatch {
 		Screen.ClearMsgs(false)
 	}
 	if LudwigMode == LudwigScreen {
-		Screen.Fixup(frames.current)
+		Screen.Fixup(currentFrame)
 	}
 
 	// Execute the user's initialization string.
@@ -645,7 +634,15 @@ func startUp(argv []string) (*initialFrames, bool) {
 			Dlm: TpdExact,
 			Str: NewStrObjectFrom(FileData.Initial),
 		}
-		if frames.current, ok = Execute(frames.current, frames.oops, CmdFileExecute, LeadParamNone, 1, tparam, true); !ok {
+		if currentFrame, ok = Execute(
+			currentFrame,
+			&specialFrames,
+			CmdFileExecute,
+			LeadParamNone,
+			1,
+			tparam,
+			true,
+		); !ok {
 			if ExitAbort {
 				// something is wrong, but let the user continue anyway!
 				if LudwigMode != LudwigBatch {
@@ -658,7 +655,7 @@ func startUp(argv []string) (*initialFrames, bool) {
 
 	// Set the Abort Flag now.  This will suppress spurious start-up messages
 	LudwigAborted = true
-	return &frames, true
+	return currentFrame, &specialFrames, true
 }
 
 func main() {
@@ -671,9 +668,11 @@ func main() {
 	}()
 	SysInitSig()
 	ValueInitializations()
-	initialize()                            // Stuff VALUE can't do, like creating frames etc.
-	if frames, ok := startUp(os.Args); ok { // Parse command line, get files attached, etc.
-		ExecuteImmed(frames.current, frames.oops)
+	// Stuff VALUE can't do, like creating frames etc.
+	initialize()
+	// Parse command line, get files attached, etc.
+	if currentFrame, specialFrames, ok := startUp(os.Args); ok {
+		ExecuteImmed(currentFrame, specialFrames)
 		SysExitSuccess()
 	}
 	if LudwigAborted {

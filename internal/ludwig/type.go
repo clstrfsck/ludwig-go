@@ -362,6 +362,12 @@ type TabArray [MaxStrLenP + 1]bool
 // VerifyArray represents an array of verify flags
 type VerifyArray [MaxVerify + 1]bool
 
+type SpecialFrames struct {
+	Cmd  *FrameObject
+	Heap *FrameObject
+	Oops *FrameObject
+}
+
 // FrameObject represents a frame in the editor
 type FrameObject struct {
 	FirstGroup    *GroupObject
