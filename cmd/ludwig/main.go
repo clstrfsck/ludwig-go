@@ -559,8 +559,8 @@ func startUp(argv []string) (*initialFrames, bool) {
 
 	Screen.MsgRow = TerminalInfo.Height + 1
 
-	// Create the three automatically defined frames: OOPS, COMMAND and LUDWIG.
-	// Save pointers to COMMAND & OOPS  frames for use in later frame routines.
+	// Create the automatically defined frames: COMMAND, HEAP, OOPS and LUDWIG.
+	// Save pointers to frames for use in later frame routines.
 
 	frames := initialFrames{}
 	var ok bool
