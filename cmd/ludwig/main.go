@@ -587,6 +587,10 @@ func startUp(argv []string) (*initialFrames, bool) {
 	}
 	frames.heap.Options.Set(OptSpecialFrame)
 
+	// FIXME: Remove this when cmd and heap sorted out
+	FrameCmd = frames.cmd
+	FrameHeap = frames.heap
+
 	frames.current, ok = FrameEdit(nil, DefaultFrameName)
 	if !ok {
 		return &frames, false
@@ -669,8 +673,6 @@ func main() {
 	ValueInitializations()
 	initialize()                            // Stuff VALUE can't do, like creating frames etc.
 	if frames, ok := startUp(os.Args); ok { // Parse command line, get files attached, etc.
-		FrameCmd = frames.cmd
-		FrameHeap = frames.heap
 		ExecuteImmed(frames.current, frames.oops)
 		SysExitSuccess()
 	}
