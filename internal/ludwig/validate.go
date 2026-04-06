@@ -33,7 +33,7 @@ func ValidateCommand(currentFrame *FrameObject, specialFrames *SpecialFrames) bo
 		Screen.Message(DbgInvalidFramePtr)
 		return false
 	}
-	if specialFrames.Oops == nil || specialFrames.Cmd == nil || specialFrames.Heap == nil {
+	if specialFrames.Oops() == nil || specialFrames.Cmd() == nil || specialFrames.Heap() == nil {
 		Screen.Message(DbgInvalidFramePtr)
 		return false
 	}
@@ -67,11 +67,11 @@ func ValidateCommand(currentFrame *FrameObject, specialFrames *SpecialFrames) bo
 		if thisSpan.Frame != nil {
 			thisFrame := thisSpan.Frame
 			switch thisFrame {
-			case specialFrames.Cmd:
+			case specialFrames.Cmd():
 				frameList |= cmd
-			case specialFrames.Oops:
+			case specialFrames.Oops():
 				frameList |= oops
-			case specialFrames.Heap:
+			case specialFrames.Heap():
 				frameList |= heap
 			}
 
