@@ -271,23 +271,23 @@ func Execute(
 				theMark = theOtherMark
 				theOtherMark = anotherMark
 			}
-			if currentFrame != specialFrames.Oops {
+			if currentFrame != specialFrames.Oops() {
 				// Make sure oops_span is okay
-				MarkCreate(specialFrames.Oops.LastGroup.LastLine, 1, &specialFrames.Oops.Span.MarkTwo)
+				MarkCreate(specialFrames.Oops().LastGroup.LastLine, 1, &specialFrames.Oops().Span.MarkTwo)
 				cmdSuccess = TextMove(
-					false,                                 // Don't copy, transfer
-					1,                                     // One instance of
-					theOtherMark,                          // starting pos
-					theMark,                               // ending pos
-					specialFrames.Oops.Span.MarkTwo,       // destination
-					&specialFrames.Oops.Marks[MarkEquals], // leave at start
-					&specialFrames.Oops.Dot,               // leave at end
+					false,                                   // Don't copy, transfer
+					1,                                       // One instance of
+					theOtherMark,                            // starting pos
+					theMark,                                 // ending pos
+					specialFrames.Oops().Span.MarkTwo,       // destination
+					&specialFrames.Oops().Marks[MarkEquals], // leave at start
+					&specialFrames.Oops().Dot,               // leave at end
 				)
-				specialFrames.Oops.TextModified = true
+				specialFrames.Oops().TextModified = true
 				MarkCreate(
-					specialFrames.Oops.Dot.Line,
-					specialFrames.Oops.Dot.Col,
-					&specialFrames.Oops.Marks[MarkModified],
+					specialFrames.Oops().Dot.Line,
+					specialFrames.Oops().Dot.Col,
+					&specialFrames.Oops().Marks[MarkModified],
 				)
 			} else {
 				cmdSuccess = TextRemove(theOtherMark, theMark)
@@ -309,15 +309,15 @@ func Execute(
 			}
 			MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 			LinesExtract(firstLine, lastLine)
-			if currentFrame != specialFrames.Oops {
-				LinesInject(firstLine, lastLine, specialFrames.Oops.LastGroup.LastLine)
-				MarkCreate(firstLine, 1, &specialFrames.Oops.Marks[MarkEquals])
-				MarkCreate(specialFrames.Oops.LastGroup.LastLine, 1, &specialFrames.Oops.Dot)
-				specialFrames.Oops.TextModified = true
+			if currentFrame != specialFrames.Oops() {
+				LinesInject(firstLine, lastLine, specialFrames.Oops().LastGroup.LastLine)
+				MarkCreate(firstLine, 1, &specialFrames.Oops().Marks[MarkEquals])
+				MarkCreate(specialFrames.Oops().LastGroup.LastLine, 1, &specialFrames.Oops().Dot)
+				specialFrames.Oops().TextModified = true
 				MarkCreate(
-					specialFrames.Oops.Dot.Line,
-					specialFrames.Oops.Dot.Col,
-					&specialFrames.Oops.Marks[MarkModified],
+					specialFrames.Oops().Dot.Line,
+					specialFrames.Oops().Dot.Col,
+					&specialFrames.Oops().Marks[MarkModified],
 				)
 			}
 			currentFrame.Dot.Col = dotCol
@@ -450,7 +450,7 @@ func Execute(
 		cmdSuccess = EqsGetRepEqs(currentFrame, rept, request)
 
 	case CmdDoLastCommand, CmdExecuteString:
-		if currentFrame == specialFrames.Cmd {
+		if currentFrame == specialFrames.Cmd() {
 			Screen.Message(MsgNotWhileEditingCmd)
 			return
 		}
@@ -460,19 +460,19 @@ func Execute(
 				return
 			}
 
-			specialFrames.Cmd.ReturnFrame = currentFrame
-			currentFrame = specialFrames.Cmd
+			specialFrames.Cmd().ReturnFrame = currentFrame
+			currentFrame = specialFrames.Cmd()
 
 			// Zap frame COMMAND's current contents
-			firstLine := specialFrames.Cmd.FirstGroup.FirstLine
-			lastLine := specialFrames.Cmd.LastGroup.LastLine.BLink
+			firstLine := specialFrames.Cmd().FirstGroup.FirstLine
+			lastLine := specialFrames.Cmd().LastGroup.LastLine.BLink
 			if lastLine != nil {
 				MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 				LinesExtract(firstLine, lastLine)
 			}
 
 			// Insert the new tpar into frame COMMAND
-			if !TextInsertTpar(&request, specialFrames.Cmd.Dot, &specialFrames.Cmd.Marks[MarkEquals]) {
+			if !TextInsertTpar(&request, specialFrames.Cmd().Dot, &specialFrames.Cmd().Marks[MarkEquals]) {
 				return
 			}
 
@@ -481,9 +481,9 @@ func Execute(
 
 		// Recompile and execute frame COMMAND
 		var newSpan, oldSpan *SpanObject
-		if SpanFind(specialFrames.Cmd.Span.Name, &newSpan, &oldSpan) {
+		if SpanFind(specialFrames.Cmd().Span.Name, &newSpan, &oldSpan) {
 			var ok bool
-			currentFrame, ok = CodeCompile(currentFrame, specialFrames.Cmd.Span, true)
+			currentFrame, ok = CodeCompile(currentFrame, specialFrames.Cmd().Span, true)
 			if !ok {
 				return
 			}
@@ -492,7 +492,7 @@ func Execute(
 				specialFrames,
 				rept,
 				count,
-				specialFrames.Cmd.Span.Code,
+				specialFrames.Cmd().Span.Code,
 				true,
 			)
 		}
@@ -503,18 +503,18 @@ func Execute(
 		cmdSuccess = FileCommand(currentFrame, command, rept, count, tparam, fromSpan)
 
 	case CmdFileExecute:
-		if currentFrame == specialFrames.Cmd {
+		if currentFrame == specialFrames.Cmd() {
 			Screen.Message(MsgNotWhileEditingCmd)
 			return
 		}
 		var request TParObject
 		if TparGet1(currentFrame, tparam, command, &request) {
 			newTparam := request
-			specialFrames.Cmd.ReturnFrame = currentFrame
-			currentFrame = specialFrames.Cmd
+			specialFrames.Cmd().ReturnFrame = currentFrame
+			currentFrame = specialFrames.Cmd()
 			// Zap frame COMMAND's current contents
-			firstLine := specialFrames.Cmd.FirstGroup.FirstLine
-			lastLine := specialFrames.Cmd.LastGroup.LastLine.BLink
+			firstLine := specialFrames.Cmd().FirstGroup.FirstLine
+			lastLine := specialFrames.Cmd().LastGroup.LastLine.BLink
 			if lastLine != nil {
 				MarksSqueeze(firstLine, 1, lastLine.FLink, 1)
 				LinesExtract(firstLine, lastLine)
@@ -523,16 +523,16 @@ func Execute(
 				currentFrame = currentFrame.ReturnFrame
 				// Recompile and execute frame COMMAND
 				var newSpan, oldSpan *SpanObject
-				if SpanFind(specialFrames.Cmd.Span.Name, &newSpan, &oldSpan) {
+				if SpanFind(specialFrames.Cmd().Span.Name, &newSpan, &oldSpan) {
 					var ok bool
-					currentFrame, ok = CodeCompile(currentFrame, specialFrames.Cmd.Span, true)
+					currentFrame, ok = CodeCompile(currentFrame, specialFrames.Cmd().Span, true)
 					if ok {
 						currentFrame, cmdSuccess = CodeInterpret(
 							currentFrame,
 							specialFrames,
 							rept,
 							count,
-							specialFrames.Cmd.Span.Code,
+							specialFrames.Cmd().Span.Code,
 							true,
 						)
 					}
@@ -752,16 +752,16 @@ func Execute(
 
 	case CmdWordDelete:
 		if FileData.OldCmds {
-			cmdSuccess = WordDeleteWord(currentFrame, specialFrames.Oops, rept, count)
+			cmdSuccess = WordDeleteWord(currentFrame, specialFrames.Oops(), rept, count)
 		} else {
-			cmdSuccess = NewwordDeleteWord(currentFrame, specialFrames.Oops, rept, count)
+			cmdSuccess = NewwordDeleteWord(currentFrame, specialFrames.Oops(), rept, count)
 		}
 
 	case CmdAdvanceParagraph:
 		cmdSuccess = NewwordAdvanceParagraph(currentFrame, rept, count)
 
 	case CmdDeleteParagraph:
-		cmdSuccess = NewwordDeleteParagraph(currentFrame, specialFrames.Oops, rept, count)
+		cmdSuccess = NewwordDeleteParagraph(currentFrame, specialFrames.Oops(), rept, count)
 
 	case CmdMark:
 		cmdSuccess = true
@@ -1037,29 +1037,29 @@ func Execute(
 		var newSpan, oldSpan *SpanObject
 		if SpanFind(newName, &newSpan, &oldSpan) {
 			// Grunge the old one
-			if newSpan == specialFrames.Oops.Span {
-				if !TextRemove(specialFrames.Oops.Span.MarkOne, specialFrames.Oops.Span.MarkTwo) {
+			if newSpan == specialFrames.Oops().Span {
+				if !TextRemove(specialFrames.Oops().Span.MarkOne, specialFrames.Oops().Span.MarkTwo) {
 					return
 				}
 			} else {
 				// Make sure oops_span is okay
-				MarkCreate(specialFrames.Oops.LastGroup.LastLine, 1, &specialFrames.Oops.Span.MarkTwo)
+				MarkCreate(specialFrames.Oops().LastGroup.LastLine, 1, &specialFrames.Oops().Span.MarkTwo)
 				if !TextMove(
 					false, // Don't copy, transfer
 					1,     // One instance of
 					newSpan.MarkOne,
 					newSpan.MarkTwo,
-					specialFrames.Oops.Span.MarkTwo,       // destination
-					&specialFrames.Oops.Marks[MarkEquals], // leave at start
-					&specialFrames.Oops.Dot,               // leave at end
+					specialFrames.Oops().Span.MarkTwo,       // destination
+					&specialFrames.Oops().Marks[MarkEquals], // leave at start
+					&specialFrames.Oops().Dot,               // leave at end
 				) {
 					return
 				}
 			}
 		} else {
 			// Create a span in frame "HEAP"
-			MarkCreate(specialFrames.Heap.LastGroup.LastLine, 1, &specialFrames.Heap.Span.MarkTwo)
-			if !SpanCreate(newName, specialFrames.Heap.Span.MarkTwo, specialFrames.Heap.Span.MarkTwo) {
+			MarkCreate(specialFrames.Heap().LastGroup.LastLine, 1, &specialFrames.Heap().Span.MarkTwo)
+			if !SpanCreate(newName, specialFrames.Heap().Span.MarkTwo, specialFrames.Heap().Span.MarkTwo) {
 				return
 			}
 			if !SpanFind(newName, &newSpan, &oldSpan) {
@@ -1101,7 +1101,7 @@ func Execute(
 			if request.Len == 0 {
 				cmdSuccess = false
 			} else {
-				currentFrame, cmdSuccess = UserKey(currentFrame, specialFrames.Heap, &request, &request2)
+				currentFrame, cmdSuccess = UserKey(currentFrame, specialFrames.Heap(), &request, &request2)
 			}
 		}
 
