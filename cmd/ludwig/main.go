@@ -555,30 +555,28 @@ func startUp(argv []string) (*FrameObject, *SpecialFrames, bool) {
 	// Create the automatically defined frames: COMMAND, HEAP, OOPS and LUDWIG.
 	// Save pointers to frames for use in later frame routines.
 
-	specialFrames := SpecialFrames{}
-	var ok bool
-	specialFrames.Oops, ok = FrameEdit(nil, frameNameOops)
-	if !ok {
+	oopsFrame, oopsOk := FrameEdit(nil, frameNameOops)
+	if !oopsOk {
 		return nil, nil, false
 	}
-	if !FrameSetHeight(specialFrames.Oops, InitialScrHeight, true) {
+	if !FrameSetHeight(oopsFrame, InitialScrHeight, true) {
 		return nil, nil, false
 	}
-	specialFrames.Oops.SpaceLimit = MaxSpace     // Big !
-	specialFrames.Oops.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
-	specialFrames.Oops.Options.Set(OptSpecialFrame)
+	oopsFrame.SpaceLimit = MaxSpace     // Big !
+	oopsFrame.SpaceLeft = MaxSpace - 50 // Big ! - space for <eop> line !!
+	oopsFrame.Options.Set(OptSpecialFrame)
 
-	specialFrames.Cmd, ok = FrameEdit(nil, frameNameCmd)
-	if !ok {
+	cmdFrame, cmdOk := FrameEdit(nil, frameNameCmd)
+	if !cmdOk {
 		return nil, nil, false
 	}
-	specialFrames.Cmd.Options.Set(OptSpecialFrame)
+	cmdFrame.Options.Set(OptSpecialFrame)
 
-	specialFrames.Heap, ok = FrameEdit(nil, frameNameHeap)
-	if !ok {
+	heapFrame, heapOk := FrameEdit(nil, frameNameHeap)
+	if !heapOk {
 		return nil, nil, false
 	}
-	specialFrames.Heap.Options.Set(OptSpecialFrame)
+	heapFrame.Options.Set(OptSpecialFrame)
 
 	currentFrame, currentFrameOk := FrameEdit(nil, DefaultFrameName)
 	if !currentFrameOk {
@@ -624,7 +622,7 @@ func startUp(argv []string) (*FrameObject, *SpecialFrames, bool) {
 	}
 
 	// Execute the user's initialization string.
-
+	specialFrames := NewSpecialFrames(cmdFrame, heapFrame, oopsFrame)
 	if FileData.Initial != "" {
 		if LudwigMode == LudwigScreen {
 			VduFlush()
@@ -634,9 +632,10 @@ func startUp(argv []string) (*FrameObject, *SpecialFrames, bool) {
 			Dlm: TpdExact,
 			Str: NewStrObjectFrom(FileData.Initial),
 		}
+		var ok bool
 		if currentFrame, ok = Execute(
 			currentFrame,
-			&specialFrames,
+			specialFrames,
 			CmdFileExecute,
 			LeadParamNone,
 			1,
@@ -655,7 +654,7 @@ func startUp(argv []string) (*FrameObject, *SpecialFrames, bool) {
 
 	// Set the Abort Flag now.  This will suppress spurious start-up messages
 	LudwigAborted = true
-	return currentFrame, &specialFrames, true
+	return currentFrame, specialFrames, true
 }
 
 func main() {
